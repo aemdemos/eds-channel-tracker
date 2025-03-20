@@ -5,7 +5,7 @@ const allSlackChannels = document.getElementById('myslackchannels');
 const slackChannelsContainer = document.getElementById('slack-channels-container');
 
 const doLogout = ({ detail: payload }) => {
-  location.reload();
+  location.reload(true);
 };
 
 const sk = document.querySelector('aem-sidekick');
