@@ -4,6 +4,23 @@ import { API_ENDPOINT } from './config.js';
 const allSlackChannels = document.getElementById('myslackchannels');
 const slackChannelsContainer = document.getElementById('slack-channels-container');
 
+const doLogout = ({ detail: payload }) => {
+  location.reload();
+};
+
+const sk = document.querySelector('aem-sidekick');
+if (sk) {
+  // sidekick already loaded
+  sk.addEventListener('logged-out', doLogout);
+} else {
+  // wait for sidekick to be loaded
+  document.addEventListener('sidekick-ready', () => {
+    // sidekick now loaded
+    document.querySelector('aem-sidekick')
+    .addEventListener('logged-out', doLogout);
+  }, { once: true });
+}
+
 const getAllSlackChannels = async () => {
   try {
     const response = await fetch(`${API_ENDPOINT}`);
