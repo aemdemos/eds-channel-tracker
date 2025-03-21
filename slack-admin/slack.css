@@ -7,31 +7,36 @@
   flex-direction: column;
 }
 
-.slack-admin #slack-channels-container ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-s);
-  padding: 0;
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.slack-admin #slack-channels-container ul li {
-  border: var(--border-s) solid var(--gray-100);
-  list-style: none;
-  padding: var(--spacing-m);
+.styled-table thead {
+    background-color: #f4f4f4;
+    text-align: left;
 }
 
-.slack-admin #slack-channels-container ul li.member {
-  background-color: var(--green-100);
+.styled-table th, .styled-table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
 }
 
-.slack-admin #slack-channels-container ul li.member.remove {
-  background-color: var(--red-100);
+.styled-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
 }
 
-.slack-admin #slack-channels-container ul li.not-member.add {
-  background-color: var(--blue-100);
+.styled-table tbody tr:hover {
+    background-color: #f1f1f1;
 }
 
-.slack-admin #slack-channels-container ul li p {
-  max-width: 200px;
+.styled-table th {
+    font-weight: bold;
+}
+
+.styled-table td:last-child {
+    font-weight: bold;
 }

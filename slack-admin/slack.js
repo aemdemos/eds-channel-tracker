@@ -34,13 +34,14 @@ const displayChannels = async () => {
   <thead>
     <tr>
       <th>Name</th>
-      <th>Purpose</th>
+      <th>Description</th>
       <th>Last Activity</th>
     </tr>
   </thead>
   <tbody></tbody>
 `;
 
+  table.classList.add('styled-table');
   const tbody = table.querySelector('tbody');
 
 
