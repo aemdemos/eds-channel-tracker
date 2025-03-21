@@ -65,7 +65,14 @@ const displayChannels = async () => {
     tr.innerHTML = `
     <td>${channel.name}</td>
     <td>${channel.purpose.value}</td>
-    <td style="color: ${isActive ? 'green' : 'red'};">${formattedDate}</td>
+    <td>
+  <span style="background-color: ${isActive ? 'lightgreen' : 'lightcoral'}; 
+               color: white; 
+               padding: 4px 8px; 
+               border-radius: 4px;">
+    ${formattedDate}
+  </span>
+</td>
   `;
 
     tbody.appendChild(tr);
