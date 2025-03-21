@@ -80,10 +80,8 @@ const displayChannels = async () => {
     const sortedData = [...all].sort((a, b) => {
       if (key === 'name' || key === 'purpose') {
         return a[key].localeCompare(b[key]);
-      } else if (key === 'updated') {
-        return new Date(a[key]) - new Date(b[key]);
       }
-      return 0; // Ensure a value is always returned
+      return new Date(a[key]) - new Date(b[key]);
     });
     renderRows(sortedData);
 
