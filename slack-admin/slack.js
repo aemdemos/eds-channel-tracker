@@ -1,8 +1,8 @@
-import { API_ENDPOINT } from './config.js';
+import API_ENDPOINT from './config.js';
 
 const slackChannelsContainer = document.getElementById('slack-channels-container');
 
-const doLogout = () => location.reload();
+const doLogout = () => window.location.reload();
 
 const sk = document.querySelector('aem-sidekick');
 if (sk) {
@@ -19,10 +19,8 @@ if (sk) {
 const getAllSlackChannels = async () => {
   try {
     const response = await fetch(API_ENDPOINT);
-    if (response.ok) {
-      return await response.json();
-    }
-  } catch (e) {}
+    if (response.ok) return await response.json();
+  } catch (e) {/* Handle error */}
   return [];
 }
 
@@ -32,13 +30,15 @@ const displayChannels = async () => {
   all.sort((a, b) => a.name.localeCompare(b.name));
 
   const ul = document.createElement('ul');
-  all.forEach(channel => {
+  all.forEach((channel) => {
     const li = document.createElement('li');
+    const updatedDate = new Date(channel.updated);
+    const formattedDate = updatedDate.toISOString().split('T')[0];
     li.innerHTML = `
       <h4>${channel.name}</h4>
       <p>${channel.purpose.value}</p>
-      <p style="color: ${new Date() - new Date(channel.updated) < 30 * 24 * 60 * 60 * 1000 ? 'green' : 'red'};">
-        Last Activity: ${new Date(channel.updated).toDateString()}
+      <p style="color: ${new Date() - updatedDate < 30 * 24 * 60 * 60 * 1000 ? 'green' : 'red'};">
+        Last Activity: ${formattedDate}
       </p>
     `;
     ul.appendChild(li);
@@ -46,14 +46,13 @@ const displayChannels = async () => {
 
   slackChannelsContainer.innerHTML = '';
   slackChannelsContainer.appendChild(ul);
-}
+};
 
 /**
  * Handles site admin form submission.
  * @param {Event} e - Submit event.
  */
-document.getElementById('myslackchannels').addEventListener('click', async (e) => {
+document.getElementById('channelisation').addEventListener('click', async (e) => {
   e.preventDefault();
   await displayChannels();
 });
-
