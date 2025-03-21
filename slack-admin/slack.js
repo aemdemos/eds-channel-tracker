@@ -72,8 +72,6 @@ const displayChannels = async () => {
     tbody.appendChild(tr);
   });
 
-  summary.textContent = `Total Channels: ${all.length}`;
-
   slackChannelsContainer.innerHTML = '';
   slackChannelsContainer.appendChild(summary);
   slackChannelsContainer.appendChild(table);
