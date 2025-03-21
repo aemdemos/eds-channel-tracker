@@ -29,7 +29,7 @@ const displayChannels = async () => {
   const all = await getAllSlackChannels();
   all.sort((a, b) => a.name.localeCompare(b.name));
 
-  const activeChannels = all.filter(channel => {
+  const activeChannels = all.filter((channel) => {
     const updatedDate = new Date(channel.updated);
     return new Date() - updatedDate < 30 * 24 * 60 * 60 * 1000; // Active within 30 days
   }).length;
