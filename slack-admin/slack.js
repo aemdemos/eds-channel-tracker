@@ -29,6 +29,9 @@ const displayChannels = async () => {
   const all = await getAllSlackChannels();
   all.sort((a, b) => a.name.localeCompare(b.name));
 
+  const summary = document.createElement('div');
+  summary.classList.add('table-summary');
+
   const table = document.createElement('table');
   table.innerHTML = `
   <thead>
@@ -60,7 +63,10 @@ const displayChannels = async () => {
     tbody.appendChild(tr);
   });
 
+  summary.textContent = `Total Channels: ${all.length}`;
+
   slackChannelsContainer.innerHTML = '';
+  slackChannelsContainer.appendChild(summary);
   slackChannelsContainer.appendChild(table);
 };
 
