@@ -83,6 +83,7 @@ const displayChannels = async () => {
       } else if (key === 'updated') {
         return new Date(a[key]) - new Date(b[key]);
       }
+      return 0; // Ensure a value is always returned
     });
     renderRows(sortedData);
 
