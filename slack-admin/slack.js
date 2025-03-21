@@ -39,19 +39,19 @@ const displayChannels = async () => {
   summary.innerHTML = `
   <span>Total Channels: ${all.length}</span> |
   <span style="color: green;">Active Channels: ${activeChannels}</span>
-`;
+  `;
 
   const table = document.createElement('table');
   table.innerHTML = `
-  <thead>
-    <tr>
-      <th data-sort="name">Name</th>
-      <th data-sort="purpose">Description</th>
-      <th data-sort="updated">Last Activity</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-`;
+    <thead>
+      <tr>
+        <th data-sort="name">Name</th>
+        <th data-sort="purpose">Description</th>
+        <th data-sort="updated">Last Activity</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  `;
 
   table.classList.add('styled-table');
   const tbody = table.querySelector('tbody');
@@ -65,34 +65,42 @@ const displayChannels = async () => {
       const isActive = new Date() - updatedDate < 30 * 24 * 60 * 60 * 1000;
 
       tr.innerHTML = `
-      <td>${channel.name}</td>
-      <td>${channel.purpose.value}</td>
-      <td style="color: ${isActive ? 'green' : 'red'};">${formattedDate}</td>
-    `;
+        <td>${channel.name}</td>
+        <td>${channel.purpose.value}</td>
+        <td style="color: ${isActive ? 'green' : 'red'};">${formattedDate}</td>
+      `;
 
-    tbody.appendChild(tr);
+      tbody.appendChild(tr);
+    });
+  };
+
+  renderRows(all);
+
+  const sortTable = (key) => {
+    const sortedData = [...all].sort((a, b) => {
+      if (key === 'name' || key === 'purpose') {
+        return a[key].localeCompare(b[key]);
+      } else if (key === 'updated') {
+        return new Date(a[key]) - new Date(b[key]);
+      }
+    });
+    renderRows(sortedData);
+
+    // Add visual cue for sorted column
+    table.querySelectorAll('th').forEach((th) => {
+      th.classList.remove('sorted');
+      if (th.getAttribute('data-sort') === key) {
+        th.classList.add('sorted');
+      }
+    });
+  };
+
+  table.querySelectorAll('th').forEach((th) => {
+    th.addEventListener('click', () => {
+      const sortKey = th.getAttribute('data-sort');
+      sortTable(sortKey);
+    });
   });
-};
-
-renderRows(all);
-
-const sortTable = (key) => {
-  const sortedData = [...all].sort((a, b) => {
-    if (key === 'name' || key === 'purpose') {
-      return a[key].localeCompare(b[key]);
-    } else if (key === 'updated') {
-      return new Date(a[key]) - new Date(b[key]);
-    }
-  });
-  renderRows(sortedData);
-};
-
-table.querySelectorAll('th').forEach((th) => {
-  th.addEventListener('click', () => {
-    const sortKey = th.getAttribute('data-sort');
-    sortTable(sortKey);
-  });
-});
 
   slackChannelsContainer.innerHTML = '';
   slackChannelsContainer.appendChild(summary);
