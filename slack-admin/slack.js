@@ -45,9 +45,9 @@ const displayChannels = async () => {
   table.innerHTML = `
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Description</th>
-      <th>Last Activity</th>
+      <th data-sort="name">Name</th>
+      <th data-sort="purpose">Description</th>
+      <th data-sort="updated">Last Activity</th>
     </tr>
   </thead>
   <tbody></tbody>
@@ -56,20 +56,43 @@ const displayChannels = async () => {
   table.classList.add('styled-table');
   const tbody = table.querySelector('tbody');
 
-  all.forEach((channel) => {
-    const tr = document.createElement('tr');
-    const updatedDate = new Date(channel.updated);
-    const formattedDate = updatedDate.toISOString().split('T')[0];
-    const isActive = new Date() - updatedDate < 30 * 24 * 60 * 60 * 1000;
+  const renderRows = (data) => {
+    tbody.innerHTML = '';
+    data.forEach((channel) => {
+      const tr = document.createElement('tr');
+      const updatedDate = new Date(channel.updated);
+      const formattedDate = updatedDate.toISOString().split('T')[0];
+      const isActive = new Date() - updatedDate < 30 * 24 * 60 * 60 * 1000;
 
-    tr.innerHTML = `
-    <td>${channel.name}</td>
-    <td>${channel.purpose.value}</td>
-    <td style="color: ${isActive ? 'green' : 'red'};">${formattedDate}</td>
-  `;
+      tr.innerHTML = `
+      <td>${channel.name}</td>
+      <td>${channel.purpose.value}</td>
+      <td style="color: ${isActive ? 'green' : 'red'};">${formattedDate}</td>
+    `;
 
     tbody.appendChild(tr);
   });
+};
+
+renderRows(all);
+
+const sortTable = (key) => {
+  const sortedData = [...all].sort((a, b) => {
+    if (key === 'name' || key === 'purpose') {
+      return a[key].localeCompare(b[key]);
+    } else if (key === 'updated') {
+      return new Date(a[key]) - new Date(b[key]);
+    }
+  });
+  renderRows(sortedData);
+};
+
+table.querySelectorAll('th').forEach((th) => {
+  th.addEventListener('click', () => {
+    const sortKey = th.getAttribute('data-sort');
+    sortTable(sortKey);
+  });
+});
 
   slackChannelsContainer.innerHTML = '';
   slackChannelsContainer.appendChild(summary);
