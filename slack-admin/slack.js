@@ -1,5 +1,7 @@
 import API_ENDPOINT from './config.js';
 
+let sortDirection = 'asc';
+
 const slackChannelsContainer = document.getElementById('slack-channels-container');
 
 const doLogout = () => window.location.reload();
@@ -79,19 +81,21 @@ const displayChannels = async () => {
   const sortTable = (key) => {
     const sortedData = [...all].sort((a, b) => {
       if (key === 'name' || key === 'purpose') {
-        return a[key].localeCompare(b[key]);
+        return sortDirection === 'asc' ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
       }
-      return new Date(a[key]) - new Date(b[key]);
+      return sortDirection === 'asc' ? new Date(a[key]) - new Date(b[key]) : new Date(b[key]) - new Date(a[key]);
     });
     renderRows(sortedData);
 
     // Add visual cue for sorted column
     table.querySelectorAll('th').forEach((th) => {
-      th.classList.remove('sorted');
+      th.classList.remove('sorted-asc', 'sorted-desc');
       if (th.getAttribute('data-sort') === key) {
-        th.classList.add('sorted');
+        th.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
       }
     });
+    // Toggle sort direction
+    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
   };
 
   table.querySelectorAll('th').forEach((th) => {
