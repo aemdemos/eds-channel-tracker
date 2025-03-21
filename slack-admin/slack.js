@@ -1,12 +1,8 @@
 import { API_ENDPOINT } from './config.js';
 
-/* eslint-disable no-alert */
-const allSlackChannels = document.getElementById('myslackchannels');
 const slackChannelsContainer = document.getElementById('slack-channels-container');
 
-const doLogout = ({ detail: payload }) => {
-  location.reload(true);
-};
+const doLogout = () => location.reload();
 
 const sk = document.querySelector('aem-sidekick');
 if (sk) {
@@ -16,49 +12,37 @@ if (sk) {
   // wait for sidekick to be loaded
   document.addEventListener('sidekick-ready', () => {
     // sidekick now loaded
-    document.querySelector('aem-sidekick')
-    .addEventListener('logged-out', doLogout);
+    document.querySelector('aem-sidekick').addEventListener('logged-out', doLogout);
   }, { once: true });
 }
 
 const getAllSlackChannels = async () => {
   try {
-    const response = await fetch(`${API_ENDPOINT}`);
-
+    const response = await fetch(API_ENDPOINT);
     if (response.ok) {
-      const channels = await response.json();
-      return channels;
+      return await response.json();
     }
-  } catch (e) {};
-
+  } catch (e) {}
   return [];
 }
 
 const displayChannels = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
-
   const all = await getAllSlackChannels();
-
   all.sort((a, b) => a.name.localeCompare(b.name));
 
   const ul = document.createElement('ul');
-
   all.forEach(channel => {
+    channel.updated = undefined;
+    channel.purpose = undefined;
     const li = document.createElement('li');
-
-    const title = document.createElement('h4');
-    title.textContent = channel.name;
-    li.appendChild(title);
-
-    const description = document.createElement('p');
-    description.textContent = channel.purpose.value;
-    li.appendChild(description);
-
-
-    const updated = document.createElement('p');
-    updated.textContent = `Last Activity: ${channel.updated}`;
-    li.appendChild(updated);
-
+    li.innerHTML = `
+      <h4>${channel.name}</h4>
+      <p>${channel.purpose.value}</p>
+      <p style="color: ${new Date() - new Date(channel.updated) < 30 * 24 * 60 * 60 * 1000 ? 'green' : 'red'};">
+        Last Activity: ${new Date(channel.updated).toDateString()}
+      </p>
+    `;
     ul.appendChild(li);
   });
 
@@ -70,8 +54,8 @@ const displayChannels = async () => {
  * Handles site admin form submission.
  * @param {Event} e - Submit event.
  */
-allSlackChannels.addEventListener('click', async (e) => {
+document.getElementById('myslackchannels').addEventListener('click', async (e) => {
   e.preventDefault();
-  displayChannels();
+  await displayChannels();
 });
 
