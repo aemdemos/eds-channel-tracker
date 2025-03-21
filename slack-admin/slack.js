@@ -54,6 +54,11 @@ const displayChannels = async () => {
     description.textContent = channel.purpose.value;
     li.appendChild(description);
 
+
+    const updated = document.createElement('p');
+    updated.textContent = `Last Activity: ${channel.updated}`;
+    li.appendChild(updated);
+
     ul.appendChild(li);
   });
 
