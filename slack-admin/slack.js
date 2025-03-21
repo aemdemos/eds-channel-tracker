@@ -20,9 +20,9 @@ const getAllSlackChannels = async () => {
   try {
     const response = await fetch(API_ENDPOINT);
     if (response.ok) return await response.json();
-  } catch (e) {/* Handle error */}
+  } catch (e) { /* Handle error */ }
   return [];
-}
+};
 
 const displayChannels = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
@@ -55,7 +55,6 @@ const displayChannels = async () => {
 
   table.classList.add('styled-table');
   const tbody = table.querySelector('tbody');
-
 
   all.forEach((channel) => {
     const tr = document.createElement('tr');
