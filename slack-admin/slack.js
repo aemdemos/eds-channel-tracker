@@ -29,8 +29,17 @@ const displayChannels = async () => {
   const all = await getAllSlackChannels();
   all.sort((a, b) => a.name.localeCompare(b.name));
 
+  const activeChannels = all.filter(channel => {
+    const updatedDate = new Date(channel.updated);
+    return new Date() - updatedDate < 30 * 24 * 60 * 60 * 1000; // Active within 30 days
+  }).length;
+
   const summary = document.createElement('div');
   summary.classList.add('table-summary');
+  summary.innerHTML = `
+  <span>Total Channels: ${all.length}</span> |
+  <span style="color: green;">Active Channels: ${activeChannels}</span>
+`;
 
   const table = document.createElement('table');
   table.innerHTML = `
@@ -61,8 +70,6 @@ const displayChannels = async () => {
 
     tbody.appendChild(tr);
   });
-
-  summary.textContent = `Total Channels: ${all.length}`;
 
   slackChannelsContainer.innerHTML = '';
   slackChannelsContainer.appendChild(summary);
