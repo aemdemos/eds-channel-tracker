@@ -33,8 +33,6 @@ const displayChannels = async () => {
 
   const ul = document.createElement('ul');
   all.forEach(channel => {
-    channel.updated = undefined;
-    channel.purpose = undefined;
     const li = document.createElement('li');
     li.innerHTML = `
       <h4>${channel.name}</h4>
