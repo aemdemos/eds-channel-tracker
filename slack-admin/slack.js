@@ -29,23 +29,38 @@ const displayChannels = async () => {
   const all = await getAllSlackChannels();
   all.sort((a, b) => a.name.localeCompare(b.name));
 
-  const ul = document.createElement('ul');
+  const table = document.createElement('table');
+  table.innerHTML = `
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Purpose</th>
+      <th>Last Activity</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+`;
+
+  const tbody = table.querySelector('tbody');
+
+
   all.forEach((channel) => {
-    const li = document.createElement('li');
+    const tr = document.createElement('tr');
     const updatedDate = new Date(channel.updated);
     const formattedDate = updatedDate.toISOString().split('T')[0];
-    li.innerHTML = `
-      <h4>${channel.name}</h4>
-      <p>${channel.purpose.value}</p>
-      <p style="color: ${new Date() - updatedDate < 30 * 24 * 60 * 60 * 1000 ? 'green' : 'red'};">
-        Last Activity: ${formattedDate}
-      </p>
-    `;
-    ul.appendChild(li);
+    const isActive = new Date() - updatedDate < 30 * 24 * 60 * 60 * 1000;
+
+    tr.innerHTML = `
+    <td>${channel.name}</td>
+    <td>${channel.purpose.value}</td>
+    <td style="color: ${isActive ? 'green' : 'red'};">${formattedDate}</td>
+  `;
+
+    tbody.appendChild(tr);
   });
 
   slackChannelsContainer.innerHTML = '';
-  slackChannelsContainer.appendChild(ul);
+  slackChannelsContainer.appendChild(table);
 };
 
 /**
