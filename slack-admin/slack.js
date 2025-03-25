@@ -67,7 +67,7 @@ const displayChannels = async () => {
       const isActive = new Date() - updatedDate < 30 * 24 * 60 * 60 * 1000;
 
       tr.innerHTML = `
-        <td>${channel.name}</td>
+        <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
         <td>${channel.purpose.value}</td>
         <td style="color: ${isActive ? 'green' : 'red'};">${formattedDate}</td>
       `;
