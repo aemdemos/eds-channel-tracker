@@ -36,10 +36,12 @@
 .styled-table th {
     font-weight: bold;
 }
+
 .styled-table th.sorted-asc::after {
     content: '▲';
     margin-left: 5px;
 }
+
 .styled-table th.sorted-desc::after {
     content: '▼';
     margin-left: 5px;
@@ -48,7 +50,6 @@
 .styled-table td:last-child {
     font-weight: bold;
 }
-
 
 .table-summary {
     font-size: 25px;
