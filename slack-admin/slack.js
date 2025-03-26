@@ -40,7 +40,6 @@ const displayChannels = async () => {
   summary.classList.add('table-summary');
   summary.innerHTML = `
   <span>Total Channels: ${all.length}</span> |
-//  <span style="color: green;">Active Channels: ${activeChannels}</span>
   <span style="color: green;">Active Channels: </span>   
   `;
 
