@@ -32,8 +32,8 @@ const displayChannels = async () => {
   all.sort((a, b) => a.name.localeCompare(b.name));
 
   const activeChannels = all.filter((channel) => {
-    const createdDate = new Date(channel.created);
-    return new Date() - createdDate < 30 * 24 * 60 * 60 * 1000; // Active within 30 days
+    const lastMessageDate = new Date(channel.last_activity_timestamp * 1000);
+    return new Date() - lastMessageDate < 30 * 24 * 60 * 60 * 1000; // Active within 30 days
   }).length;
 
   const summary = document.createElement('div');
@@ -49,7 +49,7 @@ const displayChannels = async () => {
       <tr>
         <th data-sort="name">Name</th>
         <th data-sort="purpose">Description</th>
-        <th data-sort="updated">Created</th>
+        <th data-sort="created">Created</th>
       </tr>
     </thead>
     <tbody></tbody>
