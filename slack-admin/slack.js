@@ -26,7 +26,7 @@ const getAllSlackChannels = async () => {
   return [];
 };
 
-const  displayChannels = async () => {
+const displayChannels = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
   const all = await getAllSlackChannels();
   all.sort((a, b) => a.name.localeCompare(b.name));
