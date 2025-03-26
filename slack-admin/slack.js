@@ -62,9 +62,9 @@ const displayChannels = async () => {
     tbody.innerHTML = '';
     data.forEach((channel) => {
       const tr = document.createElement('tr');
-      const updatedDate = new Date(channel.updated);
-      const formattedDate = updatedDate.toISOString().split('T')[0];
-      const isActive = new Date() - updatedDate < 30 * 24 * 60 * 60 * 1000;
+      const lastActivityDate = new Date(channel.last_activity_timestamp);
+      const formattedDate = lastActivityDate.toISOString().split('T')[0];
+      const isActive = new Date() - lastActivityDate < 30 * 24 * 60 * 60 * 1000;
 
       tr.innerHTML = `
         <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
