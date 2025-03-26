@@ -31,12 +31,7 @@ const displayChannels = async () => {
   const all = await getAllSlackChannels();
   all.sort((a, b) => a.name.localeCompare(b.name));
 
-  const activeChannels = all.filter((channel) => {
-    const lastMessageDate = new Date(channel.last_activity_timestamp * 1000);
-    return new Date() - lastMessageDate < 30 * 24 * 60 * 60 * 1000; // Active within 30 days
-  }).length;
-
-  const summary = document.createElement('div');
+const summary = document.createElement('div');
   summary.classList.add('table-summary');
   summary.innerHTML = `
   <span>Total Channels: ${all.length}</span> |
@@ -63,16 +58,12 @@ const displayChannels = async () => {
     data.forEach((channel) => {
       const tr = document.createElement('tr');
       const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0];
-      // const lastMessageDate = new Date(channel.last_activity_timestamp * 1000);
-      // const formattedDate = lastMessageDate.toISOString().split('T')[0];
-      // const isActive = new Date() - lastMessageDate < 30 * 24 * 60 * 60 * 1000;
 
       tr.innerHTML = `
         <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
         <td>${channel.purpose.value}</td>
         <td>${createdDate}</td>
       `;
-             // <td style="color: ${isActive ? 'green' : 'red'};">${formattedDate}</td>
 
       tbody.appendChild(tr);
     });
