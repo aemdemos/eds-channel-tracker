@@ -32,8 +32,8 @@ const displayChannels = async () => {
   all.sort((a, b) => a.name.localeCompare(b.name));
 
   const activeChannels = all.filter((channel) => {
-    const lastActivityDate = new Date(channel.last_activity_timestamp * 1000);
-    return new Date() - lastActivityDate < 30 * 24 * 60 * 60 * 1000; // Active within 30 days
+    const createdDate = new Date(channel.created);
+    return new Date() - createdDate < 30 * 24 * 60 * 60 * 1000; // Active within 30 days
   }).length;
 
   const summary = document.createElement('div');
@@ -49,7 +49,7 @@ const displayChannels = async () => {
       <tr>
         <th data-sort="name">Name</th>
         <th data-sort="purpose">Description</th>
-        <th data-sort="last_activity_timestamp">Last Activity</th>
+        <th data-sort="updated">Created</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -62,9 +62,9 @@ const displayChannels = async () => {
     tbody.innerHTML = '';
     data.forEach((channel) => {
       const tr = document.createElement('tr');
-      const lastActivityDate = new Date(channel.last_activity_timestamp * 1000);
-      const formattedDate = lastActivityDate.toISOString().split('T')[0];
-      const isActive = new Date() - lastActivityDate < 30 * 24 * 60 * 60 * 1000;
+      const createdDate = new Date(channel.created * 1000);
+      const formattedDate = createdDate.toISOString().split('T')[0];
+      const isActive = new Date() - createdDate < 30 * 24 * 60 * 60 * 1000;
 
       tr.innerHTML = `
         <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
