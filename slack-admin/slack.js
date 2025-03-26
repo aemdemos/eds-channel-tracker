@@ -31,11 +31,11 @@ const displayChannels = async () => {
   const all = await getAllSlackChannels();
   all.sort((a, b) => a.name.localeCompare(b.name));
 
-const summary = document.createElement('div');
+  const summary = document.createElement('div');
   summary.classList.add('table-summary');
   summary.innerHTML = `
-  <span>Total Channels: ${all.length}</span> |
-  <span style="color: green;">Active Channels: </span>   
+    <span>Total Channels: ${all.length}</span> |
+    <span style="color: green;">Active Channels: </span>   
   `;
 
   const table = document.createElement('table');
