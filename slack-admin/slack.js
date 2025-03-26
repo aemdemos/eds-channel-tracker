@@ -40,7 +40,8 @@ const displayChannels = async () => {
   summary.classList.add('table-summary');
   summary.innerHTML = `
   <span>Total Channels: ${all.length}</span> |
-  <span style="color: green;">Active Channels: ${activeChannels}</span>
+//  <span style="color: green;">Active Channels: ${activeChannels}</span>
+  <span style="color: green;">Active Channels: </span>   
   `;
 
   const table = document.createElement('table');
@@ -62,15 +63,17 @@ const displayChannels = async () => {
     tbody.innerHTML = '';
     data.forEach((channel) => {
       const tr = document.createElement('tr');
-      const createdDate = new Date(channel.created * 1000);
-      const formattedDate = createdDate.toISOString().split('T')[0];
-      const isActive = new Date() - createdDate < 30 * 24 * 60 * 60 * 1000;
+      const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0];
+      // const lastMessageDate = new Date(channel.last_activity_timestamp * 1000);
+      // const formattedDate = lastMessageDate.toISOString().split('T')[0];
+      // const isActive = new Date() - lastMessageDate < 30 * 24 * 60 * 60 * 1000;
 
       tr.innerHTML = `
         <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
         <td>${channel.purpose.value}</td>
-        <td style="color: ${isActive ? 'green' : 'red'};">${formattedDate}</td>
+        <td>${createdDate}</td>
       `;
+             // <td style="color: ${isActive ? 'green' : 'red'};">${formattedDate}</td>
 
       tbody.appendChild(tr);
     });
