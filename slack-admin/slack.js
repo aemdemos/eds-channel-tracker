@@ -26,13 +26,13 @@ const getAllSlackChannels = async () => {
   return [];
 };
 
-const displayChannels = async () => {
+const  displayChannels = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
   const all = await getAllSlackChannels();
   all.sort((a, b) => a.name.localeCompare(b.name));
 
   const activeChannels = all.filter((channel) => {
-    const updatedDate = new Date(channel.updated);
+    const updatedDate = new Date(channel.last_activity_timestamp * 1000);
     return new Date() - updatedDate < 30 * 24 * 60 * 60 * 1000; // Active within 30 days
   }).length;
 
@@ -62,7 +62,7 @@ const displayChannels = async () => {
     tbody.innerHTML = '';
     data.forEach((channel) => {
       const tr = document.createElement('tr');
-      const lastActivityDate = new Date(channel.last_activity_timestamp);
+      const lastActivityDate = new Date(channel.last_activity_timestamp * 1000);
       const formattedDate = lastActivityDate.toISOString().split('T')[0];
       const isActive = new Date() - lastActivityDate < 30 * 24 * 60 * 60 * 1000;
 
