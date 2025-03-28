@@ -20,15 +20,39 @@ if (sk) {
 
 const getAllSlackChannels = async () => {
   try {
-    const response = await fetch(API_ENDPOINT);
+    const response = await fetch(API_ENDPOINT +"/slack/channels");
     if (response.ok) return await response.json();
-  } catch (e) { /* Handle error */ }
-  return [];
+  } catch (e) {
+    console.error('Error fetching channels:', e);
+    return [];
+  }
+};
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const getSlackChannelWithRateLimit = async (channelId, delayMs) => {
+  await delay(delayMs);
+  return getSlackChannel(channelId);
+};
+
+const getSlackChannel = async (channelId) => {
+  try {
+    const response = await fetch(
+      API_ENDPOINT + "/slack/lastmessage?channelId=${channelId}");
+    if (response.ok) return await response.json();
+  } catch (e) {
+    console.error(`Error fetching last message for channel ${channelId}:`, e);
+    return null;
+  }
 };
 
 const displayChannels = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
   const all = await getAllSlackChannels();
+  if (all.length === 0) {
+    slackChannelsContainer.innerHTML = '<span class="error">Failed to load channels. Please try again later.</span>';
+    return;
+  }
   all.sort((a, b) => a.name.localeCompare(b.name));
 
   const summary = document.createElement('div');
@@ -45,6 +69,7 @@ const displayChannels = async () => {
         <th data-sort="name">Name</th>
         <th data-sort="purpose">Description</th>
         <th data-sort="created">Created</th>
+        <th data-sort="message">Last Message</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -63,6 +88,7 @@ const displayChannels = async () => {
         <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
         <td>${channel.purpose.value}</td>
         <td>${createdDate}</td>
+         <td class="last-message" data-channel-id="${channel.id}">Loading...</td>
       `;
 
       tbody.appendChild(tr);
@@ -101,6 +127,18 @@ const displayChannels = async () => {
   slackChannelsContainer.innerHTML = '';
   slackChannelsContainer.appendChild(summary);
   slackChannelsContainer.appendChild(table);
+
+  // Fetch last message data for each channel in parallel
+  const delayMs = 100; // Adjust delay as needed to avoid rate limiting
+  const lastMessagePromises = all.map(channel => getSlackChannelWithRateLimit(channel.id, index * delayMs));
+  const lastMessageData = await Promise.all(lastMessagePromises);
+  lastMessageData.forEach((message, index) => {
+    const messageCell = tbody.querySelector(`.last-message[data-channel-id="${all[index].id}"]`);
+    if (messageCell) {
+      const messageDate = message ? new Date(message.ts * 1000).toISOString().split('T')[0] : 'No date';
+      messageCell.textContent = messageDate || 'Error loading message';
+    }
+  });
 };
 
 /**
