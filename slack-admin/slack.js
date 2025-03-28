@@ -33,7 +33,10 @@ const delay = (ms) => new Promise((resolve) => {
 const getSlackChannel = async (channelId) => {
   try {
     const response = await fetch(`${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
-    if (response.ok) return response.json();
+    if (response.ok) {
+      const text = await response.text();
+      return text ? JSON.parse(text) : null;
+    }
   } catch (e) { /* Handle error */ }
   return null;
 };
