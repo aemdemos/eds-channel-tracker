@@ -38,7 +38,7 @@ const getSlackChannel = async (channelId) => {
   return null;
 };
 
-const getSlackChannelWithRateLimit = async (channelId, delayMs) => {
+const getSlackChannelRateLimit = async (channelId, delayMs) => {
   await delay(delayMs);
   return getSlackChannel(channelId);
 };
@@ -127,10 +127,9 @@ const displayChannels = async () => {
 
   // Fetch last message data for each channel in parallel
   const delayMs = 100; // Adjust delay as needed to avoid rate limiting
-  const lastMessagePromises = all.map((channel, index) =>
-    getSlackChannelWithRateLimit(channel.id, index * delayMs)
-  );
-  const lastMessageData = await Promise.all(lastMessagePromises);
+  const lastMessage = all.map((channel, index) =>
+    getSlackChannelRateLimit(channel.id, index * delayMs));
+  const lastMessageData = await Promise.all(lastMessage);
   lastMessageData.forEach((message, index) => {
     const messageCell = tbody.querySelector(`.last-message[data-channel-id="${all[index].id}"]`);
     if (messageCell) {
