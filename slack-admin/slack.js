@@ -34,8 +34,14 @@ const getSlackChannel = async (channelId) => {
   try {
     const response = await fetch(`${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
     if (response.ok) return response.json();
-  } catch (e) { /* Handle error */ }
-  return null;
+  } catch (e) {
+    if (e.message.includes('429') && attempt < 5) { // Retry up to 5 times
+      const newDelay = delayMs * 2 ** attempt; // Exponential backoff
+      console.warn(`Rate limit hit, retrying in ${newDelay}ms...`);
+      return getSlackChannelRateLimit(channelId, newDelay, attempt + 1);
+    }
+    throw e;
+  }
 };
 
 const getSlackChannelRateLimit = async (channelId, delayMs) => {
@@ -130,12 +136,12 @@ const displayChannels = async () => {
   const msgs = all.map((channel, index) => getSlackChannelRateLimit(channel.id, index * delayMs));
   const lastMessageData = await Promise.all(msgs);
 
-  lastMessageData.forEach((message, index) => {
+  lastMessageData.messages.forEach((message, index) => {
     const messageCell = tbody.querySelector(`.last-message[data-channel-id="${all[index].id}"]`);
     console.log(`Channel ID: ${all[index].id}, Message:`, message);
 
     if (messageCell) {
-      const messageDate = message ? new Date(message.ts * 1000).toISOString().split('T')[0] : 'No date';
+      const messageDate = message && message.ts ? new Date(message.ts * 1000).toISOString().split('T')[0] : 'No date';
       messageCell.textContent = messageDate || 'Error loading message';
     } else {
       console.error(`Message cell not found for channel ID: ${all[index].id}`);
