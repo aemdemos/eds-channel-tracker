@@ -31,31 +31,35 @@ const getConversationWithRateLimit = async (channelId) => {
     try {
       const response = await fetch(
         `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
+      // Check for HTTP errors
+      if (!response.ok) {
+        if (response.status === 429) {
+          // Handle 429 Rate Limit Error
+          const retryAfter = response.headers.get('retry-after') || '1';
+          console.warn(
+            `Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
+          await new Promise(
+            resolve => setTimeout(resolve, parseInt(retryAfter, 10) * 1000));
+          continue;
+        } else {
+          const errorData = await response.json();
+          throw new Error(
+            `API Error (Status ${response.status}): ${errorData.error}`);
+        }
+      }
 
+      // Log rate limit headers
       console.log('Rate Limit Headers:', {
-        limit: response.headers['x-ratelimit-limit'],
-        remaining: response.headers['x-ratelimit-remaining'],
-        reset: new Date(parseInt(response.headers['x-ratelimit-reset'], 10) * 1000)
+        limit: response.headers.get('x-ratelimit-limit'),
+        remaining: response.headers.get('x-ratelimit-remaining'),
+        reset: new Date(
+          parseInt(response.headers.get('x-ratelimit-reset'), 10) * 1000)
       });
 
-      if (response.ok) return response.json();
+      return await response.json();
     } catch (error) {
-      if (error.response) {
-        const status = error.response.status;
-
-        // Handle 429 Rate Limit Error
-        if (status === 429) {
-          const retryAfter = parseInt(error.response.headers['retry-after'], 10) || 1;
-          console.warn(`Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
-          await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-        } else {
-          console.error(`API Error (Status ${status}):`, error.response.data.error || error.message);
-          return null;
-        }
-      } else {
-        console.error('Network or other error:', error.message);
-        return null;
-      }
+      console.error('Error:', error.message);
+      return null;
     }
   }
 };
@@ -73,7 +77,7 @@ const displayChannels = async () => {
   summary.classList.add('table-summary');
   summary.innerHTML = `
     <span>Total Channels: ${all.length}</span> |
-    <span style="color: green;">Active Channels: </span>   
+    <span style="color: green;">Active Channels: <span id="active-channels-count">0</span></span>
   `;
 
   const table = document.createElement('table');
@@ -145,18 +149,29 @@ const displayChannels = async () => {
   // Fetch last message data for each channel in parallel
   const msgs = all.map((channel) => getConversationWithRateLimit(channel.id));
   const lastMessageData = await Promise.all(msgs);
-
+  let activeChannelsCount = 0;
   lastMessageData.forEach((message, index) => {
     const messageCell = tbody.querySelector(`.last-message[data-channel-id="${all[index].id}"]`);
     console.log(`Channel ID: ${all[index].id}, Message:`, message);
 
     if (messageCell) {
       const messageDate = message && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000).toISOString().split('T')[0] : 'No date';
+      const messageTimestamp = message && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000) : null;
+      const currentDate = new Date();
+      const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
+      if (messageTimestamp && messageTimestamp > thirtyDaysAgo) {
+        messageCell.classList.add('recent-message');
+        activeChannelsCount++;
+      } else {
+        messageCell.classList.add('old-message');
+      }
+
       messageCell.textContent = messageDate || 'Error loading message';
     } else {
       console.error(`Message cell not found for channel ID: ${all[index].id}`);
     }
   });
+  document.getElementById('active-channels-count').textContent = activeChannelsCount.toString();
 };
 
 /**

@@ -59,3 +59,10 @@
 th[data-sort="created"] {
     width: 200px; /* Adjust the width as needed */
 }
+.recent-message {
+    color: green;
+}
+
+.old-message {
+    color: red;
+}
