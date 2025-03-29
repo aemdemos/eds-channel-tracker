@@ -136,12 +136,12 @@ const displayChannels = async () => {
   const msgs = all.map((channel, index) => getSlackChannelRateLimit(channel.id, index * delayMs));
   const lastMessageData = await Promise.all(msgs);
 
-  lastMessageData.messages.forEach((message, index) => {
+  lastMessageData.forEach((message, index) => {
     const messageCell = tbody.querySelector(`.last-message[data-channel-id="${all[index].id}"]`);
     console.log(`Channel ID: ${all[index].id}, Message:`, message);
 
     if (messageCell) {
-      const messageDate = message && message.ts ? new Date(message.ts * 1000).toISOString().split('T')[0] : 'No date';
+      const messageDate = message && message.messages.ts ? new Date(message.messages.ts * 1000).toISOString().split('T')[0] : 'No date';
       messageCell.textContent = messageDate || 'Error loading message';
     } else {
       console.error(`Message cell not found for channel ID: ${all[index].id}`);
