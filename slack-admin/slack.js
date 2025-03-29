@@ -26,27 +26,38 @@ const getAllSlackChannels = async () => {
   return [];
 };
 
-const delay = (ms) => new Promise((resolve) => {
-  setTimeout(resolve, ms);
-});
+const getConversationWithRateLimit = async (channelId) => {
+  while (true) {
+    try {
+      const response = await fetch(
+        `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
 
-const getSlackChannel = async (channelId) => {
-  try {
-    const response = await fetch(`${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
-    if (response.ok) return response.json();
-  } catch (e) {
-    if (e.message.includes('429') && attempt < 5) { // Retry up to 5 times
-      const newDelay = delayMs * 2 ** attempt; // Exponential backoff
-      console.warn(`Rate limit hit, retrying in ${newDelay}ms...`);
-      return getSlackChannelRateLimit(channelId, newDelay, attempt + 1);
+      console.log('Rate Limit Headers:', {
+        limit: response.headers['x-ratelimit-limit'],
+        remaining: response.headers['x-ratelimit-remaining'],
+        reset: new Date(parseInt(response.headers['x-ratelimit-reset'], 10) * 1000)
+      });
+
+      if (response.ok) return response.json();
+    } catch (error) {
+      if (error.response) {
+        const status = error.response.status;
+
+        // Handle 429 Rate Limit Error
+        if (status === 429) {
+          const retryAfter = parseInt(error.response.headers['retry-after'], 10) || 1;
+          console.warn(`Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
+          await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+        } else {
+          console.error(`API Error (Status ${status}):`, error.response.data.error || error.message);
+          return null;
+        }
+      } else {
+        console.error('Network or other error:', error.message);
+        return null;
+      }
     }
-    throw e;
   }
-};
-
-const getSlackChannelRateLimit = async (channelId, delayMs) => {
-  await delay(delayMs);
-  return getSlackChannel(channelId);
 };
 
 const displayChannels = async () => {
@@ -132,8 +143,7 @@ const displayChannels = async () => {
   slackChannelsContainer.appendChild(table);
 
   // Fetch last message data for each channel in parallel
-  const delayMs = 300; // Adjust delay as needed to avoid rate limiting
-  const msgs = all.map((channel, index) => getSlackChannelRateLimit(channel.id, index * delayMs));
+  const msgs = all.map((channel) => getConversationWithRateLimit(channel.id));
   const lastMessageData = await Promise.all(msgs);
 
   lastMessageData.forEach((message, index) => {
