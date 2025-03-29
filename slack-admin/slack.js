@@ -79,7 +79,7 @@ const displayChannels = async () => {
     tbody.innerHTML = '';
     data.forEach((channel) => {
       const tr = document.createElement('tr');
-      const createdDate = new Date(channel.created).toISOString().split('T')[0];
+      const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0];
 
       tr.innerHTML = `
         <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
@@ -126,7 +126,7 @@ const displayChannels = async () => {
   slackChannelsContainer.appendChild(table);
 
   // Fetch last message data for each channel in parallel
-  const delayMs = 1000; // Adjust delay as needed to avoid rate limiting
+  const delayMs = 2000; // Adjust delay as needed to avoid rate limiting
   const msgs = all.map((channel, index) => getSlackChannelRateLimit(channel.id, index * delayMs));
   const lastMessageData = await Promise.all(msgs);
 
