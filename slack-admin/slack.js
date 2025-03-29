@@ -49,12 +49,15 @@ const getConversationWithRateLimit = async (channelId) => {
       }
 
       // Log rate limit headers
+  /*
       console.log('Rate Limit Headers:', {
         limit: response.headers.get('x-ratelimit-limit'),
         remaining: response.headers.get('x-ratelimit-remaining'),
         reset: new Date(
           parseInt(response.headers.get('x-ratelimit-reset'), 10) * 1000)
       });
+
+   */
 
       return await response.json();
     } catch (error) {
@@ -77,7 +80,7 @@ const displayChannels = async () => {
   summary.classList.add('table-summary');
   summary.innerHTML = `
     <span>Total Channels: ${all.length}</span> |
-    <span style="color: green;">Active Channels: <span id="active-channels-count">0</span></span>
+    <span style="color: green;">Active Channels: <span id="active-channels-count"><span class="spinner"></span></span></span></span>
   `;
 
   const table = document.createElement('table');
@@ -106,7 +109,8 @@ const displayChannels = async () => {
         <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
         <td>${channel.purpose.value}</td>
         <td>${createdDate}</td>
-         <td class="last-message" data-channel-id="${channel.id}">Loading...</td>
+         <!--td class="last-message" data-channel-id="${channel.id}">Loading...</--td-->
+         <td class="last-message" data-channel-id="${channel.id}"><span class="spinner"></span></td>
       `;
 
       tbody.appendChild(tr);
@@ -116,12 +120,19 @@ const displayChannels = async () => {
   renderRows(all);
 
   const sortTable = (key) => {
+    const dataType = typeof all[0][key];
+
     const sortedData = [...all].sort((a, b) => {
-      if (key === 'name' || key === 'purpose') {
+      if (dataType === 'string') {
         return sortDirection === 'asc' ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
+      } else if (dataType === 'number') {
+        return sortDirection === 'asc' ? a[key] - b[key] : b[key] - a[key];
+      } else if (a[key] instanceof Date && b[key] instanceof Date) {
+        return sortDirection === 'asc' ? a[key] - b[key] : b[key] - a[key];
       }
-      return sortDirection === 'asc' ? new Date(a[key]) - new Date(b[key]) : new Date(b[key]) - new Date(a[key]);
+      return 0; // Default case if types do not match
     });
+
     renderRows(sortedData);
 
     // Add visual cue for sorted column
@@ -152,7 +163,7 @@ const displayChannels = async () => {
   let activeChannelsCount = 0;
   lastMessageData.forEach((message, index) => {
     const messageCell = tbody.querySelector(`.last-message[data-channel-id="${all[index].id}"]`);
-    console.log(`Channel ID: ${all[index].id}, Message:`, message);
+  //  console.log(`Channel ID: ${all[index].id}, Message:`, message);
 
     if (messageCell) {
       const messageDate = message && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000).toISOString().split('T')[0] : 'No date';
