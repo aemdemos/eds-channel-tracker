@@ -126,7 +126,7 @@ const displayChannels = async () => {
   slackChannelsContainer.appendChild(table);
 
   // Fetch last message data for each channel in parallel
-  const delayMs = 2000; // Adjust delay as needed to avoid rate limiting
+  const delayMs = 300; // Adjust delay as needed to avoid rate limiting
   const msgs = all.map((channel, index) => getSlackChannelRateLimit(channel.id, index * delayMs));
   const lastMessageData = await Promise.all(msgs);
 
