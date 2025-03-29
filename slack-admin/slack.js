@@ -90,7 +90,7 @@ const displayChannels = async () => {
         <th data-sort="name">Name</th>
         <th data-sort="purpose">Description</th>
         <th data-sort="created">Created</th>
-        <th data-sort="message">Last Message</th>
+        <th data-sort="message" class="sorting-disabled">Last Message</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -119,6 +119,11 @@ const displayChannels = async () => {
   renderRows(all);
 
   const sortTable = (key) => {
+    const th = table.querySelector(`th[data-sort="${key}"]`);
+    if (th.classList.contains('sorting-disabled')) {
+      return; // Prevent sorting if the column is disabled
+    }
+
     const dataType = typeof all[0][key];
 
     const sortedData = [...all].sort((a, b) => {
@@ -126,8 +131,8 @@ const displayChannels = async () => {
         return sortDirection === 'asc' ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
       } else if (dataType === 'number') {
         return sortDirection === 'asc' ? a[key] - b[key] : b[key] - a[key];
-      } else if (a[key] instanceof Date && b[key] instanceof Date) {
-        return sortDirection === 'asc' ? a[key] - b[key] : b[key] - a[key];
+      } else if (dataType === 'date') {
+        return sortDirection === 'asc' ? a.lastMessageTimestamp - b.lastMessageTimestamp : b.lastMessageTimestamp - a.lastMessageTimestamp;
       }
       return 0; // Default case if types do not match
     });
@@ -177,11 +182,17 @@ const displayChannels = async () => {
       }
 
       messageCell.textContent = messageDate || 'Error loading message';
+      // Store the last message data in the all array
+      all[index].lastMessageDate = messageDate;
+      all[index].lastMessageTimestamp = messageTimestamp;
     } else {
       console.error(`Message cell not found for channel ID: ${all[index].id}`);
     }
   });
   document.getElementById('active-channels-count').textContent = activeChannelsCount.toString();
+
+  // Enable sorting for the "Last Message" column after data is loaded
+  table.querySelector('th[data-sort="message"]').classList.remove('sorting-disabled');
 };
 
 /**
