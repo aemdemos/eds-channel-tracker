@@ -80,7 +80,7 @@ const displayChannels = async () => {
   summary.classList.add('table-summary');
   summary.innerHTML = `
     <span>Total Channels: ${all.length}</span> |
-    <span style="color: green;">Active Channels: <span id="active-channels-count"><span class="spinner"></span></span></span></span>
+    <span style="color: green;">Active Channels: <span id="active-channels-count"></span></span></span>
   `;
 
   const table = document.createElement('table');
@@ -109,8 +109,7 @@ const displayChannels = async () => {
         <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
         <td>${channel.purpose.value}</td>
         <td>${createdDate}</td>
-         <!--td class="last-message" data-channel-id="${channel.id}">Loading...</--td-->
-         <td class="last-message" data-channel-id="${channel.id}"><span class="spinner"></span></td>
+         <td class="last-message" data-channel-id="${channel.id}">Loading...</td>
       `;
 
       tbody.appendChild(tr);
