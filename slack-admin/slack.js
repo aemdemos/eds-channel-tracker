@@ -32,8 +32,7 @@ const getConversationWithRateLimit = async (channelId) => {
       try {
         const response = await fetch(
           `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
-
-        return response.json();
+        if (response.ok) return response.json();
       } catch (error) {
         if (error.response) {
           const status = error.response.status;
