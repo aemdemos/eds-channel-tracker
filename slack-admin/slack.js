@@ -27,7 +27,8 @@ const getAllSlackChannels = async () => {
 };
 
 const getConversationWithRateLimit = async (channelId) => {
-  while (true) {
+  let retry = true;
+  while (retry) {
     try {
       const response = await fetch(
         `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
@@ -35,20 +36,18 @@ const getConversationWithRateLimit = async (channelId) => {
       if (!response.ok) {
         if (response.status === 429) {
           // Handle 429 Rate Limit Error
-          const retryAfter = response.headers.get('retry-after') || '1';
-          console.warn(
-            `Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
+          const retryAfter = response.headers.get('Retry-After') || '1';
+          console.warn(`Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
           await new Promise(
             resolve => setTimeout(resolve, parseInt(retryAfter, 10) * 1000));
-          continue;
         } else {
           const errorData = await response.json();
-          throw new Error(
-            `API Error (Status ${response.status}): ${errorData.error}`);
+          throw new Error(`API Error (Status ${response.status}): ${errorData.error}`);
         }
+      } else {
+        retry = false;
+        return await response.json();
       }
-
-      return await response.json();
     } catch (error) {
       console.error('Error:', error.message);
       return null;
