@@ -44,16 +44,15 @@ const getConversationWithRateLimit = async (channelId) => {
               10) || 1;
             console.warn(
               `Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
-            await new Promise(
-              (resolve) => setTimeout(resolve, retryAfter * 1000));
+            await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
           } else {
-            console.error(`API Error (Status ${status}):`,
+              console.error(`API Error (Status ${status}):`,
               error.response.data.error || error.message);
-            return null;
+              return null;
           }
         } else {
-          console.error('Network or other error:', error.message);
-          return null;
+            console.error('Network or other error:', error.message);
+            return null;
         }
       }
     }
@@ -140,7 +139,7 @@ const displayChannels = async () => {
           const dateA = new Date(a.created * 1000);
           const dateB = new Date(b.created * 1000);
           return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
-      } else if (dataType === 'date') {
+      } else if (key === 'message') {
         return sortDirection === 'asc' ? a.lastMessageTimestamp - b.lastMessageTimestamp : b.lastMessageTimestamp - a.lastMessageTimestamp;
       }
       return 0; // Default case if types do not match
