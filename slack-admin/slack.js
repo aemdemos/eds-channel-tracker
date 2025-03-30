@@ -27,33 +27,38 @@ const getAllSlackChannels = async () => {
 };
 
 const getConversationWithRateLimit = async (channelId) => {
-  while (true) {
-    try {
-      const response = await fetch(
-        `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
-      // Check for HTTP errors
+  const fetchWithRetry = async () => {
+    while (true) {
+      try {
+        const response = await fetch(
+          `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
 
-      return response.json();
-    } catch (error) {
-      if (error.response) {
-        const status = error.response.status;
+        return response.json();
+      } catch (error) {
+        if (error.response) {
+          const status = error.response.status;
 
-        // Handle 429 Rate Limit Error
-        if (status === 429) {
-          const retryAfter = parseInt(error.response.headers['Retry-After'], 10) || 1;
-          console.warn(
-            `Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
-          await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
+          // Handle 429 Rate Limit Error
+          if (status === 429) {
+            const retryAfter = parseInt(error.response.headers['Retry-After'],
+              10) || 1;
+            console.warn(
+              `Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
+            await new Promise(
+              (resolve) => setTimeout(resolve, retryAfter * 1000));
+          } else {
+            console.error(`API Error (Status ${status}):`,
+              error.response.data.error || error.message);
+            return null;
+          }
         } else {
-          console.error(`API Error (Status ${status}):`, error.response.data.error || error.message);
+          console.error('Network or other error:', error.message);
           return null;
         }
-      } else {
-        console.error('Network or other error:', error.message);
-        return null;
       }
     }
-  }
+  };
+  return fetchWithRetry();
 };
 
 const fetchAllConversations = async (channels) => {
@@ -153,9 +158,9 @@ const displayChannels = async () => {
     sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
   };
 
-  table.querySelectorAll('th').forEach((th) => {
+  table.querySelectorAll('th').forEach((header) => {
     th.addEventListener('click', () => {
-      const sortKey = th.getAttribute('data-sort');
+      const sortKey = header.getAttribute('data-sort');
       sortTable(sortKey);
     });
   });
@@ -171,13 +176,15 @@ const displayChannels = async () => {
     const messageCell = tbody.querySelector(`.last-message[data-channel-id="${all[index].id}"]`);
 
     if (messageCell) {
-      const messageDate = message && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000).toISOString().split('T')[0] : 'No date';
+      const messageDate = message && message.messages[0] && message.messages[0].ts
+        ? new Date(message.messages[0].ts * 1000).toISOString().split('T')[0]
+        : 'No date';
       const messageTimestamp = message && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000) : null;
       const currentDate = new Date();
       const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
       if (messageTimestamp && messageTimestamp > thirtyDaysAgo) {
         messageCell.classList.add('recent-message');
-        activeChannelsCount++;
+        activeChannelsCount += 1;
       } else {
         messageCell.classList.add('old-message');
       }
