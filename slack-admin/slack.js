@@ -27,33 +27,31 @@ const getAllSlackChannels = async () => {
 };
 
 const getConversationWithRateLimit = async (channelId) => {
-  const maxAttempts = 5;
-  let attempts = 0;
-  let response;
-
-  while (attempts < maxAttempts) {
-    response = await fetch(
-      `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
-
-    if (!response.ok) {
-      // Rate limit status code
-      if (response.status === 429) {
-        const retryAfter = response.headers.get('Retry-After') || '1';
-        console.warn(
-          `Rate limit exceeded. Retrying after ${retryAfter} seconds...`,
-        );
-        new Promise((resolve) =>
-          setTimeout(resolve, parseInt(retryAfter, 10) * 1000),
-        );
-        attempts += 1;
-      } else {
-        console.error(
-          `Failed to fetch last message for channel ${channelId}: ${response.statusText}`,
-        );
-        return null;
+  while (true) {
+    try {
+      const response = await fetch(
+        `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
+      // Check for HTTP errors
+      if (!response.ok) {
+        if (response.status === 429) {
+          // Handle 429 Rate Limit Error
+          const retryAfter = response.headers.get('retry-after') || '1';
+          console.warn(
+            `Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
+          await new Promise(
+            resolve => setTimeout(resolve, parseInt(retryAfter, 10) * 1000));
+          continue;
+        } else {
+          const errorData = await response.json();
+          throw new Error(
+            `API Error (Status ${response.status}): ${errorData.error}`);
+        }
       }
-    } else {
-      return response.json();
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error:', error.message);
+      return null;
     }
   }
 };
@@ -69,7 +67,6 @@ const fetchAllConversations = async (channels) => {
   return Promise.all(promises);
 };
 
-
 const displayChannels = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
   const all = await getAllSlackChannels();
@@ -77,6 +74,7 @@ const displayChannels = async () => {
     slackChannelsContainer.innerHTML = '<span class="error">Failed to load channels. Please try again later.</span>';
     return;
   }
+
   all.sort((a, b) => a.name.localeCompare(b.name));
 
   const summary = document.createElement('div');
@@ -169,25 +167,13 @@ const displayChannels = async () => {
   const lastMessageData = await fetchAllConversations(all);
   let activeChannelsCount = 0;
   lastMessageData.forEach((message, index) => {
-    if (!message) {
-      console.error(
-        `Failed to fetch last message for channel ID: ${all[index].id}`);
-      return;
-    }
-    const messageCell = tbody.querySelector(
-      `.last-message[data-channel-id="${all[index].id}"]`);
+    const messageCell = tbody.querySelector(`.last-message[data-channel-id="${all[index].id}"]`);
 
     if (messageCell) {
-      const messageDate = message && message.messages[0]
-      && message.messages[0].ts ? new Date(
-          message.messages[0].ts * 1000).toISOString().split('T')[0]
-        : 'No date';
-      const messageTimestamp = message && message.messages[0]
-      && message.messages[0].ts ? new Date(message.messages[0].ts * 1000)
-        : null;
+      const messageDate = message && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000).toISOString().split('T')[0] : 'No date';
+      const messageTimestamp = message && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000) : null;
       const currentDate = new Date();
-      const thirtyDaysAgo = new Date(
-        currentDate.setDate(currentDate.getDate() - 30));
+      const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
       if (messageTimestamp && messageTimestamp > thirtyDaysAgo) {
         messageCell.classList.add('recent-message');
         activeChannelsCount++;
@@ -200,17 +186,13 @@ const displayChannels = async () => {
       all[index].lastMessageDate = messageDate;
       all[index].lastMessageTimestamp = messageTimestamp;
     } else {
-      console.error(
-        `Message cell not found for channel ID: ${all[index].id}`);
+      console.error(`Message cell not found for channel ID: ${all[index].id}`);
     }
   });
-
-  document.getElementById(
-    'active-channels-count').textContent = activeChannelsCount.toString();
+  document.getElementById('active-channels-count').textContent = activeChannelsCount.toString();
 
   // Enable sorting for the "Last Message" column after data is loaded
-  table.querySelector('th[data-sort="message"]').classList.remove(
-    'sorting-disabled');
+  table.querySelector('th[data-sort="message"]').classList.remove('sorting-disabled');
 };
 
 /**
