@@ -176,7 +176,7 @@ const displayChannels = async () => {
     const messageCell = tbody.querySelector(`.last-message[data-channel-id="${all[index].id}"]`);
 
     if (messageCell) {
-      const messageDate = message && message.messages[0] && message.messages[0].ts
+      const messageDate = message && message.messages && message.messages[0] && message.messages[0].ts
         ? new Date(message.messages[0].ts * 1000).toISOString().split('T')[0]
         : 'No date';
       const messageTimestamp = message && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000) : null;
