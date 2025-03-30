@@ -180,7 +180,7 @@ const displayChannels = async () => {
       const messageDate = message && message.messages && message.messages[0] && message.messages[0].ts
         ? new Date(message.messages[0].ts * 1000).toISOString().split('T')[0]
         : 'No date';
-      const messageTimestamp = message && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000) : null;
+      const messageTimestamp = message && message.messages && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000) : null;
       const currentDate = new Date();
       const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
       if (messageTimestamp && messageTimestamp > thirtyDaysAgo) {
