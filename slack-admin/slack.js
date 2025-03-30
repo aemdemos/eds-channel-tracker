@@ -48,17 +48,6 @@ const getConversationWithRateLimit = async (channelId) => {
         }
       }
 
-      // Log rate limit headers
-  /*
-      console.log('Rate Limit Headers:', {
-        limit: response.headers.get('x-ratelimit-limit'),
-        remaining: response.headers.get('x-ratelimit-remaining'),
-        reset: new Date(
-          parseInt(response.headers.get('x-ratelimit-reset'), 10) * 1000)
-      });
-
-   */
-
       return await response.json();
     } catch (error) {
       console.error('Error:', error.message);
