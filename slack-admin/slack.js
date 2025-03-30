@@ -43,18 +43,17 @@ const getConversationWithRateLimit = async (channelId) => {
           const retryAfter = parseInt(error.response.headers['Retry-After'], 10) || 1;
           console.warn(
             `Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
-          await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+          await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
         } else {
-          console.error(`API Error (Status ${status}):`,
-            error.response.data.error || error.message);
+          console.error(`API Error (Status ${status}):`, error.response.data.error || error.message);
           return null;
         }
-    } else {
-      console.error('Network or other error:', error.message);
-      return null;
+      } else {
+        console.error('Network or other error:', error.message);
+        return null;
+      }
     }
   }
-}
 };
 
 const fetchAllConversations = async (channels) => {
