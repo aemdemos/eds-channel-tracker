@@ -110,12 +110,16 @@ const displayChannels = async () => {
       const tr = document.createElement('tr');
       const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0];
       const lastMessageDate = channel.lastMessageDate || 'Loading...';
+      const messageTimestamp = channel.lastMessageTimestamp;
+      const currentDate = new Date();
+      const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
+      const messageClass = messageTimestamp && messageTimestamp > thirtyDaysAgo ? 'recent-message' : 'old-message';
 
       tr.innerHTML = `
         <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
         <td>${channel.purpose.value}</td>
         <td>${createdDate}</td>
-         <td class="last-message" data-channel-id="${channel.id}">${lastMessageDate}</td>
+         <td class="last-message ${messageClass}" data-channel-id="${channel.id}">${lastMessageDate}</td>
       `;
 
       tbody.appendChild(tr);
