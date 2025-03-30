@@ -133,9 +133,7 @@ const displayChannels = async () => {
       if (dataType === 'string') {
         return sortDirection === 'asc' ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
       } else if (key === 'created') {
-          const dateA = new Date(a.created * 1000);
-          const dateB = new Date(b.created * 1000);
-          return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+        return sortDirection === 'asc' ? a.created - b.created : b.created - a.created;
       } else if (key === 'message') {
         return sortDirection === 'asc' ? a.lastMessageTimestamp - b.lastMessageTimestamp : b.lastMessageTimestamp - a.lastMessageTimestamp;
       }
@@ -170,6 +168,8 @@ const displayChannels = async () => {
   // Fetch last message data only if not already present
   const lastMessageData = await fetchAllConversations(all);
   let activeChannelsCount = 0;
+  const thirtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 30)); // Calculate once
+
   lastMessageData.forEach((message, index) => {
     const messageCell = tbody.querySelector(`.last-message[data-channel-id="${all[index].id}"]`);
 
@@ -178,8 +178,6 @@ const displayChannels = async () => {
         ? new Date(message.messages[0].ts * 1000).toISOString().split('T')[0]
         : 'No date';
       const messageTimestamp = message && message.messages && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000) : null;
-      const currentDate = new Date();
-      const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
       if (messageTimestamp && messageTimestamp > thirtyDaysAgo) {
         messageCell.classList.add('recent-message');
         activeChannelsCount += 1;
