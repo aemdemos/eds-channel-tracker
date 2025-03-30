@@ -40,20 +40,20 @@ const getConversationWithRateLimit = async (channelId) => {
       if (response.status === 429) {
         const retryAfter = response.headers.get('Retry-After') || '1';
         console.warn(
-          `Rate limit exceeded. Retrying after ${retryAfter} seconds...`
+          `Rate limit exceeded. Retrying after ${retryAfter} seconds...`,
         );
-        await new Promise((resolve) =>
-          setTimeout(resolve, parseInt(retryAfter, 10) * 1000)
+        new Promise((resolve) =>
+          setTimeout(resolve, parseInt(retryAfter, 10) * 1000),
         );
         attempts += 1;
       } else {
         console.error(
-          `Failed to fetch last message for channel ${channelId}: ${response.statusText}`
+          `Failed to fetch last message for channel ${channelId}: ${response.statusText}`,
         );
         return null;
       }
     } else {
-      return await response.json();
+      return response.json();
     }
   }
 };
