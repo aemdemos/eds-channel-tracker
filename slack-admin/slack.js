@@ -136,8 +136,10 @@ const displayChannels = async () => {
     const sortedData = [...all].sort((a, b) => {
       if (dataType === 'string') {
         return sortDirection === 'asc' ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
-      } else if (dataType === 'number') {
-        return sortDirection === 'asc' ? a[key] - b[key] : b[key] - a[key];
+      } else if (key === 'created') {
+          const dateA = new Date(a.created * 1000);
+          const dateB = new Date(b.created * 1000);
+          return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
       } else if (dataType === 'date') {
         return sortDirection === 'asc' ? a.lastMessageTimestamp - b.lastMessageTimestamp : b.lastMessageTimestamp - a.lastMessageTimestamp;
       }
