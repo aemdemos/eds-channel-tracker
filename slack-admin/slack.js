@@ -159,7 +159,7 @@ const displayChannels = async () => {
   };
 
   table.querySelectorAll('th').forEach((header) => {
-    th.addEventListener('click', () => {
+    header.addEventListener('click', () => {
       const sortKey = header.getAttribute('data-sort');
       sortTable(sortKey);
     });
