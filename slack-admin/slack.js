@@ -29,9 +29,10 @@ const getAllSlackChannels = async () => {
 const getConversationWithRateLimit = async (channelId) => {
   const maxAttempts = 5;
   let attempts = 0;
+  let response;
 
   while (attempts < maxAttempts) {
-    const response = await fetch(
+    response = await fetch(
       `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
 
     if (!response.ok) {
@@ -39,13 +40,16 @@ const getConversationWithRateLimit = async (channelId) => {
       if (response.status === 429) {
         const retryAfter = response.headers.get('Retry-After') || '1';
         console.warn(
-          `Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
-        await new Promise(
-          resolve => setTimeout(resolve, parseInt(retryAfter, 10) * 1000));
-        attempts++;
+          `Rate limit exceeded. Retrying after ${retryAfter} seconds...`
+        );
+        await new Promise((resolve) =>
+          setTimeout(resolve, parseInt(retryAfter, 10) * 1000)
+        );
+        attempts += 1;
       } else {
         console.error(
-          `Failed to fetch last message for channel ${channelId}: ${response.statusText}`);
+          `Failed to fetch last message for channel ${channelId}: ${response.statusText}`
+        );
         return null;
       }
     } else {
@@ -53,6 +57,18 @@ const getConversationWithRateLimit = async (channelId) => {
     }
   }
 };
+
+const fetchAllConversations = async (channels) => {
+  const promises = channels.map((channel) => {
+    if (!channel.lastMessageTimestamp) {
+      return getConversationWithRateLimit(channel.id);
+    }
+    return Promise.resolve(null);
+  });
+
+  return Promise.all(promises);
+};
+
 
 const displayChannels = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
@@ -150,13 +166,7 @@ const displayChannels = async () => {
   slackChannelsContainer.appendChild(table);
 
   // Fetch last message data only if not already present
-  const msgs = all.map((channel) => {
-    if (!channel.lastMessageTimestamp) {
-      return getConversationWithRateLimit(channel.id);
-    }
-    return Promise.resolve(null);
-  });
-  const lastMessageData = await Promise.all(msgs);
+  const lastMessageData = await fetchAllConversations(all);
   let activeChannelsCount = 0;
   lastMessageData.forEach((message, index) => {
     if (!message) {
