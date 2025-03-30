@@ -27,30 +27,29 @@ const getAllSlackChannels = async () => {
 };
 
 const getConversationWithRateLimit = async (channelId) => {
-  let retry = true;
-  while (retry) {
-    try {
-      const response = await fetch(
-        `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
-      // Check for HTTP errors
-      if (!response.ok) {
-        if (response.status === 429) {
-          // Handle 429 Rate Limit Error
-          const retryAfter = response.headers.get('Retry-After') || '1';
-          console.warn(`Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
-          await new Promise(
-            resolve => setTimeout(resolve, parseInt(retryAfter, 10) * 1000));
-        } else {
-          const errorData = await response.json();
-          throw new Error(`API Error (Status ${response.status}): ${errorData.error}`);
-        }
+  const maxAttempts = 5;
+  let attempts = 0;
+
+  while (attempts < maxAttempts) {
+    const response = await fetch(
+      `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
+
+    if (!response.ok) {
+      // Rate limit status code
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After') || '1';
+        console.warn(
+          `Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
+        await new Promise(
+          resolve => setTimeout(resolve, parseInt(retryAfter, 10) * 1000));
+        attempts++;
       } else {
-        retry = false;
-        return await response.json();
+        console.error(
+          `Failed to fetch last message for channel ${channelId}: ${response.statusText}`);
+        return null;
       }
-    } catch (error) {
-      console.error('Error:', error.message);
-      return null;
+    } else {
+      return await response.json();
     }
   }
 };
@@ -76,7 +75,7 @@ const displayChannels = async () => {
     <thead>
       <tr>
         <th data-sort="name">Name</th>
-        <th data-sort="purpose">Description</th>
+        <th data-sort="purpose" class="sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
         <th data-sort="message" class="sorting-disabled">Last Message</th>
       </tr>
@@ -130,10 +129,11 @@ const displayChannels = async () => {
     // Add visual cue for sorted column
     table.querySelectorAll('th').forEach((th) => {
       th.classList.remove('sorted-asc', 'sorted-desc');
-      if (th.getAttribute('data-sort') === key) {
+      if (th.getAttribute('data-sort') === key && !th.classList.contains('sorting-disabled')) {
         th.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
       }
     });
+
     // Toggle sort direction
     sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
   };
@@ -149,19 +149,35 @@ const displayChannels = async () => {
   slackChannelsContainer.appendChild(summary);
   slackChannelsContainer.appendChild(table);
 
-  // Fetch last message data for each channel in parallel
-  const msgs = all.map((channel) => getConversationWithRateLimit(channel.id));
+  // Fetch last message data only if not already present
+  const msgs = all.map((channel) => {
+    if (!channel.lastMessageTimestamp) {
+      return getConversationWithRateLimit(channel.id);
+    }
+    return Promise.resolve(null);
+  });
   const lastMessageData = await Promise.all(msgs);
   let activeChannelsCount = 0;
   lastMessageData.forEach((message, index) => {
-    const messageCell = tbody.querySelector(`.last-message[data-channel-id="${all[index].id}"]`);
-  //  console.log(`Channel ID: ${all[index].id}, Message:`, message);
+    if (!message) {
+      console.error(
+        `Failed to fetch last message for channel ID: ${all[index].id}`);
+      return;
+    }
+    const messageCell = tbody.querySelector(
+      `.last-message[data-channel-id="${all[index].id}"]`);
 
     if (messageCell) {
-      const messageDate = message && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000).toISOString().split('T')[0] : 'No date';
-      const messageTimestamp = message && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000) : null;
+      const messageDate = message && message.messages[0]
+      && message.messages[0].ts ? new Date(
+          message.messages[0].ts * 1000).toISOString().split('T')[0]
+        : 'No date';
+      const messageTimestamp = message && message.messages[0]
+      && message.messages[0].ts ? new Date(message.messages[0].ts * 1000)
+        : null;
       const currentDate = new Date();
-      const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
+      const thirtyDaysAgo = new Date(
+        currentDate.setDate(currentDate.getDate() - 30));
       if (messageTimestamp && messageTimestamp > thirtyDaysAgo) {
         messageCell.classList.add('recent-message');
         activeChannelsCount++;
@@ -174,13 +190,17 @@ const displayChannels = async () => {
       all[index].lastMessageDate = messageDate;
       all[index].lastMessageTimestamp = messageTimestamp;
     } else {
-      console.error(`Message cell not found for channel ID: ${all[index].id}`);
+      console.error(
+        `Message cell not found for channel ID: ${all[index].id}`);
     }
   });
-  document.getElementById('active-channels-count').textContent = activeChannelsCount.toString();
+
+  document.getElementById(
+    'active-channels-count').textContent = activeChannelsCount.toString();
 
   // Enable sorting for the "Last Message" column after data is loaded
-  table.querySelector('th[data-sort="message"]').classList.remove('sorting-disabled');
+  table.querySelector('th[data-sort="message"]').classList.remove(
+    'sorting-disabled');
 };
 
 /**
