@@ -37,10 +37,8 @@ const getConversationWithRateLimit = async (channelId) => {
       if (!response.ok) {
         if (response.status === 429) {
           const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
-          console.warn(`Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
           await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
         } else {
-          console.error(`API Error (Status ${response.status}):`, response.statusText);
           return null;
         }
       } else {
@@ -51,14 +49,14 @@ const getConversationWithRateLimit = async (channelId) => {
   return fetchWithRetry();
 };
 
-const fetchAllConversations = async (channels) =>
-  channels.map(async (channel) => {
+const fetchAllConversations = async (channels) => channels.map(async (channel) => {
     if (!channel.lastMessageTimestamp) {
       const message = await getConversationWithRateLimit(channel.id);
       return { channelId: channel.id, message };
     }
     return { channelId: channel.id, message: null };
-  });
+    }
+);
 
 const displayChannels = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
@@ -98,7 +96,7 @@ const displayChannels = async () => {
     data.forEach((channel) => {
       const tr = document.createElement('tr');
       const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0];
-      const lastMessageDate = channel.lastMessageDate ||'<div class="spinner"></div>';
+      const lastMessageDate = channel.lastMessageDate || '<div class="spinner"></div>';
       const messageTimestamp = channel.lastMessageTimestamp;
       const currentDate = new Date();
       const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
@@ -118,8 +116,8 @@ const displayChannels = async () => {
   renderRows(all);
 
   const sortTable = (key) => {
-    const th = table.querySelector(`th[data-sort="${key}"]`);
-    if (th.classList.contains('sorting-disabled')) {
+    const header = table.querySelector(`th[data-sort="${key}"]`);
+    if (header.classList.contains('sorting-disabled')) {
       return; // Prevent sorting if the column is disabled
     }
 
@@ -128,9 +126,11 @@ const displayChannels = async () => {
     const sortedData = [...all].sort((a, b) => {
       if (dataType === 'string') {
         return sortDirection === 'asc' ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
-      } else if (key === 'created') {
+      }
+      if (key === 'created') {
         return sortDirection === 'asc' ? a.created - b.created : b.created - a.created;
-      } else if (key === 'message') {
+      }
+      if (key === 'message') {
         return sortDirection === 'asc' ? a.lastMessageTimestamp - b.lastMessageTimestamp : b.lastMessageTimestamp - a.lastMessageTimestamp;
       }
       return 0; // Default case if types do not match
@@ -165,8 +165,7 @@ const displayChannels = async () => {
   let activeChannelsCount = 0;
   const thirtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 30)); // Calculate once
 
-  await Promise.all(
-    all.map(async (channel) => {
+  await Promise.all(all.map(async (channel) => {
     const { channelId, message } = await fetchAllConversations(channel);
     const messageCell = tbody.querySelector(`.last-message[data-channel-id="${channelId}"]`);
 
@@ -193,8 +192,6 @@ const displayChannels = async () => {
         channel.lastMessageDate = messageDate;
         channel.lastMessageTimestamp = messageTimestamp;
       }
-    } else {
-      console.debug(`Message cell not found for channel ID: ${channelId}`);
     }
   })
 );
