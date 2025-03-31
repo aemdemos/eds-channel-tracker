@@ -162,12 +162,12 @@ const displayChannels = async () => {
   slackChannelsContainer.appendChild(table);
 
   // Fetch last message data only if not already present
-  const lastMessagePromises = await fetchAllConversations(all);
   let activeChannelsCount = 0;
   const thirtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 30)); // Calculate once
 
-  for (const promise of lastMessagePromises) {
-    const { channelId, message } = await promise;
+  await Promise.all(
+    all.map(async (channel) => {
+    const { channelId, message } = await fetchAllConversations(channel);
     const messageCell = tbody.querySelector(`.last-message[data-channel-id="${channelId}"]`);
 
     if (messageCell) {
@@ -196,7 +196,8 @@ const displayChannels = async () => {
     } else {
       console.debug(`Message cell not found for channel ID: ${channelId}`);
     }
-  }
+  })
+);
 
   document.getElementById('active-channels-count').textContent = activeChannelsCount.toString();
 
