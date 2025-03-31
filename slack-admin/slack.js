@@ -32,7 +32,8 @@ const getConversationWithRateLimit = async (channelId) => {
 
     while (true) {
       response = await fetch(
-        `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
+        `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`
+      );
       if (!response.ok) {
         if (response.status === 429) {
           const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
@@ -50,15 +51,14 @@ const getConversationWithRateLimit = async (channelId) => {
   return fetchWithRetry();
 };
 
-const fetchAllConversations = async (channels) => {
-  return channels.map(async (channel) => {
+const fetchAllConversations = async (channels) =>
+  channels.map(async (channel) => {
     if (!channel.lastMessageTimestamp) {
       const message = await getConversationWithRateLimit(channel.id);
-      return {channelId: channel.id, message};
+      return { channelId: channel.id, message };
     }
-    return {channelId: channel.id, message: null};
+    return { channelId: channel.id, message: null };
   });
-};
 
 const displayChannels = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
@@ -92,20 +92,6 @@ const displayChannels = async () => {
 
   table.classList.add('styled-table');
   const tbody = table.querySelector('tbody');
-
-  function isLessThan30DaysOld(timestamp) {
-    // Convert timestamp to date string (YYYY-MM-DD)
-    const lastMessageDate = new Date(timestamp * 1000).toISOString().split('T')[0];
-    // Get today's date (YYYY-MM-DD)
-    const currentDate = new Date().toISOString().split('T')[0];
-
-    // Calculate the difference in milliseconds
-    const diffInMs = new Date(currentDate) - new Date(lastMessageDate);
-    // Convert milliseconds to days
-    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-
-    return diffInDays < 30;
-  }
 
   const renderRows = (data) => {
     tbody.innerHTML = '';
