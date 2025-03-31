@@ -35,12 +35,9 @@ const getConversationWithRateLimit = async (channelId) => {
         `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
       if (!response.ok) {
         if (response.status === 429) {
-          const retryAfter = parseInt(response.headers.get('Retry-After'),
-            10) || 1;
-          console.warn(
-            `Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
-          await new Promise(
-            (resolve) => setTimeout(resolve, retryAfter * 1000));
+          const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
+          console.warn(`Rate limit exceeded. Retrying after ${retryAfter} seconds...`);
+          await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
         } else {
           console.error(`API Error (Status ${response.status}):`, response.statusText);
           return null;
@@ -178,7 +175,10 @@ const displayChannels = async () => {
         ? new Date(message.messages[0].ts * 1000).toISOString().split('T')[0]
         : 'No date';
       const messageTimestamp = message && message.messages && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000) : null;
-      if (messageTimestamp && messageTimestamp > thirtyDaysAgo) {
+
+      if (messageMessageDate === 'Loading...') {
+        messageCell.classList.remove('recent-message', 'old-message');
+      } else if (messageTimestamp && messageTimestamp > thirtyDaysAgo) {
         messageCell.classList.add('recent-message');
         activeChannelsCount += 1;
       } else {
@@ -190,7 +190,7 @@ const displayChannels = async () => {
       all[index].lastMessageDate = messageDate;
       all[index].lastMessageTimestamp = messageTimestamp;
     } else {
-      console.error(`Message cell not found for channel ID: ${all[index].id}`);
+      console.debug(`Message cell not found for channel ID: ${all[index].id}`);
     }
   });
   document.getElementById('active-channels-count').textContent = activeChannelsCount.toString();
