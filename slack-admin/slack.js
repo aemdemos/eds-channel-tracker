@@ -93,6 +93,20 @@ const displayChannels = async () => {
   table.classList.add('styled-table');
   const tbody = table.querySelector('tbody');
 
+  function isLessThan30DaysOld(timestamp) {
+    // Convert timestamp to date string (YYYY-MM-DD)
+    const lastMessageDate = new Date(timestamp * 1000).toISOString().split('T')[0];
+    // Get today's date (YYYY-MM-DD)
+    const currentDate = new Date().toISOString().split('T')[0];
+
+    // Calculate the difference in milliseconds
+    const diffInMs = new Date(currentDate) - new Date(lastMessageDate);
+    // Convert milliseconds to days
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+
+    return diffInDays < 30;
+  }
+
   const renderRows = (data) => {
     tbody.innerHTML = '';
     data.forEach((channel) => {
@@ -179,6 +193,7 @@ const displayChannels = async () => {
       if (messageDate === '<div class="spinner"></div>') {
         messageCell.classList.remove('recent-message', 'old-message');
       } else if (messageTimestamp && messageTimestamp > thirtyDaysAgo) {
+        messageCell.classList.remove('old-message');
         messageCell.classList.add('recent-message');
         activeChannelsCount += 1;
       } else {
