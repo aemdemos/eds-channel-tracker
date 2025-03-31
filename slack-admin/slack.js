@@ -29,19 +29,24 @@ const getAllSlackChannels = async () => {
 const getConversationWithRateLimit = async (channelId) => {
   const fetchWithRetry = async () => {
     let response;
+    let url = `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`;
+    let retry = true;
+    const retryPromises = [];
 
-    while (true) {
-      response = await fetch(
-        `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`
-      );
+    while (retry) {
+      response = await fetch(url);
+
       if (!response.ok) {
         if (response.status === 429) {
           const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
-          await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
+          retryPromises.push(new Promise((resolve) => setTimeout(resolve, retryAfter * 1000)));
         } else {
+          retry = false;
           return null;
         }
       } else {
+        retry = false;
+        await Promise.all(retryPromises);
         return response.json();
       }
     }
@@ -50,12 +55,12 @@ const getConversationWithRateLimit = async (channelId) => {
 };
 
 const fetchAllConversations = async (channels) => channels.map(async (channel) => {
-    if (!channel.lastMessageTimestamp) {
-      const message = await getConversationWithRateLimit(channel.id);
-      return { channelId: channel.id, message };
-    }
-    return { channelId: channel.id, message: null };
-    }
+  if (!channel.lastMessageTimestamp) {
+    const message = await getConversationWithRateLimit(channel.id);
+    return { channelId: channel.id, message };
+  }
+  return { channelId: channel.id, message: null };
+  }
 );
 
 const displayChannels = async () => {
