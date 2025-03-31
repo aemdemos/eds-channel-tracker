@@ -21,7 +21,7 @@ if (sk) {
 const getAllSlackChannels = async () => {
   try {
     const response = await fetch(`${API_ENDPOINT}/slack/channels`);
-    if (response.ok) return response.json();
+    return response.ok ? response.json() : [];
   } catch (e) { /* Handle error */ }
   return [];
 };
@@ -52,9 +52,9 @@ const fetchAllConversations = async (channels) => {
   return channels.map(async (channel) => {
     if (!channel.lastMessageTimestamp) {
       const message = await getConversationWithRateLimit(channel.id);
-      return {channelId: channel.id, message};
+      return { channelId: channel.id, message };
     }
-    return {channelId: channel.id, message: null};
+    return { channelId: channel.id, message: null };
   });
 };
 
@@ -96,7 +96,7 @@ const displayChannels = async () => {
     data.forEach((channel) => {
       const tr = document.createElement('tr');
       const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0];
-      const lastMessageDate = channel.lastMessageDate ||'<div class="spinner"></div>';
+      const lastMessageDate = channel.lastMessageDate || '<div class="spinner"></div>';
       const messageTimestamp = channel.lastMessageTimestamp;
       const currentDate = new Date();
       const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
@@ -183,7 +183,7 @@ const displayChannels = async () => {
         messageCell.classList.add('old-message');
       }
 
-      messageCell.textContent = messageDate || 'Error loading message';
+      messageCell.textContent = msgDate || 'Error loading message';
       // Store the last message data in the all array
       const channel = all.find((ch) => ch.id === channelId);
       if (channel) {
