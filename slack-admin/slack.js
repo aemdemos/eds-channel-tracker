@@ -98,7 +98,7 @@ const displayChannels = async () => {
     data.forEach((channel) => {
       const tr = document.createElement('tr');
       const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0];
-      const lastMessageDate = channel.lastMessageDate || 'Loading...';
+      const lastMessageDate = channel.lastMessageDate ||'<div class="spinner"></div>';
       const messageTimestamp = channel.lastMessageTimestamp;
       const currentDate = new Date();
       const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
@@ -176,7 +176,7 @@ const displayChannels = async () => {
         : 'No date';
       const messageTimestamp = message && message.messages && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000) : null;
 
-      if (messageDate === 'Loading...') {
+      if (messageDate === '<div class="spinner"></div>') {
         messageCell.classList.remove('recent-message', 'old-message');
       } else if (messageTimestamp && messageTimestamp > thirtyDaysAgo) {
         messageCell.classList.add('recent-message');
