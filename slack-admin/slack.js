@@ -176,7 +176,7 @@ const displayChannels = async () => {
         : 'No date';
       const messageTimestamp = message && message.messages && message.messages[0] && message.messages[0].ts ? new Date(message.messages[0].ts * 1000) : null;
 
-      if (messageMessageDate === 'Loading...') {
+      if (messageDate === 'Loading...') {
         messageCell.classList.remove('recent-message', 'old-message');
       } else if (messageTimestamp && messageTimestamp > thirtyDaysAgo) {
         messageCell.classList.add('recent-message');
