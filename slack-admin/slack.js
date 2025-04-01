@@ -26,21 +26,23 @@ const getAllSlackChannels = async () => {
   return [];
 };
 
-const getConversationWithRateLimit = async (channelId) => {
+const getAllMessagesWithRateLimit = async (channelId) => {
   const fetchWithRetry = async () => {
     let response;
+    let retry = true;
 
-    while (true) {
-      response = await fetch(
-        `${API_ENDPOINT}/slack/lastmessage?channelId=${channelId}`);
+    while (retry) {
+      response = await fetch(`${API_ENDPOINT}/slack/latest/message?channelId=${channelId}`);
       if (!response.ok) {
         if (response.status === 429) {
           const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
           await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
         } else {
+          retry = false;
           return null;
         }
       } else {
+        retry = false;
         return response.json();
       }
     }
@@ -51,7 +53,7 @@ const getConversationWithRateLimit = async (channelId) => {
 const fetchAllConversations = async (channels) => {
   return channels.map(async (channel) => {
     if (!channel.lastMessageTimestamp) {
-      const message = await getConversationWithRateLimit(channel.id);
+      const message = await getAllMessagesWithRateLimit(channel.id);
       return { channelId: channel.id, message };
     }
     return { channelId: channel.id, message: null };
@@ -83,6 +85,8 @@ const displayChannels = async () => {
         <th data-sort="purpose" class="sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
         <th data-sort="message" class="sorting-disabled">Last Message</th>
+        <th data-sort="adobeMembers" >Adobe Members</th>
+        <th data-sort="nonAdobeMembers" >Non-Adobe Members</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -106,7 +110,9 @@ const displayChannels = async () => {
         <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
         <td>${channel.purpose.value}</td>
         <td>${createdDate}</td>
-         <td class="last-message ${messageClass}" data-channel-id="${channel.id}">${lastMessageDate}</td>
+        <td class="last-message ${messageClass}" data-channel-id="${channel.id}">${lastMessageDate}</td>
+         <td>${channel.adobeMembers || 'N/A'}</td>
+          
       `;
 
       tbody.appendChild(tr);
@@ -126,9 +132,11 @@ const displayChannels = async () => {
     const sortedData = [...all].sort((a, b) => {
       if (dataType === 'string') {
         return sortDirection === 'asc' ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
-      } else if (key === 'created') {
+      }
+      if (key === 'created') {
         return sortDirection === 'asc' ? a.created - b.created : b.created - a.created;
-      } else if (key === 'message') {
+      }
+      if (key === 'message') {
         return sortDirection === 'asc' ? a.lastMessageTimestamp - b.lastMessageTimestamp : b.lastMessageTimestamp - a.lastMessageTimestamp;
       }
       return 0; // Default case if types do not match
