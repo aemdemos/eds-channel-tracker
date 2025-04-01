@@ -80,14 +80,25 @@ const countMembers = async (channelId) => {
  }
 
 const fetchAllChannels = async (channels) => {
-  return channels.map(async (channel) => {
-    const { adobeMemberCount, nonAdobeMemberCount } = await countMembers(channel.id);
-    if (!channel.lastMessageTimestamp) {
-      const message = await getLatestMessage(channel.id);
-      return { channelId: channel.id, message, adobeMemberCount, nonAdobeMemberCount };
+  const channelPromises = channels.map(async (channel) => {
+    let adobeMemberCount = channel.adobeMemberCount;
+    let nonAdobeMemberCount = channel.nonAdobeMemberCount;
+    let message = null;
+
+    if (!adobeMemberCount || !nonAdobeMemberCount) {
+      const counts = await countMembers(channel.id);
+      adobeMemberCount = counts.adobeMemberCount;
+      nonAdobeMemberCount = counts.nonAdobeMemberCount;
     }
-    return { channelId: channel.id, message: null, adobeMemberCount, nonAdobeMemberCount };
+
+    if (!channel.lastMessageTimestamp) {
+      message = await getLatestMessage(channel.id);
+    }
+
+    return { channelId: channel.id, message, adobeMemberCount, nonAdobeMemberCount };
   });
+
+  return Promise.all(channelPromises);
 };
 
 const displayChannels = async () => {
@@ -168,6 +179,9 @@ const displayChannels = async () => {
     const sortedData = [...all].sort((a, b) => {
       if (dataType === 'string') {
         return sortDirection === 'asc' ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
+      }
+      if (dataType === 'number') {
+        return sortDirection === 'asc' ? a[key] - b[key] : b[key] - a[key];
       }
       if (key === 'created') {
         return sortDirection === 'asc' ? a.created - b.created : b.created - a.created;
