@@ -18,9 +18,13 @@ if (sk) {
   }, { once: true });
 }
 
-const getAllSlackChannels = async () => {
+const getAllSlackChannels = async (channelName = "aem-", description = "Edge Delivery") => {
   try {
-    const response = await fetch(`${API_ENDPOINT}/slack/channels`);
+    const url = new URL(`${API_ENDPOINT}/slack/channels`);
+    url.searchParams.append("channelName", channelName.replace(/\*/g, ""));
+    url.searchParams.append("description", description);
+
+    const response = await fetch(url.toString());
     return response.ok ? response.json() : [];
   } catch (e) { /* Handle error */ }
   return [];
@@ -62,7 +66,11 @@ const fetchAllConversations = async (channels) => {
 
 const displayChannels = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
-  const all = await getAllSlackChannels();
+
+  const channelName = document.getElementById("channel-name").value;
+  const description = document.getElementById("description").value;
+
+  const all = await getAllSlackChannels(channelName, description);
   if (all.length === 0) {
     slackChannelsContainer.innerHTML = '<span class="error">Failed to load channels. Please try again later.</span>';
     return;
