@@ -80,25 +80,14 @@ const countMembers = async (channelId) => {
  }
 
 const fetchAllChannels = async (channels) => {
-  const channelPromises = channels.map(async (channel) => {
-    let adobeMemberCount = channel.adobeMemberCount;
-    let nonAdobeMemberCount = channel.nonAdobeMemberCount;
-    let message = null;
-
-    if (!adobeMemberCount || !nonAdobeMemberCount) {
-      const counts = await countMembers(channel.id);
-      adobeMemberCount = counts.adobeMemberCount;
-      nonAdobeMemberCount = counts.nonAdobeMemberCount;
-    }
-
+  return channels.map(async (channel) => {
+    const { adobeMemberCount, nonAdobeMemberCount } = await countMembers(channel.id);
     if (!channel.lastMessageTimestamp) {
-      message = await getLatestMessage(channel.id);
+      const message = await getLatestMessage(channel.id);
+      return { channelId: channel.id, message, adobeMemberCount, nonAdobeMemberCount };
     }
-
-    return { channelId: channel.id, message, adobeMemberCount, nonAdobeMemberCount };
+    return { channelId: channel.id, message: null, adobeMemberCount, nonAdobeMemberCount };
   });
-
-  return Promise.all(channelPromises);
 };
 
 const displayChannels = async () => {
