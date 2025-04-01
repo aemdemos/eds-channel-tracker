@@ -97,13 +97,14 @@ const displayChannels = async () => {
 
   const renderRows = (data) => {
     tbody.innerHTML = '';
+    const currentDate = new Date();
+    const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
+
     data.forEach((channel) => {
       const tr = document.createElement('tr');
       const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0];
       const lastMessageDate = channel.lastMessageDate || '<div class="spinner"></div>';
       const messageTimestamp = channel.lastMessageTimestamp;
-      const currentDate = new Date();
-      const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
       const messageClass = messageTimestamp && messageTimestamp > thirtyDaysAgo ? 'recent-message' : 'old-message';
 
       tr.innerHTML = `
