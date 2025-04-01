@@ -73,7 +73,7 @@ const displayChannels = async () => {
   const summary = document.createElement('div');
   summary.classList.add('table-summary');
   summary.innerHTML = `
-    <span>Total Channels: ${all.length}</span> |
+    <span>Channels Found: ${all.length}</span> |
     <span style="color: green;">Active Channels: <span id="active-channels-count"></span></span></span>
   `;
 
