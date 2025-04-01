@@ -71,3 +71,69 @@ th[data-sort="created"] {
 .old-message {
     color: red;
 }
+
+.search-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.search-filters div {
+    display: flex;
+    flex-direction: column;
+}
+
+.search-filters label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.search-filters input {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.button-wrapper .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.button-wrapper .button img {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+}
+
+.button-wrapper .button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.slack-admin {
+    background-color: white;
+}
+
+.title-container .default-content-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.title-container h2 {
+    padding: 0;
+    margin: 0;
+}
+
+.adobe-logo {
+    width: 90px;
+    height: auto;
+}

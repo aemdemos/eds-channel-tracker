@@ -15,16 +15,33 @@
 <body class="slack-admin">
   <header></header>
   <main>
-    <!-- TITLE -->
-    <div>
-      <h1>Edge Delivery Service Slack Channels</h1>
+    <div class="title-container">
+      <img src="../icons/adobe.png" alt="Adobe Logo" class="adobe-logo" />
+      <h2>Edge Delivery Service Slack Channels</h2>
     </div>
 
-    <!-- Slack Channels Form -->
-    <div>
+    <!-- Search Filters -->
+    <div class="search-filters">
+      <div>
+        <label for="channel-name">Channel Name</label>
+        <input type="text" id="channel-name" value="aem-*" placeholder="Channel Name" />
+      </div>
+      <div>
+        <label for="description">Description</label>
+        <input type="text" id="description" value="*Edge Delivery Services*" placeholder="Description" />
+      </div>
+      <div>
+        <label for="member-name">Member Name</label>
+        <input type="text" id="member-name" value="*" placeholder="Member Name" />
+      </div>
+      <div>
         <p class="button-wrapper">
-          <button type="reset" id="channelisation" class="button">View EDS Slack Channels</button>
+          <button type="reset" id="channelisation" class="button">
+            Search
+            <img src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" alt="Slack Logo" />
+          </button>
         </p>
+      </div>
     </div>
 
     <!-- Slack Channels Container -->
