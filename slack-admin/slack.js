@@ -30,13 +30,12 @@ const getAllSlackChannels = async (channelName = "aem-", description = "Edge Del
   return [];
 };
 
-const getAllMessagesWithRateLimit = async (channelId) => {
+const getLatestMessage = async (channelId) => {
   const fetchWithRetry = async () => {
-    let response;
     let retry = true;
 
     while (retry) {
-      response = await fetch(`${API_ENDPOINT}/slack/latest/message?channelId=${channelId}`);
+      const response = await fetch(`${API_ENDPOINT}/slack/latest/message?channelId=${channelId}`);
       if (!response.ok) {
         if (response.status === 429) {
           const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
@@ -47,20 +46,47 @@ const getAllMessagesWithRateLimit = async (channelId) => {
         }
       } else {
         retry = false;
-        return response.json();
+        return await response.json();
       }
     }
   };
   return fetchWithRetry();
 };
 
-const fetchAllConversations = async (channels) => {
-  return channels.map(async (channel) => {
-    if (!channel.lastMessageTimestamp) {
-      const message = await getAllMessagesWithRateLimit(channel.id);
-      return { channelId: channel.id, message };
+const countMembers = async (channelId) => {
+  try {
+    // Get the list of members in the channel
+    const membersResponse = await fetch(`${API_ENDPOINT}/slack/members?channelId=${channelId}` );
+    const members = await membersResponse.json();
+
+    let adobeMemberCount = 0;
+    let nonAdobeMemberCount = 0;
+
+    // Fetch user info for each member
+    for (const userId of members) {
+      const userResponse = await fetch(`${API_ENDPOINT}/slack/user/info?userId=${userId}` );
+
+      // Ensure user has a profile and email
+      const email = userResponse.user?.profile?.email;
+      if (email && email.endsWith("@adobe.com")) {
+        adobeMemberCount++;
+      } else {
+        nonAdobeMemberCount++;
+      }
     }
-    return { channelId: channel.id, message: null };
+    return { adobeMemberCount, nonAdobeMemberCount };
+  } catch (e) { /* Handle error */ }
+  return { adobeMemberCount: 0, nonAdobeMemberCount: 0 };
+ }
+
+const fetchAllChannels = async (channels) => {
+  return channels.map(async (channel) => {
+    const { adobeMemberCount, nonAdobeMemberCount } = await countMembers(channel.id);
+    if (!channel.lastMessageTimestamp) {
+      const message = await getLatestMessage(channel.id);
+      return { channelId: channel.id, message, adobeMemberCount, nonAdobeMemberCount };
+    }
+    return { channelId: channel.id, message: null, adobeMemberCount, nonAdobeMemberCount };
   });
 };
 
@@ -93,8 +119,8 @@ const displayChannels = async () => {
         <th data-sort="purpose" class="sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
         <th data-sort="message" class="sorting-disabled">Last Message</th>
-        <th data-sort="adobeMembers" >Adobe Members</th>
-        <th data-sort="nonAdobeMembers" >Non-Adobe Members</th>
+        <th data-sort="adobe" class="sorting-disabled">Adobe Members</th>
+        <th data-sort="nonAdobe" class="sorting-disabled">Non-Adobe Members</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -105,8 +131,7 @@ const displayChannels = async () => {
 
   const renderRows = (data) => {
     tbody.innerHTML = '';
-    const currentDate = new Date();
-    const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
+    const thirtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 30));
 
     data.forEach((channel) => {
       const tr = document.createElement('tr');
@@ -114,15 +139,17 @@ const displayChannels = async () => {
       const lastMessageDate = channel.lastMessageDate || '<div class="spinner"></div>';
       const messageTimestamp = channel.lastMessageTimestamp;
       const messageClass = messageTimestamp && messageTimestamp > thirtyDaysAgo ? 'recent-message' : 'old-message';
+      const adobeMembersCount = channel.adobeMembers || '<div class="spinner"></div>';
+      const nonAdobeMembersCount = channel.nonAdobeMembers || '<div class="spinner"></div>';
 
       tr.innerHTML = `
         <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
         <td>${channel.purpose.value}</td>
         <td>${createdDate}</td>
         <td class="last-message ${messageClass}" data-channel-id="${channel.id}">${lastMessageDate}</td>
-         <td>${channel.adobeMembers || 'N/A'}</td>
-          
-      `;
+        <td data-channel-id="${channel.id}">${adobeMembersCount}</td>
+        <td data-channel-id="${channel.id}">${nonAdobeMembersCount}</td>
+  \    `;
 
       tbody.appendChild(tr);
     });
@@ -177,13 +204,15 @@ const displayChannels = async () => {
   slackChannelsContainer.appendChild(table);
 
   // Fetch last message data only if not already present
-  const lastMessagePromises = await fetchAllConversations(all);
+  const channelPromises = await fetchAllChannels(all);
   let activeChannelsCount = 0;
   const thirtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 30)); // Calculate once
 
-  for (const promise of lastMessagePromises) {
-    const { channelId, message } = await promise;
+  for (const promise of channelPromises) {
+    const { channelId, message, adobeMemberCount, nonAdobeMemberCount } = await promise;
     const messageCell = tbody.querySelector(`.last-message[data-channel-id="${channelId}"]`);
+    const adobeCell = tbody.querySelector(`td[data-channel-id="${channelId}"]`);
+    const nonAdobeCell = tbody.querySelector(`td[data-channel-id="${channelId}"]`);
 
     if (messageCell) {
       const msgDate = message?.messages?.[0]?.ts
@@ -191,9 +220,7 @@ const displayChannels = async () => {
         : 'No date';
       const msgTs = message?.messages?.[0]?.ts ? new Date(message.messages[0].ts * 1000) : null;
 
-      if (msgDate === '<div class="spinner"></div>') {
-        messageCell.classList.remove('recent-message', 'old-message');
-      } else if (msgTs && msgTs > thirtyDaysAgo) {
+      if (msgTs && msgTs > thirtyDaysAgo) {
         messageCell.classList.add('recent-message');
         activeChannelsCount += 1;
       } else {
@@ -201,11 +228,16 @@ const displayChannels = async () => {
       }
 
       messageCell.textContent = msgDate || 'Error loading message';
-      // Store the last message data in the all array
+      adobeCell.textContent = adobeMemberCount;
+      nonAdobeCell.textContent = nonAdobeMemberCount;
+
+      // Store the channel data in the all array
       const channel = all.find((ch) => ch.id === channelId);
       if (channel) {
         channel.lastMessageDate = msgDate;
         channel.lastMessageTimestamp = msgTs;
+        channel.adobeMembers = adobeMemberCount;
+        channel.nonAdobeMembers = nonAdobeMemberCount;
       }
     }
   }
