@@ -81,23 +81,24 @@ const countMembers = async (channelId) => {
  }
 
 const fetchAllChannels = async (channels) => {
+
   const channelPromises = channels.map(async (channel) => {
-    try {
-    let adobeCount = channel.adobeMemberCount;
-    let nonAdobeCount = channel.nonAdobeMemberCount;
+    let adobeCount = 0;
+    let nonAdobeCount = 0;
     let message = null;
 
-    if (!adobeCount || !nonAdobeCount) {
-      const counts = await countMembers(channel.id);
-      adobeCount = counts.adobeCount;
-      nonAdobeCount = counts.nonAdobeCount;
+    try {
+      if (!channel.adobeMemberCount || !channel.nonAdobeMemberCount) {
+        const counts = await countMembers(channel.id);
+        adobeCount = counts.adobeCount;
+        nonAdobeCount = counts.nonAdobeCount;
+      }
+
+      if (!channel.lastMessageTimestamp) {
+        message = await getLatestMessage(channel.id);
     }
 
-    if (!channel.lastMessageTimestamp) {
-      message = await getLatestMessage(channel.id);
-    }
-
-    return { channelId: channel.id, message, adobeCount, nonAdobeCount };
+      return { channelId: channel.id, message, adobeCount, nonAdobeCount };
     } catch (error) {
       console.error(`Error fetching data for channel ${channel.id}:`, error);
       return { channelId: channel.id, message: null, adobeCount: 0, nonAdobeCount: 0 };
@@ -170,7 +171,7 @@ const displayChannels = async () => {
         <td class="last-message ${messageClass}" data-channel-id="${channel.id}">${lastMessageDate}</td>
         <td data-channel-id="${channel.id}">${adobeMemberCount}</td>
         <td data-channel-id="${channel.id}">${nonAdobeMemberCount}</td>
-  \    `;
+    `;
 
       tbody.appendChild(tr);
     });
