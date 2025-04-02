@@ -33,13 +33,12 @@ const getAllSlackChannels = async (channelName = "aem-", description = "Edge Del
 const getLatestMessage = async (channelId) => {
   const fetchWithRetry = async () => {
     let retry= true;
-    let response;
 
     while (retry) {
-      response = await fetch(`${API_ENDPOINT}/slack/latest/message?channelId=${channelId}`);
-      if (!response.ok) {
-        if (response.status === 429) {
-          const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
+      const messageResponse = await fetch(`${API_ENDPOINT}/slack/latest/message?channelId=${channelId}`);
+      if (!messageResponse.ok) {
+        if (messageResponse.status === 429) {
+          const retryAfter = parseInt(messageResponse.headers.get('Retry-After'), 10) || 1;
           await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
         } else {
           retry = false;
@@ -47,22 +46,21 @@ const getLatestMessage = async (channelId) => {
         }
       } else {
         retry = false;
-        return response.json();
+        return await messageResponse.json();
       }
     }
   };
   return fetchWithRetry();
 };
 
-const countMembers = async (channelId) => {
+const getMembers = async (channelId) => {
   const fetchWithRetry = async () => {
     let retry= true;
-    let response;
 
     while (retry) {
-      response = await fetch(`${API_ENDPOINT}/slack/members?channelId=${channelId}`);
-      if (!response.ok) {
-        if (response.status === 429) {
+      const membersResponse = await fetch(`${API_ENDPOINT}/slack/members?channelId=${channelId}`);
+      if (!membersResponse.ok) {
+        if (membersResponse.status === 429) {
           const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
           await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
         } else {
@@ -71,17 +69,37 @@ const countMembers = async (channelId) => {
         }
       } else {
         retry = false;
-        const membersJson = await response.json();
-        const members = membersJson.members;
-        let adobeMemberCount = 0;
-        let nonAdobeMemberCount = 0;
+        const membersJson = await membersResponse.json();
+        return membersJson.members;
+      }
+    }
+  };
+  return fetchWithRetry();
+};
 
-        // Fetch user info for each member
-        for (const userId of members) {
-          const userResponse = await fetch(`${API_ENDPOINT}/slack/user/info?userId=${userId}` );
-          const userJson = await userResponse.json();
+const countMembers = async (members) => {
+  let adobeMemberCount = 0;
+  let nonAdobeMemberCount = 0;
 
-          // Ensure user has a profile and email
+  const fetchWithRetry = async (userId) => {
+    let retry= true;
+
+    while (retry) {
+      const userResponse = await fetch(`${API_ENDPOINT}/slack/user/info?userId=${userId}`);
+      if (!userResponse.ok) {
+        if (userResponse.status === 429) {
+          const retryAfter = parseInt(userResponse.headers.get('Retry-After'),
+            10) || 1;
+          await new Promise(
+            (resolve) => setTimeout(resolve, retryAfter * 1000));
+        } else {
+          retry = false;
+          return null;
+        }
+      } else {
+        retry = false;
+        const userJson = await userResponse.json();
+        if (!userJson.user.is_bot && !userJson.user.deleted && !userJson.user.is_app_user) {
           const email = userJson.user?.profile?.email;
           if (email && email.endsWith("@adobe.com")) {
             adobeMemberCount++;
@@ -89,39 +107,40 @@ const countMembers = async (channelId) => {
             nonAdobeMemberCount++;
           }
         }
-
-        return { adobeMemberCount, nonAdobeMemberCount };
-
       }
     }
   };
-  return fetchWithRetry();
- }
+
+  for (const userId of members) {
+     await fetchWithRetry(userId);
+  }
+
+  return { adobeMemberCount, nonAdobeMemberCount };
+ };
 
 const fetchAllChannels = async (channels) => {
-
   const channelPromises = channels.map(async (channel) => {
     let adobeMemberCount = 0;
     let nonAdobeMemberCount = 0;
-
     let message = null;
 
     try {
       if (!channel.adobeMemberCount || !channel.nonAdobeMemberCount) {
-        const counts = await countMembers(channel.id);
+        const members = await getMembers(channel.id);
+        const counts = await countMembers(members);
 
-        adobeMemberCount= counts.adobeMemberCount;
+        adobeMemberCount = counts.adobeMemberCount;
         nonAdobeMemberCount = counts.nonAdobeMemberCount;
       }
 
       if (!channel.lastMessageTimestamp) {
         message = await getLatestMessage(channel.id);
-    }
+      }
 
       return { channelId: channel.id, message, adobeMemberCount, nonAdobeMemberCount };
     } catch (error) {
       console.error(`Error fetching data for channel ${channel.id}:`, error);
-      return { channelId: channel.id, message: null, memberCount: 0, /*adobeMemberCount: 0, nonAdobeMemberCount: 0*/ };
+      return { channelId: channel.id, message: null, adobeMemberCount: 0, nonAdobeMemberCount: 0 };
     }
   });
   try {
