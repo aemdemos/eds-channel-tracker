@@ -60,8 +60,8 @@ const countMembers = async (channelId) => {
     const membersResponse = await fetch(`${API_ENDPOINT}/slack/members?channelId=${channelId}` );
     const members = membersResponse.json();
 
-    let adobeCount = 0;
-    let nonAdobeCount = 0;
+    let adobeMemberCount = 0;
+    let nonAdobeMemberCount = 0;
 
     // Fetch user info for each member
     for (const userId of members) {
@@ -70,21 +70,21 @@ const countMembers = async (channelId) => {
       // Ensure user has a profile and email
       const email = userResponse.user?.profile?.email;
       if (email && email.endsWith("@adobe.com")) {
-        adobeCount++;
+        adobeMemberCount++;
       } else {
-        nonAdobeCount++;
+        nonAdobeMemberCount++;
       }
     }
-    return { adobeCount, nonAdobeCount };
+    return { adobeMemberCount, nonAdobeMemberCount };
   } catch (e) { /* Handle error */ }
-  return { adobeCount: 0, nonAdobeCount: 0 };
+  return { adobeMemberCount: 0, nonAdobeMemberCount: 0 };
  }
 
 const fetchAllChannels = async (channels) => {
   const channelPromises = channels.map(async (channel) => {
     try {
-    let adobeCount = channel.adobeMembers;
-    let nonAdobeCount = channel.nonAdobeMembers;
+    let adobeCount = channel.adobeMemberCount;
+    let nonAdobeCount = channel.nonAdobeMemberCount;
     let message = null;
 
     if (!adobeCount || !nonAdobeCount) {
@@ -160,16 +160,16 @@ const displayChannels = async () => {
       const lastMessageDate = channel.lastMessageDate || '<div class="spinner"></div>';
       const messageTimestamp = channel.lastMessageTimestamp;
       const messageClass = messageTimestamp && messageTimestamp > thirtyDaysAgo ? 'recent-message' : 'old-message';
-      const adobeMembersCount = channel.adobeMembers || '<div class="spinner"></div>';
-      const nonAdobeMembersCount = channel.nonAdobeMembers || '<div class="spinner"></div>';
+      const adobeMemberCount = channel.adobeMemberCount || '<div class="spinner"></div>';
+      const nonAdobeMemberCount = channel.nonAdobeMemberCount || '<div class="spinner"></div>';
 
       tr.innerHTML = `
         <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
         <td>${channel.purpose.value}</td>
         <td>${createdDate}</td>
         <td class="last-message ${messageClass}" data-channel-id="${channel.id}">${lastMessageDate}</td>
-        <td data-channel-id="${channel.id}">${adobeMembersCount}</td>
-        <td data-channel-id="${channel.id}">${nonAdobeMembersCount}</td>
+        <td data-channel-id="${channel.id}">${adobeMemberCount}</td>
+        <td data-channel-id="${channel.id}">${nonAdobeMemberCount}</td>
   \    `;
 
       tbody.appendChild(tr);
@@ -244,6 +244,7 @@ const displayChannels = async () => {
         : 'No date';
       const msgTs = message?.messages?.[0]?.ts ? new Date(message.messages[0].ts * 1000) : null;
 
+      messageCell.classList.remove('recent-message', 'old-message');
       if (msgTs && msgTs > thirtyDaysAgo) {
         messageCell.classList.add('recent-message');
         activeChannelsCount += 1;
@@ -260,16 +261,18 @@ const displayChannels = async () => {
       if (channel) {
         channel.lastMessageDate = msgDate;
         channel.lastMessageTimestamp = msgTs;
-        channel.adobeMembers = adobeMemberCount;
-        channel.nonAdobeMembers = nonAdobeMemberCount;
+        channel.adobeMemberCount = adobeMemberCount;
+        channel.nonAdobeMemberCount = nonAdobeMemberCount;
       }
     }
   }
 
   document.getElementById('active-channels-count').textContent = activeChannelsCount.toString();
 
-  // Enable sorting for the "Last Message" column after data is loaded
+  // Enable sorting after data is loaded
   table.querySelector('th[data-sort="message"]').classList.remove('sorting-disabled');
+  table.querySelector('th[data-sort="adobe"]').classList.remove('sorting-disabled');
+  table.querySelector('th[data-sort="nonAdobe"]').classList.remove('sorting-disabled');
 };
 
 /**
