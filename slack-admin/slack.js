@@ -55,29 +55,47 @@ const getLatestMessage = async (channelId) => {
 };
 
 const countMembers = async (channelId) => {
-  try {
-    // Get the list of members in the channel
-    const membersResponse = await fetch(`${API_ENDPOINT}/slack/members?channelId=${channelId}` );
-    const members = membersResponse.json();
+  const fetchWithRetry = async () => {
+    let retry= true;
+    let response;
 
-    let adobeMemberCount = 0;
-    let nonAdobeMemberCount = 0;
-
-    // Fetch user info for each member
-    for (const userId of members) {
-      const userResponse = await fetch(`${API_ENDPOINT}/slack/user/info?userId=${userId}` );
-
-      // Ensure user has a profile and email
-      const email = userResponse.user?.profile?.email;
-      if (email && email.endsWith("@adobe.com")) {
-        adobeMemberCount++;
+    while (retry) {
+      response = await fetch(`${API_ENDPOINT}/slack/members?channelId=${channelId}`);
+      if (!response.ok) {
+        if (response.status === 429) {
+          const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
+          await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
+        } else {
+          retry = false;
+          return null;
+        }
       } else {
-        nonAdobeMemberCount++;
+        retry = false;
+        const membersJson = await response.json();
+        const members = membersJson.members;
+        let adobeMemberCount = 0;
+        let nonAdobeMemberCount = 0;
+
+        // Fetch user info for each member
+        for (const userId of members) {
+          const userResponse = await fetch(`${API_ENDPOINT}/slack/user/info?userId=${userId}` );
+          const userJson = await userResponse.json();
+
+          // Ensure user has a profile and email
+          const email = userJson.user?.profile?.email;
+          if (email && email.endsWith("@adobe.com")) {
+            adobeMemberCount++;
+          } else {
+            nonAdobeMemberCount++;
+          }
+        }
+
+        return { adobeMemberCount, nonAdobeMemberCount };
+
       }
     }
-    return { adobeMemberCount, nonAdobeMemberCount };
-  } catch (e) { /* Handle error */ }
-  return { adobeMemberCount: 0, nonAdobeMemberCount: 0 };
+  };
+  return fetchWithRetry();
  }
 
 const fetchAllChannels = async (channels) => {
@@ -85,11 +103,13 @@ const fetchAllChannels = async (channels) => {
   const channelPromises = channels.map(async (channel) => {
     let adobeMemberCount = 0;
     let nonAdobeMemberCount = 0;
+
     let message = null;
 
     try {
-      if (!channel.adobeMemberCount || !channel.nonAdobeMemberCount) {
+      if (!channel.memberCount /*!channel.adobeMemberCount || !channel.nonAdobeMemberCount*/) {
         const counts = await countMembers(channel.id);
+
         adobeMemberCount= counts.adobeMemberCount;
         nonAdobeMemberCount = counts.nonAdobeMemberCount;
       }
@@ -101,7 +121,7 @@ const fetchAllChannels = async (channels) => {
       return { channelId: channel.id, message, adobeMemberCount, nonAdobeMemberCount };
     } catch (error) {
       console.error(`Error fetching data for channel ${channel.id}:`, error);
-      return { channelId: channel.id, message: null, adobeMemberCount: 0, nonAdobeMemberCount: 0 };
+      return { channelId: channel.id, message: null, memberCount: 0, /*adobeMemberCount: 0, nonAdobeMemberCount: 0*/ };
     }
   });
   try {
@@ -236,6 +256,7 @@ const displayChannels = async () => {
   for (const promise of channelPromises) {
     const { channelId, message, adobeMemberCount, nonAdobeMemberCount } = await promise;
     const messageCell = tbody.querySelector(`.last-message[data-channel-id="${channelId}"]`);
+
     const adobeCell = tbody.querySelector(`td[data-channel-id="${channelId}"]:nth-child(5)`);
     const nonAdobeCell = tbody.querySelector(`td[data-channel-id="${channelId}"]:nth-child(6)`);
 
@@ -254,6 +275,7 @@ const displayChannels = async () => {
       }
 
       messageCell.textContent = msgDate || 'Error loading message';
+
       adobeCell.textContent = adobeMemberCount;
       nonAdobeCell.textContent = nonAdobeMemberCount;
 
