@@ -83,25 +83,25 @@ const countMembers = async (channelId) => {
 const fetchAllChannels = async (channels) => {
 
   const channelPromises = channels.map(async (channel) => {
-    let adobeCount = 0;
-    let nonAdobeCount = 0;
+    let adobeMemberCount = 0;
+    let nonAdobeMemberCount = 0;
     let message = null;
 
     try {
       if (!channel.adobeMemberCount || !channel.nonAdobeMemberCount) {
         const counts = await countMembers(channel.id);
-        adobeCount = counts.adobeCount;
-        nonAdobeCount = counts.nonAdobeCount;
+        adobeMemberCount= counts.adobeMemberCount;
+        nonAdobeMemberCount = counts.nonAdobeMemberCount;
       }
 
       if (!channel.lastMessageTimestamp) {
         message = await getLatestMessage(channel.id);
     }
 
-      return { channelId: channel.id, message, adobeCount, nonAdobeCount };
+      return { channelId: channel.id, message, adobeMemberCount, nonAdobeMemberCount };
     } catch (error) {
       console.error(`Error fetching data for channel ${channel.id}:`, error);
-      return { channelId: channel.id, message: null, adobeCount: 0, nonAdobeCount: 0 };
+      return { channelId: channel.id, message: null, adobeMemberCount: 0, nonAdobeMemberCount: 0 };
     }
   });
   try {
