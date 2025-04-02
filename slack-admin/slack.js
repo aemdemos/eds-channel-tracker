@@ -107,7 +107,7 @@ const fetchAllChannels = async (channels) => {
     let message = null;
 
     try {
-      if (!channel.memberCount /*!channel.adobeMemberCount || !channel.nonAdobeMemberCount*/) {
+      if (!channel.adobeMemberCount || !channel.nonAdobeMemberCount) {
         const counts = await countMembers(channel.id);
 
         adobeMemberCount= counts.adobeMemberCount;
