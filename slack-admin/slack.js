@@ -32,10 +32,11 @@ const getAllSlackChannels = async (channelName = "aem-", description = "Edge Del
 
 const getLatestMessage = async (channelId) => {
   const fetchWithRetry = async () => {
-    let retry = true;
+    let retry= true;
+    let response;
 
     while (retry) {
-      const response = await fetch(`${API_ENDPOINT}/slack/latest/message?channelId=${channelId}`);
+      response = await fetch(`${API_ENDPOINT}/slack/latest/message?channelId=${channelId}`);
       if (!response.ok) {
         if (response.status === 429) {
           const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
@@ -46,7 +47,7 @@ const getLatestMessage = async (channelId) => {
         }
       } else {
         retry = false;
-        return await response.json();
+        return response.json();
       }
     }
   };
@@ -57,10 +58,10 @@ const countMembers = async (channelId) => {
   try {
     // Get the list of members in the channel
     const membersResponse = await fetch(`${API_ENDPOINT}/slack/members?channelId=${channelId}` );
-    const members = await membersResponse.json();
+    const members = membersResponse.json();
 
-    let adobeMemberCount = 0;
-    let nonAdobeMemberCount = 0;
+    let adobeCount = 0;
+    let nonAdobeCount = 0;
 
     // Fetch user info for each member
     for (const userId of members) {
@@ -69,25 +70,45 @@ const countMembers = async (channelId) => {
       // Ensure user has a profile and email
       const email = userResponse.user?.profile?.email;
       if (email && email.endsWith("@adobe.com")) {
-        adobeMemberCount++;
+        adobeCount++;
       } else {
-        nonAdobeMemberCount++;
+        nonAdobeCount++;
       }
     }
-    return { adobeMemberCount, nonAdobeMemberCount };
+    return { adobeCount, nonAdobeCount };
   } catch (e) { /* Handle error */ }
-  return { adobeMemberCount: 0, nonAdobeMemberCount: 0 };
+  return { adobeCount: 0, nonAdobeCount: 0 };
  }
 
 const fetchAllChannels = async (channels) => {
-  return channels.map(async (channel) => {
-    const { adobeMemberCount, nonAdobeMemberCount } = await countMembers(channel.id);
-    if (!channel.lastMessageTimestamp) {
-      const message = await getLatestMessage(channel.id);
-      return { channelId: channel.id, message, adobeMemberCount, nonAdobeMemberCount };
+  const channelPromises = channels.map(async (channel) => {
+    try {
+    let adobeCount = channel.adobeMembers;
+    let nonAdobeCount = channel.nonAdobeMembers;
+    let message = null;
+
+    if (!adobeCount || !nonAdobeCount) {
+      const counts = await countMembers(channel.id);
+      adobeCount = counts.adobeCount;
+      nonAdobeCount = counts.nonAdobeCount;
     }
-    return { channelId: channel.id, message: null, adobeMemberCount, nonAdobeMemberCount };
+
+    if (!channel.lastMessageTimestamp) {
+      message = await getLatestMessage(channel.id);
+    }
+
+    return { channelId: channel.id, message, adobeCount, nonAdobeCount };
+    } catch (error) {
+      console.error(`Error fetching data for channel ${channel.id}:`, error);
+      return { channelId: channel.id, message: null, adobeCount: 0, nonAdobeCount: 0 };
+    }
   });
+  try {
+    return Promise.all(channelPromises);
+  } catch (error) {
+      console.error('Error fetching all channels:', error);
+      return [];
+    }
 };
 
 const displayChannels = async () => {
@@ -214,8 +235,8 @@ const displayChannels = async () => {
   for (const promise of channelPromises) {
     const { channelId, message, adobeMemberCount, nonAdobeMemberCount } = await promise;
     const messageCell = tbody.querySelector(`.last-message[data-channel-id="${channelId}"]`);
-    const adobeCell = tbody.querySelector(`td[data-channel-id="${channelId}"]`);
-    const nonAdobeCell = tbody.querySelector(`td[data-channel-id="${channelId}"]`);
+    const adobeCell = tbody.querySelector(`td[data-channel-id="${channelId}"]:nth-child(5)`);
+    const nonAdobeCell = tbody.querySelector(`td[data-channel-id="${channelId}"]:nth-child(6)`);
 
     if (messageCell) {
       const msgDate = message?.messages?.[0]?.ts
