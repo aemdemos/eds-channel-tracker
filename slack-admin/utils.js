@@ -1,5 +1,5 @@
 // utils.js
-export const sortData = (data, key, direction) => {
+export const sortTable = (data, key, direction) => {
   const dataType = typeof data[0][key];
   return [...data].sort((a, b) => {
     if (dataType === 'string') {

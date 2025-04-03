@@ -1,5 +1,5 @@
-import API_ENDPOINT from './config.js';
 import { getLatestMessage, getMembers, getAllSlackChannels } from './api.js';
+import { sortTable } from './utils.js';
 
 let sortDirection = 'asc';
 
@@ -30,8 +30,8 @@ const renderTable = (channels) => {
         <th data-sort="name">Name</th>
         <th data-sort="purpose" class="sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
-        <th data-sort="message" class="sorting-disabled">Last Message</th>
-        <th data-sort="members" class="sorting-disabled">Members</th>
+        <th data-sort="message">Last Message</th>
+        <th data-sort="members">Members</th>
       </tr>
     </thead>
   `;
@@ -68,6 +68,31 @@ const renderTable = (channels) => {
 
   // Append the table to the slackChannelsContainer
   slackChannelsContainer.appendChild(table);
+
+  // Add sorting functionality to table headers
+  addSortingToTable(table, channels);
+
+};
+
+const addSortingToTable = (table, channels) => {
+  const headers = table.querySelectorAll('th[data-sort]');
+  headers.forEach(header => {
+    header.addEventListener('click', () => {
+      const columnKey = header.getAttribute('data-sort');
+      sortTable(channels, columnKey, sortDirection);
+      toggleSortDirection();
+
+      header.classList.remove('sorted-asc', 'sorted-desc');
+      if (!header.classList.contains('sorting-disabled')) {
+        header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+      }
+
+    });
+  });
+};
+
+const toggleSortDirection = () => {
+  sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
 };
 
 const updateLastMessageCell = (channel, messageDate) => {
