@@ -8,12 +8,9 @@ const doLogout = () => window.location.reload();
 
 const sk = document.querySelector('aem-sidekick');
 if (sk) {
-  // sidekick already loaded
   sk.addEventListener('logged-out', doLogout);
 } else {
-  // wait for sidekick to be loaded
   document.addEventListener('sidekick-ready', () => {
-    // sidekick now loaded
     document.querySelector('aem-sidekick').addEventListener('logged-out', doLogout);
   }, { once: true });
 }
@@ -23,156 +20,47 @@ const getAllSlackChannels = async (channelName = "aem-", description = "Edge Del
     const url = new URL(`${API_ENDPOINT}/slack/channels`);
     url.searchParams.append("channelName", channelName.replace(/\*/g, ""));
     url.searchParams.append("description", description);
-
     const response = await fetch(url.toString());
     return response.ok ? response.json() : [];
-  } catch (e) { /* Handle error */ }
+  } catch (e) { }
   return [];
 };
 
-const getLatestMessage = async (channelId) => {
-  const fetchWithRetry = async () => {
-    let retry= true;
-
-    while (retry) {
-      const messageResponse = await fetch(`${API_ENDPOINT}/slack/latest/message?channelId=${channelId}`);
-      if (!messageResponse.ok) {
-        if (messageResponse.status === 429) {
-          const retryAfter = parseInt(messageResponse.headers.get('Retry-After'), 10) || 1;
-          await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
-        } else {
-          retry = false;
-          return null;
-        }
-      } else {
-        retry = false;
-        return await messageResponse.json();
-      }
-    }
-  };
-  return fetchWithRetry();
-};
-
-const getMembers = async (channelId) => {
-  const fetchWithRetry = async () => {
-    let retry= true;
-
-    while (retry) {
-      const membersResponse = await fetch(`${API_ENDPOINT}/slack/members?channelId=${channelId}`);
-      if (!membersResponse.ok) {
-        if (membersResponse.status === 429) {
-          const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
-          await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
-        } else {
-          retry = false;
-          return null;
-        }
-      } else {
-        retry = false;
-        const membersJson = await membersResponse.json();
-        return membersJson.members;
-      }
-    }
-  };
-  return fetchWithRetry();
-};
-
-const countMembers = async (members) => {
-  let adobeMemberCount = 0;
-  let nonAdobeMemberCount = 0;
-
-  const fetchWithRetry = async (userId) => {
-    let retry= true;
-
-    while (retry) {
-      const userResponse = await fetch(`${API_ENDPOINT}/slack/user/info?userId=${userId}`);
-      if (!userResponse.ok) {
-        if (userResponse.status === 429) {
-          const retryAfter = parseInt(userResponse.headers.get('Retry-After'),
-            10) || 1;
-          await new Promise(
-            (resolve) => setTimeout(resolve, retryAfter * 1000));
-        } else {
-          retry = false;
-          return null;
-        }
-      } else {
-        retry = false;
-        const userJson = await userResponse.json();
-        if (!userJson.user.is_bot && !userJson.user.deleted && !userJson.user.is_app_user) {
-          const email = userJson.user?.profile?.email;
-          if (email && email.endsWith("@adobe.com")) {
-            adobeMemberCount++;
-          } else {
-            nonAdobeMemberCount++;
-          }
-        }
-      }
-    }
-  };
-
-  for (const userId of members) {
-     await fetchWithRetry(userId);
+const fetchWithRetry = async (url, attempts = 0) => {
+  if (attempts >= 10) {
+    console.error("Max retry attempts reached for URL:", url);
+    return null;
   }
-
-  return { adobeMemberCount, nonAdobeMemberCount };
- };
-
-const fetchAllChannels = async (channels) => {
-  const channelPromises = channels.map(async (channel) => {
-    let adobeMemberCount = 0;
-    let nonAdobeMemberCount = 0;
-    let message = null;
-
-    try {
-      if (!channel.adobeMemberCount || !channel.nonAdobeMemberCount) {
-        const members = await getMembers(channel.id);
-        const counts = await countMembers(members);
-
-        adobeMemberCount = counts.adobeMemberCount;
-        nonAdobeMemberCount = counts.nonAdobeMemberCount;
-      }
-
-      if (!channel.lastMessageTimestamp) {
-        message = await getLatestMessage(channel.id);
-      }
-
-      return { channelId: channel.id, message, adobeMemberCount, nonAdobeMemberCount };
-    } catch (error) {
-      console.error(`Error fetching data for channel ${channel.id}:`, error);
-      return { channelId: channel.id, message: null, adobeMemberCount: 0, nonAdobeMemberCount: 0 };
-    }
-  });
   try {
-    return Promise.all(channelPromises);
-  } catch (error) {
-      console.error('Error fetching all channels:', error);
-      return [];
+    const response = await fetch(url);
+    if (response.ok) {
+      return await response.json();
+    } else if (response.status === 429) {
+      const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
+      console.warn(`Rate limited, retrying after ${retryAfter} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+      return await fetchWithRetry(url, attempts + 1);
+    } else {
+      console.error("Fetch failed: ", response.status);
+      return null;
     }
+  } catch (e) {
+    console.error("Error during fetch:", e);
+    return null;
+  }
 };
 
-const displayChannels = async () => {
-  slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
+const getLatestMessage = (channelId) => fetchWithRetry(`${API_ENDPOINT}/slack/latest/message?channelId=${channelId}`);
+const getMembers = (channelId) => fetchWithRetry(`${API_ENDPOINT}/slack/members?channelId=${channelId}`);
 
-  const channelName = document.getElementById("channel-name").value;
-  const description = document.getElementById("description").value;
+const renderTable = (channels) => {
+  slackChannelsContainer.innerHTML = ''; // Clear any previous content
 
-  const all = await getAllSlackChannels(channelName, description);
-  if (all.length === 0) {
-    slackChannelsContainer.innerHTML = '<span class="error">Failed to load channels. Please try again later.</span>';
-    return;
-  }
-
-  all.sort((a, b) => a.name.localeCompare(b.name));
-
-  const summary = document.createElement('div');
-  summary.classList.add('table-summary');
-  summary.innerHTML = `
-    <span>Channels Found: ${all.length}</span> |
-    <span style="color: green;">Active Channels: <span id="active-channels-count"></span></span></span>
-  `;
-
+  // Create the table with the same classes as in your original code
   const table = document.createElement('table');
+  table.classList.add('styled-table'); // Add 'styled-table' class to the table
+
+  // Define the table headers
   table.innerHTML = `
     <thead>
       <tr>
@@ -180,148 +68,106 @@ const displayChannels = async () => {
         <th data-sort="purpose" class="sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
         <th data-sort="message" class="sorting-disabled">Last Message</th>
-        <th data-sort="adobe" class="sorting-disabled">Adobe Members</th>
-        <th data-sort="nonAdobe" class="sorting-disabled">Non-Adobe Members</th>
+        <th data-sort="members" class="sorting-disabled">Members</th>
       </tr>
     </thead>
-    <tbody></tbody>
   `;
 
-  table.classList.add('styled-table');
-  const tbody = table.querySelector('tbody');
+  // Create the table body (with tbody)
+  const tbody = document.createElement('tbody');
 
-  const renderRows = (data) => {
-    tbody.innerHTML = '';
-    const thirtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 30));
+  // Loop through the channels and create rows
+  channels.forEach((channel) => {
+    const tr = document.createElement('tr'); // Create a row for each channel
 
-    data.forEach((channel) => {
-      const tr = document.createElement('tr');
-      const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0];
-      const lastMessageDate = channel.lastMessageDate || '<div class="spinner"></div>';
-      const messageTimestamp = channel.lastMessageTimestamp;
-      const messageClass = messageTimestamp && messageTimestamp > thirtyDaysAgo ? 'recent-message' : 'old-message';
-      const adobeMemberCount = channel.adobeMemberCount || '<div class="spinner"></div>';
-      const nonAdobeMemberCount = channel.nonAdobeMemberCount || '<div class="spinner"></div>';
+    const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0]; // Format the creation date
+    const spinner = '<div class="spinner"></div>'; // Show a spinner if no message date is available
 
-      tr.innerHTML = `
-        <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
-        <td>${channel.purpose.value}</td>
-        <td>${createdDate}</td>
-        <td class="last-message ${messageClass}" data-channel-id="${channel.id}">${lastMessageDate}</td>
-        <td data-channel-id="${channel.id}">${adobeMemberCount}</td>
-        <td data-channel-id="${channel.id}">${nonAdobeMemberCount}</td>
+
+    // Add classes to the cells (you can apply any additional class that you need)
+    tr.classList.add('channel-row');
+    tr.setAttribute("data-channel-id", channel.id); // Set the channel ID as a data attribute
+
+    tr.innerHTML = `
+      <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
+      <td>${channel.purpose?.value || ''}</td>
+      <td class="stat-column">${createdDate}</td>
+      <td class="stat-column last-message">${spinner}</td>
+      <td class="stat-column members-count">${spinner}</td>
+
     `;
 
-      tbody.appendChild(tr);
-    });
-  };
-
-  renderRows(all);
-
-  const sortTable = (key) => {
-    const header = table.querySelector(`th[data-sort="${key}"]`);
-    if (header.classList.contains('sorting-disabled')) {
-      return; // Prevent sorting if the column is disabled
-    }
-
-    const dataType = typeof all[0][key];
-
-    const sortedData = [...all].sort((a, b) => {
-      if (dataType === 'string') {
-        return sortDirection === 'asc' ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
-      }
-      if (dataType === 'number') {
-        return sortDirection === 'asc' ? a[key] - b[key] : b[key] - a[key];
-      }
-      if (key === 'created') {
-        return sortDirection === 'asc' ? a.created - b.created : b.created - a.created;
-      }
-      if (key === 'message') {
-        return sortDirection === 'asc' ? a.lastMessageTimestamp - b.lastMessageTimestamp : b.lastMessageTimestamp - a.lastMessageTimestamp;
-      }
-      return 0; // Default case if types do not match
-    });
-
-    renderRows(sortedData);
-
-    // Add visual cue for sorted column
-    table.querySelectorAll('th').forEach((th) => {
-      th.classList.remove('sorted-asc', 'sorted-desc');
-      if (th.getAttribute('data-sort') === key && !th.classList.contains('sorting-disabled')) {
-        th.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
-      }
-    });
-
-    // Toggle sort direction
-    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-  };
-
-  table.querySelectorAll('th').forEach((header) => {
-    header.addEventListener('click', () => {
-      const sortKey = header.getAttribute('data-sort');
-      sortTable(sortKey);
-    });
+    tbody.appendChild(tr); // Add the row to the tbody
   });
 
-  slackChannelsContainer.innerHTML = '';
-  slackChannelsContainer.appendChild(summary);
+  // Append tbody to the table
+  table.appendChild(tbody);
+
+  // Append the table to the slackChannelsContainer
   slackChannelsContainer.appendChild(table);
-
-  // Fetch last message data only if not already present
-  const channelPromises = await fetchAllChannels(all);
-  let activeChannelsCount = 0;
-  const thirtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 30)); // Calculate once
-
-  for (const promise of channelPromises) {
-    const { channelId, message, adobeMemberCount, nonAdobeMemberCount } = await promise;
-    const messageCell = tbody.querySelector(`.last-message[data-channel-id="${channelId}"]`);
-
-    const adobeCell = tbody.querySelector(`td[data-channel-id="${channelId}"]:nth-child(5)`);
-    const nonAdobeCell = tbody.querySelector(`td[data-channel-id="${channelId}"]:nth-child(6)`);
-
-    if (messageCell) {
-      const msgDate = message?.messages?.[0]?.ts
-        ? new Date(message.messages[0].ts * 1000).toISOString().split('T')[0]
-        : 'No date';
-      const msgTs = message?.messages?.[0]?.ts ? new Date(message.messages[0].ts * 1000) : null;
-
-      messageCell.classList.remove('recent-message', 'old-message');
-      if (msgTs && msgTs > thirtyDaysAgo) {
-        messageCell.classList.add('recent-message');
-        activeChannelsCount += 1;
-      } else {
-        messageCell.classList.add('old-message');
-      }
-
-      messageCell.textContent = msgDate || 'Error loading message';
-
-      adobeCell.textContent = adobeMemberCount;
-      nonAdobeCell.textContent = nonAdobeMemberCount;
-
-      // Store the channel data in the all array
-      const channel = all.find((ch) => ch.id === channelId);
-      if (channel) {
-        channel.lastMessageDate = msgDate;
-        channel.lastMessageTimestamp = msgTs;
-        channel.adobeMemberCount = adobeMemberCount;
-        channel.nonAdobeMemberCount = nonAdobeMemberCount;
-      }
-    }
-  }
-
-  document.getElementById('active-channels-count').textContent = activeChannelsCount.toString();
-
-  // Enable sorting after data is loaded
-  table.querySelector('th[data-sort="message"]').classList.remove('sorting-disabled');
-  table.querySelector('th[data-sort="adobe"]').classList.remove('sorting-disabled');
-  table.querySelector('th[data-sort="nonAdobe"]').classList.remove('sorting-disabled');
 };
 
-/**
- * Handles site admin form submission.
- * @param {Event} e - Submit event.
- */
-document.getElementById('channelisation').addEventListener('click', async (e) => {
-  e.preventDefault();
-  await displayChannels();
-});
+const updateLastMessageCell = (channel, messageDate) => {
+  const row = document.querySelector(`tr[data-channel-id="${channel.id}"]`);
+  if (row) {
+    row.querySelector('.last-message').innerHTML = messageDate;
+  }
+};
+
+const updateMembersCountCell = (channel, membersCount) => {
+  const row = document.querySelector(`tr[data-channel-id="${channel.id}"]`);
+  if (row) {
+    row.querySelector('.members-count').textContent = membersCount;
+  }
+};
+
+const startFetching = async () => {
+  slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
+  const channels = await getAllSlackChannels();
+  renderTable(channels);
+
+  // Load 10 rows at a time with a 1-second pause between each batch
+  const batchSize = 20;
+  const totalChannels = channels.length;
+
+  for (let i = 0; i < totalChannels; i += batchSize) {
+    const batch = channels.slice(i, i + batchSize);
+
+    const messagePromises = batch.map(channel =>
+      getLatestMessage(channel.id).then(messageJson => ({
+        channelId: channel.id,
+        messageDate: messageJson?.messages?.[0]?.ts
+          ? new Date(messageJson.messages[0].ts * 1000).toISOString().split('T')[0]
+          : 'No date'
+      }))
+    );
+
+    const memberPromises = batch.map(channel =>
+      getMembers(channel.id).then(membersJson => ({
+        channelId: channel.id,
+        membersCount: membersJson?.members?.length || 0
+      }))
+    );
+
+    const messageResults = await Promise.all(messagePromises);
+    const memberResults = await Promise.all(memberPromises);
+
+    // Update the table after each batch
+    messageResults.forEach(({ channelId, messageDate }) => {
+      const channel = channels.find(c => c.id === channelId);
+      updateLastMessageCell(channel, messageDate);
+    });
+
+    memberResults.forEach(({ channelId, membersCount }) => {
+      const channel = channels.find(c => c.id === channelId);
+      updateMembersCountCell(channel, membersCount);
+    });
+
+    // Pause for 1 second before processing the next batch
+    if (i + batchSize < totalChannels) {
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+    }
+  }
+};
+
+document.getElementById('channelisation').addEventListener('click', startFetching);

@@ -47,10 +47,6 @@
     margin-left: 5px;
 }
 
-.styled-table td:last-child {
-    font-weight: bold;
-}
-
 .table-summary {
     font-size: 25px;
     font-weight: bold;
@@ -61,8 +57,8 @@
     height: 20px;
 }
 
-th[data-sort="created"] {
-    width: 200px; /* Adjust the width as needed */
+.stat-column {
+    width: 150px; /* Adjust the width as needed */
 }
 .recent-message {
     color: green;
