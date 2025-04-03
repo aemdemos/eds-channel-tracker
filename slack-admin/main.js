@@ -46,6 +46,14 @@ const renderTable = (channels) => {
     const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0]; // Format the creation date
     const spinner = '<div class="spinner"></div>'; // Show a spinner if no message date is available
 
+    // Determine the class for the message date
+    let messageDateClass = '';
+    if (channel.messageDate) {
+      const messageDate = new Date(channel.messageDate);
+      const currentDate = new Date();
+      const dateDifference = (currentDate - messageDate) / (1000 * 60 * 60 * 24); // Difference in days
+      messageDateClass = dateDifference < 30 ? 'recent-message' : 'old-message';
+    }
 
     // Add classes to the cells (you can apply any additional class that you need)
     tr.classList.add('channel-row');
@@ -55,8 +63,8 @@ const renderTable = (channels) => {
       <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
       <td>${channel.purpose?.value || ''}</td>
       <td class="stat-column">${createdDate}</td>
-      <td class="stat-column last-message">${spinner}</td>
-      <td class="stat-column members-count">${spinner}</td>
+      <td class="stat-column last-message ${messageDateClass}">${channel.messageDate || spinner}</td>
+      <td class="stat-column members-count">${channel.membersCount || spinner}</td>
 
     `;
 
@@ -79,10 +87,11 @@ const addSortingToTable = (table, channels) => {
   headers.forEach(header => {
     header.addEventListener('click', () => {
       const columnKey = header.getAttribute('data-sort');
-      sortTable(channels, columnKey, sortDirection);
+      const sortedData = sortTable(channels, columnKey, sortDirection);
+      renderTable(sortedData);
       toggleSortDirection();
 
-      header.classList.remove('sorted-asc', 'sorted-desc');
+      headers.forEach(h => h.classList.remove('sorted-asc', 'sorted-desc'));
       if (!header.classList.contains('sorting-disabled')) {
         header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
       }
@@ -99,6 +108,7 @@ const updateLastMessageCell = (channel, messageDate) => {
   const row = document.querySelector(`tr[data-channel-id="${channel.id}"]`);
   if (row) {
     row.querySelector('.last-message').innerHTML = messageDate;
+    channel.messageDate = messageDate; // Save the last message date in the channel object
   }
 };
 
@@ -106,6 +116,7 @@ const updateMembersCountCell = (channel, membersCount) => {
   const row = document.querySelector(`tr[data-channel-id="${channel.id}"]`);
   if (row) {
     row.querySelector('.members-count').textContent = membersCount;
+    channel.membersCount = membersCount; // Save the members count in the channel object
   }
 };
 
@@ -121,21 +132,28 @@ const startFetching = async () => {
   for (let i = 0; i < totalChannels; i += batchSize) {
     const batch = channels.slice(i, i + batchSize);
 
-    const messagePromises = batch.map(channel =>
-      getLatestMessage(channel.id).then(messageJson => ({
+    const messagePromises = batch.map(channel => {
+    if (!channel.messageDate) {
+      return getLatestMessage(channel.id).then(messageJson => ({
         channelId: channel.id,
         messageDate: messageJson?.messages?.[0]?.ts
-          ? new Date(messageJson.messages[0].ts * 1000).toISOString().split('T')[0]
+          ? new Date(messageJson.messages[0].ts * 1000).toISOString().split(
+            'T')[0]
           : 'No date'
-      }))
-    );
+      }));
+    }
+      return Promise.resolve({ channelId: channel.id, messageDate: channel.messageDate });
+    });
 
-    const memberPromises = batch.map(channel =>
-      getMembers(channel.id).then(membersJson => ({
+    const memberPromises = batch.map(channel => {
+    if (!channel.membersCount) {
+      return getMembers(channel.id).then(membersJson => ({
         channelId: channel.id,
         membersCount: membersJson?.members?.length || 0
-      }))
-    );
+      }));
+    }
+      return Promise.resolve({ channelId: channel.id, membersCount: channel.membersCount });
+    });
 
     const messageResults = await Promise.all(messagePromises);
     const memberResults = await Promise.all(memberPromises);

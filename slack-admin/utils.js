@@ -8,6 +8,9 @@ export const sortTable = (data, key, direction) => {
     if (dataType === 'number') {
       return direction === 'asc' ? a[key] - b[key] : b[key] - a[key];
     }
+    if (dataType === 'object' && a[key] instanceof Date && b[key] instanceof Date) {
+      return direction === 'asc' ? a[key] - b[key] : b[key] - a[key];
+    }
     return 0;
   });
 };
