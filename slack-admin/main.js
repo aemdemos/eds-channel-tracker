@@ -1,155 +1,10 @@
-import API_ENDPOINT from './config.js';
-
-let sortDirection = 'asc';
+// main.js
+import { getAllSlackChannels } from './api.js';
+import { fetchAllChannels } from './channels.js';
+import { sortData } from './utils.js';
 
 const slackChannelsContainer = document.getElementById('slack-channels-container');
-
-const doLogout = () => window.location.reload();
-
-const sk = document.querySelector('aem-sidekick');
-if (sk) {
-  // sidekick already loaded
-  sk.addEventListener('logged-out', doLogout);
-} else {
-  // wait for sidekick to be loaded
-  document.addEventListener('sidekick-ready', () => {
-    // sidekick now loaded
-    document.querySelector('aem-sidekick').addEventListener('logged-out', doLogout);
-  }, { once: true });
-}
-
-const getAllSlackChannels = async (channelName = "aem-", description = "Edge Delivery") => {
-  try {
-    const url = new URL(`${API_ENDPOINT}/slack/channels`);
-    url.searchParams.append("channelName", channelName.replace(/\*/g, ""));
-    url.searchParams.append("description", description);
-
-    const response = await fetch(url.toString());
-    return response.ok ? response.json() : [];
-  } catch (e) { /* Handle error */ }
-  return [];
-};
-
-const getLatestMessage = async (channelId) => {
-  const fetchWithRetry = async () => {
-    let retry= true;
-
-    while (retry) {
-      const messageResponse = await fetch(`${API_ENDPOINT}/slack/latest/message?channelId=${channelId}`);
-      if (!messageResponse.ok) {
-        if (messageResponse.status === 429) {
-          const retryAfter = parseInt(messageResponse.headers.get('Retry-After'), 10) || 1;
-          await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
-        } else {
-          retry = false;
-          return null;
-        }
-      } else {
-        retry = false;
-        return await messageResponse.json();
-      }
-    }
-  };
-  return fetchWithRetry();
-};
-
-const getMembers = async (channelId) => {
-  const fetchWithRetry = async () => {
-    let retry= true;
-
-    while (retry) {
-      const membersResponse = await fetch(`${API_ENDPOINT}/slack/members?channelId=${channelId}`);
-      if (!membersResponse.ok) {
-        if (membersResponse.status === 429) {
-          const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
-          await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
-        } else {
-          retry = false;
-          return null;
-        }
-      } else {
-        retry = false;
-        const membersJson = await membersResponse.json();
-        return membersJson.members;
-      }
-    }
-  };
-  return fetchWithRetry();
-};
-
-const countMembers = async (members) => {
-  let adobeMemberCount = 0;
-  let nonAdobeMemberCount = 0;
-
-  const fetchWithRetry = async (userId) => {
-    let retry= true;
-
-    while (retry) {
-      const userResponse = await fetch(`${API_ENDPOINT}/slack/user/info?userId=${userId}`);
-      if (!userResponse.ok) {
-        if (userResponse.status === 429) {
-          const retryAfter = parseInt(userResponse.headers.get('Retry-After'),
-            10) || 1;
-          await new Promise(
-            (resolve) => setTimeout(resolve, retryAfter * 1000));
-        } else {
-          retry = false;
-          return null;
-        }
-      } else {
-        retry = false;
-        const userJson = await userResponse.json();
-        if (!userJson.user.is_bot && !userJson.user.deleted && !userJson.user.is_app_user) {
-          const email = userJson.user?.profile?.email;
-          if (email && email.endsWith("@adobe.com")) {
-            adobeMemberCount++;
-          } else {
-            nonAdobeMemberCount++;
-          }
-        }
-      }
-    }
-  };
-
-  for (const userId of members) {
-     await fetchWithRetry(userId);
-  }
-
-  return { adobeMemberCount, nonAdobeMemberCount };
- };
-
-const fetchAllChannels = async (channels) => {
-  const channelPromises = channels.map(async (channel) => {
-    let adobeMemberCount = 0;
-    let nonAdobeMemberCount = 0;
-    let message = null;
-
-    try {
-      if (!channel.adobeMemberCount || !channel.nonAdobeMemberCount) {
-        const members = await getMembers(channel.id);
-        const counts = await countMembers(members);
-
-        adobeMemberCount = counts.adobeMemberCount;
-        nonAdobeMemberCount = counts.nonAdobeMemberCount;
-      }
-
-      if (!channel.lastMessageTimestamp) {
-        message = await getLatestMessage(channel.id);
-      }
-
-      return { channelId: channel.id, message, adobeMemberCount, nonAdobeMemberCount };
-    } catch (error) {
-      console.error(`Error fetching data for channel ${channel.id}:`, error);
-      return { channelId: channel.id, message: null, adobeMemberCount: 0, nonAdobeMemberCount: 0 };
-    }
-  });
-  try {
-    return Promise.all(channelPromises);
-  } catch (error) {
-      console.error('Error fetching all channels:', error);
-      return [];
-    }
-};
+let sortDirection = 'asc';
 
 const displayChannels = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
@@ -169,7 +24,7 @@ const displayChannels = async () => {
   summary.classList.add('table-summary');
   summary.innerHTML = `
     <span>Channels Found: ${all.length}</span> |
-    <span style="color: green;">Active Channels: <span id="active-channels-count"></span></span></span>
+    <span style="color: green;">Active Channels: <span id="active-channels-count"></span></span>
   `;
 
   const table = document.createElement('table');
@@ -210,7 +65,7 @@ const displayChannels = async () => {
         <td class="last-message ${messageClass}" data-channel-id="${channel.id}">${lastMessageDate}</td>
         <td data-channel-id="${channel.id}">${adobeMemberCount}</td>
         <td data-channel-id="${channel.id}">${nonAdobeMemberCount}</td>
-    `;
+      `;
 
       tbody.appendChild(tr);
     });
@@ -224,24 +79,7 @@ const displayChannels = async () => {
       return; // Prevent sorting if the column is disabled
     }
 
-    const dataType = typeof all[0][key];
-
-    const sortedData = [...all].sort((a, b) => {
-      if (dataType === 'string') {
-        return sortDirection === 'asc' ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
-      }
-      if (dataType === 'number') {
-        return sortDirection === 'asc' ? a[key] - b[key] : b[key] - a[key];
-      }
-      if (key === 'created') {
-        return sortDirection === 'asc' ? a.created - b.created : b.created - a.created;
-      }
-      if (key === 'message') {
-        return sortDirection === 'asc' ? a.lastMessageTimestamp - b.lastMessageTimestamp : b.lastMessageTimestamp - a.lastMessageTimestamp;
-      }
-      return 0; // Default case if types do not match
-    });
-
+    const sortedData = sortData(all, key, sortDirection);
     renderRows(sortedData);
 
     // Add visual cue for sorted column
@@ -317,10 +155,6 @@ const displayChannels = async () => {
   table.querySelector('th[data-sort="nonAdobe"]').classList.remove('sorting-disabled');
 };
 
-/**
- * Handles site admin form submission.
- * @param {Event} e - Submit event.
- */
 document.getElementById('channelisation').addEventListener('click', async (e) => {
   e.preventDefault();
   await displayChannels();
