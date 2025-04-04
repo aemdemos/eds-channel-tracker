@@ -118,7 +118,8 @@ const updateMembersCountCell = (channel, membersCount) => {
 
 const startFetching = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
-  const channels = await getAllSlackChannels();
+  const channelNameFilter = document.getElementById('channel-name').value.trim(); // Get the input value
+  const channels = await getAllSlackChannels(channelNameFilter);
   renderTable(channels);
 
   // Load 20 rows at a time with a 1-second pause between each batch
