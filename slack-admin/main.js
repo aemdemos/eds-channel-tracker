@@ -2,6 +2,7 @@ import { getLatestMessage, getMembers, getAllSlackChannels } from './api.js';
 import { sortTable } from './utils.js';
 
 let sortDirection = 'asc';
+let activeChannelsCount = 0;
 
 const slackChannelsContainer = document.getElementById('slack-channels-container');
 
@@ -19,6 +20,7 @@ if (sk) {
 const initTable = (channels)  => {
 
   slackChannelsContainer.innerHTML = ''; // Clear any previous content
+  activeChannelsCount = 0;
 
   const summary = document.createElement('div');
   summary.classList.add('table-summary');
@@ -133,6 +135,11 @@ const updateLastMessageCell = (channel, messageDate) => {
     const messageClass = lastMessageDate.getTime() && lastMessageDate.getTime() > thirtyDaysAgo ? 'recent-message' : 'old-message';
     lastMessageCell.classList.remove('recent-message', 'old-message');
     lastMessageCell.classList.add(messageClass);
+
+    if (messageClass === "recent-message") {
+      activeChannelsCount++;
+      document.getElementById('active-channels-count').textContent = activeChannelsCount;
+    }
   }
 };
 
