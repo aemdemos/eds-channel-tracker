@@ -107,10 +107,10 @@ const addSortingToTable = (table, channels) => {
   const headers = table.querySelectorAll('th[data-sort]');
   headers.forEach(header => {
     header.addEventListener('click', () => {
+      headers.forEach(h => h.classList.remove('sorted-asc', 'sorted-desc'));
       if (!header.classList.contains('sorting-disabled')) {
         const columnKey = header.getAttribute('data-sort');
         const sortedData = sortTable(channels, columnKey, sortDirection);
-        header.classList.remove('sorted-asc', 'sorted-desc');
         header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
         renderTable(sortedData);
         toggleSortDirection();
