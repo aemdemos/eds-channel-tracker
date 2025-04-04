@@ -135,3 +135,23 @@
     width: 90px;
     height: auto;
 }
+
+.header {
+    padding: 30px;
+    float: right;
+}
+
+.feedback-link {
+    color: #0077c8;
+    font-weight: 500;
+    text-decoration: underline;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.feedback-link:hover { color: #005a91; }
+.slack-logo {
+    width: 20px;
+    height: 20px;
+}
