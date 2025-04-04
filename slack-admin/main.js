@@ -146,8 +146,24 @@ const updateLastMessageCell = (channel, messageDate) => {
 const updateMembersCountCell = (channel, membersCount) => {
   const row = document.querySelector(`tr[data-channel-id="${channel.id}"]`);
   if (row) {
-    row.querySelector('.members-count').textContent = membersCount;
+    const membersCountCell = row.querySelector('.members-count');
+    membersCountCell.textContent = membersCount;
+    const membersModal = document.createElement('div');
+    membersModal.innerHTML = '<span class="spinner"></span>';
+    membersModal.classList.add('members-modal');
+    membersCountCell.appendChild(membersModal); // Create a span for styling if needed
     channel.membersCount = membersCount; // Save the members count in the channel object
+
+    membersCountCell.addEventListener('mouseenter', (e) => {
+      const modal = membersCountCell.querySelector('.members-modal');
+      modal.style.display = 'block';
+      modal.style.top = e.clientY + 'px';
+      modal.style.left = e.clientX + 'px';
+    });
+    membersCountCell.addEventListener('mouseleave', () => {
+      const modal = membersCountCell.querySelector('.members-modal');
+      modal.style.display = 'none';
+    });
   }
 };
 
