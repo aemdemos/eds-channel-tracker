@@ -37,8 +37,8 @@ export const getAllSlackChannels = async (channelName = "aem-", description = "E
   return [];
 };
 
-export const getLatestMessage = async (channelId) => {
-  return await fetchWithRetry(`${API_ENDPOINT}/slack/latest/message?channelId=${channelId}`);
+export const getMessageStats = async (channelId) => {
+  return await fetchWithRetry(`${API_ENDPOINT}/slack/messageStats?channelId=${channelId}`);
 };
 
 export const getMembers = async (channelId) => {

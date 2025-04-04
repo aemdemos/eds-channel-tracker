@@ -1,4 +1,4 @@
-import { getLatestMessage, getMembers, getAllSlackChannels } from './api.js';
+import {  getMessageStats, getMembers, getAllSlackChannels } from './api.js';
 import { sortTable } from './utils.js';
 
 let sortDirection = 'asc';
@@ -43,6 +43,7 @@ const initTable = (channels)  => {
         <th data-sort="name">Name</th>
         <th data-sort="purpose" class="sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
+        <th data-sort="messagesCount">Messages</th>
         <th data-sort="messageDate">Last Message</th>
         <th data-sort="membersCount">Members</th>
       </tr>
@@ -94,6 +95,7 @@ const renderTable = (channels) => {
       <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
       <td>${channel.purpose?.value || ''}</td>
       <td class="stat-column">${createdDate}</td>
+      <td class="stat-column messages-count">${channel.messagesCount || spinner}</td>
       <td class="stat-column last-message ${messageDateClass}">${channel.messageDate || spinner}</td>
       <td class="stat-column members-count">${channel.membersCount || spinner}</td>
     `;
@@ -123,9 +125,12 @@ const toggleSortDirection = () => {
   sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
 };
 
-const updateLastMessageCell = (channel, messageDate) => {
+const updateMessageCells = (channel, messagesCount, messageDate) => {
   const row = document.querySelector(`tr[data-channel-id="${channel.id}"]`);
   if (row) {
+    const messagesCountCell = row.querySelector('.messages-count');
+    messagesCountCell.textContent = messagesCount;
+    channel.messagesCount = messagesCount; // Save the messages count in the channel object
     channel.messageDate = messageDate; // Save the last message date in the channel object
     const lastMessageCell = row.querySelector('.last-message');
     lastMessageCell.innerHTML = messageDate;
@@ -182,16 +187,17 @@ const startFetching = async () => {
     const batch = channels.slice(i, i + batchSize);
 
     const messagePromises = batch.map(channel => {
-    if (!channel.messageDate) {
-      return getLatestMessage(channel.id).then(messageJson => ({
+    if (!channel.messagesCount || !channel.messageDate || channel.messageDate === 'No date') {
+      return getMessageStats(channel.id).then(messageJson => ({
         channelId: channel.id,
-        messageDate: messageJson?.messages?.[0]?.ts
-          ? new Date(messageJson.messages[0].ts * 1000).toISOString().split(
+        messagesCount: messageJson?.messageCount || 0,
+        messageDate: messageJson?.lastMessageTimestamp
+          ? new Date(messageJson.lastMessageTimestamp * 1000).toISOString().split(
             'T')[0]
           : 'No date',
       }));
     }
-      return Promise.resolve({ channelId: channel.id, messageDate: channel.messageDate })
+      return Promise.resolve({ channelId: channel.id, messagesCount: channel.messagesCount, messageDate: channel.messageDate })
     });
 
     const memberPromises = batch.map(channel => {
@@ -208,9 +214,9 @@ const startFetching = async () => {
     const memberResults = await Promise.all(memberPromises);
 
     // Update the table after each batch
-    messageResults.forEach(({ channelId, messageDate }) => {
+    messageResults.forEach(({ channelId, messagesCount, messageDate }) => {
       const channel = channels.find(c => c.id === channelId);
-      updateLastMessageCell(channel, messageDate);
+      updateMessageCells(channel, messagesCount, messageDate);
     });
 
     memberResults.forEach(({ channelId, membersCount }) => {
