@@ -26,7 +26,7 @@ const initTable = (channels)  => {
   summary.classList.add('table-summary');
   summary.innerHTML = `
     <span>Total Channels: ${channels.length}</span> |
-    <span style="color: green;">Active Channels: <span id="active-channels-count"></span></span></span>
+    <span style="color: green;">Active Channels: <span id="active-channels-count">0</span></span></span>
   `;
 
 
