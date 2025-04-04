@@ -20,6 +20,16 @@ const initTable = (channels)  => {
 
   slackChannelsContainer.innerHTML = ''; // Clear any previous content
 
+  const summary = document.createElement('div');
+  summary.classList.add('table-summary');
+  summary.innerHTML = `
+    <span>Total Channels: ${channels.length}</span> |
+    <span style="color: green;">Active Channels: <span id="active-channels-count"></span></span></span>
+  `;
+
+
+  slackChannelsContainer.appendChild(summary);
+
   // Create the table with the same classes as in your original code
   const table = document.createElement('table');
   table.classList.add('styled-table'); // Add 'styled-table' class to the table
@@ -54,7 +64,6 @@ const initTable = (channels)  => {
 
 const renderTable = (channels) => {
 
-  const table = document.getElementById("slack-channels-container").querySelector('table');
   const tbody = document.getElementsByTagName('tbody').item(0);
 
   tbody.innerHTML = ''; // Clear previous rows
@@ -115,8 +124,15 @@ const toggleSortDirection = () => {
 const updateLastMessageCell = (channel, messageDate) => {
   const row = document.querySelector(`tr[data-channel-id="${channel.id}"]`);
   if (row) {
-    row.querySelector('.last-message').innerHTML = messageDate;
     channel.messageDate = messageDate; // Save the last message date in the channel object
+    const lastMessageCell = row.querySelector('.last-message');
+    lastMessageCell.innerHTML = messageDate;
+    const currentDate = new Date();
+    const lastMessageDate = new Date(messageDate); // Convert to Date object
+    const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
+    const messageClass = lastMessageDate.getTime() && lastMessageDate.getTime() > thirtyDaysAgo ? 'recent-message' : 'old-message';
+    lastMessageCell.classList.remove('recent-message', 'old-message');
+    lastMessageCell.classList.add(messageClass);
   }
 };
 
