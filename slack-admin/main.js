@@ -16,7 +16,8 @@ if (sk) {
   }, { once: true });
 }
 
-const renderTable = (channels) => {
+const initTable = (channels)  => {
+
   slackChannelsContainer.innerHTML = ''; // Clear any previous content
 
   // Create the table with the same classes as in your original code
@@ -38,6 +39,25 @@ const renderTable = (channels) => {
 
   // Create the table body (with tbody)
   const tbody = document.createElement('tbody');
+
+  // Append tbody to the table
+  table.appendChild(tbody);
+
+  addSortingToTable(table, channels);
+
+  // Append the table to the slackChannelsContainer
+  slackChannelsContainer.appendChild(table);
+
+  renderTable(channels);
+
+}
+
+const renderTable = (channels) => {
+
+  const table = document.getElementById("slack-channels-container").querySelector('table');
+  const tbody = document.getElementsByTagName('tbody').item(0);
+
+  tbody.innerHTML = ''; // Clear previous rows
 
   // Loop through the channels and create rows
   channels.forEach((channel) => {
@@ -70,31 +90,23 @@ const renderTable = (channels) => {
     tbody.appendChild(tr); // Add the row to the tbody
   });
 
-  // Append tbody to the table
-  table.appendChild(tbody);
-
-  // Append the table to the slackChannelsContainer
-  slackChannelsContainer.appendChild(table);
-
-  addSortingToTable(table, channels);
 };
 
 const addSortingToTable = (table, channels) => {
   const headers = table.querySelectorAll('th[data-sort]');
   headers.forEach(header => {
     header.addEventListener('click', () => {
-      const columnKey = header.getAttribute('data-sort');
-      const sortedData = sortTable(channels, columnKey, sortDirection);
-      renderTable(sortedData);
-      toggleSortDirection();
-
-      headers.forEach(h => h.classList.remove('sorted-asc', 'sorted-desc'));
       if (!header.classList.contains('sorting-disabled')) {
+        const columnKey = header.getAttribute('data-sort');
+        const sortedData = sortTable(channels, columnKey, sortDirection);
+        header.classList.remove('sorted-asc', 'sorted-desc');
         header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+        renderTable(sortedData);
+        toggleSortDirection();
       }
     });
   });
-};
+}
 
 const toggleSortDirection = () => {
   sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -120,7 +132,8 @@ const startFetching = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
   const channelNameFilter = document.getElementById('channel-name').value.trim(); // Get the input value
   const channels = await getAllSlackChannels(channelNameFilter);
-  renderTable(channels);
+
+  initTable(channels);
 
   // Load 20 rows at a time with a 1-second pause between each batch
   const batchSize = 20;
