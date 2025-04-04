@@ -30,8 +30,8 @@ const renderTable = (channels) => {
         <th data-sort="name">Name</th>
         <th data-sort="purpose" class="sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
-        <th data-sort="message">Last Message</th>
-        <th data-sort="members">Members</th>
+        <th data-sort="messageDate">Last Message</th>
+        <th data-sort="membersCount">Members</th>
       </tr>
     </thead>
   `;
@@ -65,7 +65,6 @@ const renderTable = (channels) => {
       <td class="stat-column">${createdDate}</td>
       <td class="stat-column last-message ${messageDateClass}">${channel.messageDate || spinner}</td>
       <td class="stat-column members-count">${channel.membersCount || spinner}</td>
-
     `;
 
     tbody.appendChild(tr); // Add the row to the tbody
@@ -77,9 +76,7 @@ const renderTable = (channels) => {
   // Append the table to the slackChannelsContainer
   slackChannelsContainer.appendChild(table);
 
-  // Add sorting functionality to table headers
   addSortingToTable(table, channels);
-
 };
 
 const addSortingToTable = (table, channels) => {
@@ -95,7 +92,6 @@ const addSortingToTable = (table, channels) => {
       if (!header.classList.contains('sorting-disabled')) {
         header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
       }
-
     });
   });
 };
@@ -125,7 +121,7 @@ const startFetching = async () => {
   const channels = await getAllSlackChannels();
   renderTable(channels);
 
-  // Load 10 rows at a time with a 1-second pause between each batch
+  // Load 20 rows at a time with a 1-second pause between each batch
   const batchSize = 20;
   const totalChannels = channels.length;
 
@@ -139,10 +135,10 @@ const startFetching = async () => {
         messageDate: messageJson?.messages?.[0]?.ts
           ? new Date(messageJson.messages[0].ts * 1000).toISOString().split(
             'T')[0]
-          : 'No date'
+          : 'No date',
       }));
     }
-      return Promise.resolve({ channelId: channel.id, messageDate: channel.messageDate });
+      return Promise.resolve({ channelId: channel.id, messageDate: channel.messageDate })
     });
 
     const memberPromises = batch.map(channel => {
