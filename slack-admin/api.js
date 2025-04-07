@@ -41,8 +41,8 @@ export const getMessageStats = async (channelId) => {
   return await fetchWithRetry(`${API_ENDPOINT}/slack/messageStats?channelId=${channelId}`);
 };
 
-export const getMembers = async (channelId) => {
-  return  await fetchWithRetry(`${API_ENDPOINT}/slack/members?channelId=${channelId}`);
+export const getMemberIds = async (channelId) => {
+  return await fetchWithRetry(`${API_ENDPOINT}/slack/members?channelId=${channelId}`);
 };
 
 export const getUserInfo = async (userId) => {
