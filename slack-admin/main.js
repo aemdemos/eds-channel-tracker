@@ -213,6 +213,10 @@ const startFetching = async () => {
   const channelNameFilter = document.getElementById('channel-name').value.trim(); // Get the input value
   const channels = await getAllSlackChannels(channelNameFilter);
 
+
+  // SORT BY NAME initially
+  channels.sort((a, b) => a.name.localeCompare(b.name));
+
   initTable(channels);
 
   // Load 20 rows at a time with a 1-second pause between each batch
