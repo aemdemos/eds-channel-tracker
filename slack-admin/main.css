@@ -179,6 +179,9 @@
     text-align: center;
     font-size: 14px;
     padding: 15px;
+    max-height: 400px;   /* Set your desired fixed height */
+    overflow-y: auto;    /* Enable vertical scrolling when content overflows */
+    overflow-x: hidden;  /* Prevent horizontal scrolling */
 }
 
 .modal h4 {
