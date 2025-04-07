@@ -159,14 +159,26 @@ const updateMembersCountCell = (channel, membersCount) => {
   membersCountCell._modalData = null;
 
   let modalVisible = false;
+  let secondClickListener = null;
   const modal = document.getElementById('modal');
 
-  membersCountCell.addEventListener('click', async () => {
-    if (modalVisible) {
+  membersCountCell.addEventListener('click', async (e) => {
+    e.stopPropagation(); // prevent the event from bubbling to the document
+
+    modalVisible = true;
+
+    // Add one-time document click listener
+    secondClickListener = () => {
       hideModal(modal);
       modalVisible = false;
-      return;
-    }
+      document.removeEventListener("click", secondClickListener);
+      secondClickListener = null;
+    };
+
+    // Delay to avoid triggering on the same click
+    setTimeout(() => {
+      document.addEventListener("click", secondClickListener, { once: true });
+    }, 0);
 
     positionModal(modal, membersCountCell);
     modal.style.display = 'block';
@@ -174,7 +186,6 @@ const updateMembersCountCell = (channel, membersCount) => {
 
     if (membersCountCell._fetched) {
       modal.innerHTML = membersCountCell._modalData;
-      modalVisible = true;
       return;
     }
 
@@ -185,17 +196,13 @@ const updateMembersCountCell = (channel, membersCount) => {
       const { adobeMembers, nonAdobeMembers } = await countMembers(response.members);
       adobeMembers.sort(alphaSort);
       nonAdobeMembers.sort(alphaSort);
-
       const modalContent = renderMembersTable(channel.name, adobeMembers, nonAdobeMembers);
       modal.innerHTML = modalContent;
-
       membersCountCell._fetched = true;
       membersCountCell._modalData = modalContent;
-      modalVisible = true;
     } catch (err) {
       modal.innerHTML = `<p style="color: red;">Error loading data</p>`;
       console.error(err);
-      modalVisible = true;
     }
   });
 };

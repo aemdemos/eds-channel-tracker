@@ -11,9 +11,9 @@ export const countMembers = async (members) => {
     if (userJson && !userJson.user.is_bot && !userJson.user.deleted && !userJson.user.is_app_user) {
       const email = userJson.user?.profile?.email;
       if (email && email.endsWith("@adobe.com")) {
-        adobeMembers.push(userJson.user.name);
+        adobeMembers.push(userJson.user.real_name);
       } else {
-        nonAdobeMembers.push(userJson.user.name);
+        nonAdobeMembers.push(userJson.user.real_name);
       }
     }
   }
