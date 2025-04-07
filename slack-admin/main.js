@@ -1,4 +1,4 @@
-import {  getMessageStats, getMembers, getAllSlackChannels } from './api.js';
+import { getMessageStats, getMembers, getAllSlackChannels, getUserInfo } from './api.js';
 import { sortTable } from './utils.js';
 
 let sortDirection = 'asc';
@@ -97,7 +97,7 @@ const renderTable = (channels) => {
       <td class="stat-column">${createdDate}</td>
       <td class="stat-column messages-count">${channel.messagesCount || spinner}</td>
       <td class="stat-column last-message ${messageDateClass}">${channel.messageDate || spinner}</td>
-      <td class="stat-column members-count">${channel.membersCount || spinner}</td>
+      <td class="stat-column members-count hover-cell">${channel.membersCount || spinner}</td>
     `;
 
     tbody.appendChild(tr); // Add the row to the tbody
@@ -153,22 +153,65 @@ const updateMembersCountCell = (channel, membersCount) => {
   if (row) {
     const membersCountCell = row.querySelector('.members-count');
     membersCountCell.textContent = membersCount;
-    const membersModal = document.createElement('div');
-    membersModal.innerHTML = '<span class="spinner"></span>';
-    membersModal.classList.add('members-modal');
-    membersCountCell.appendChild(membersModal); // Create a span for styling if needed
-    channel.membersCount = membersCount; // Save the members count in the channel object
 
-    membersCountCell.addEventListener('mouseenter', (e) => {
-      const modal = membersCountCell.querySelector('.members-modal');
-      modal.style.display = 'block';
-      modal.style.top = e.clientY + 'px';
-      modal.style.left = e.clientX + 'px';
+    membersCountCell._fetched = false; // Custom property to track fetch status
+    membersCountCell._modalData = null; // Optional: store the fetched data to re-render if needed
+
+    membersCountCell.addEventListener('mouseenter', async function (e) {
+    const modal = document.getElementById('modal');
+
+    // Position the modal to the right of the cell
+    const rect = membersCountCell.getBoundingClientRect();
+    modal.style.top = `${window.scrollY + rect.top - 15}px`;
+    modal.style.left = `${window.scrollX + rect.left + 35}px`;
+    modal.style.display = 'block';
+
+    // If already fetched, just display the existing modal data
+    if (membersCountCell._fetched) {
+      modal.innerHTML = membersCountCell._modalData;
+      return;
+    }
+
+    try {
+      const response = await getMembers(channel.id);
+      if (!response.ok) throw new Error('Failed to fetch');
+
+      const membersJson = response; // assume this is an array of members
+      const adobeEmails = [];
+      const otherEmails = [];
+
+      const user = await getUserInfo(membersJson.members[0]);
+
+      if (user.user.profile.email && user.user.profile.email.includes('adobe')) {
+        adobeEmails.push(user.user.profile.email);
+      } else {
+        otherEmails.push(user.user.profile.email);
+      }
+
+      modal.innerHTML = `
+            <strong>Adobe emails:</strong>
+            <ul>${adobeEmails.map(email => `<li>${email}</li>`)
+      .join('')}</ul>
+            <strong>Other emails:</strong>
+            <ul>${otherEmails.map(email => `<li>${email}</li>`)
+      .join('')}</ul>
+        `;
+
+      membersCountCell._fetched = true;
+      membersCountCell._modalData = modal.innerHTML;
+
+    } catch (err) {
+      modal.innerHTML = `<p style="color: red;">Error loading data</p>`;
+      console.error(err);
+    }
+
+    membersCountCell.addEventListener('mouseleave', function () {
+        const modal = document.getElementById('modal');
+        modal.innerHTML = '<span class="spinner"></span>';
+        modal.style.display = 'none'; // Hide modal when mouse leaves
+      });
     });
-    membersCountCell.addEventListener('mouseleave', () => {
-      const modal = membersCountCell.querySelector('.members-modal');
-      modal.style.display = 'none';
-    });
+
   }
 };
 

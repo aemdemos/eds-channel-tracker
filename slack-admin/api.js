@@ -48,3 +48,4 @@ export const getMembers = async (channelId) => {
 export const getUserInfo = async (userId) => {
   return await fetchWithRetry(`${API_ENDPOINT}/slack/user/info?userId=${userId}`);
 };
+
