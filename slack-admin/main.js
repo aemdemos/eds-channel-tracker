@@ -186,7 +186,7 @@ const updateMembersCountCell = (channel, membersCount) => {
       adobeMembers.sort(alphaSort);
       nonAdobeMembers.sort(alphaSort);
 
-      const modalContent = renderMembersTable(adobeMembers, nonAdobeMembers);
+      const modalContent = renderMembersTable(channel.name, adobeMembers, nonAdobeMembers);
       modal.innerHTML = modalContent;
 
       membersCountCell._fetched = true;
