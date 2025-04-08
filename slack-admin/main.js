@@ -46,8 +46,7 @@ const initTable = (channels)  => {
         <th data-sort="messagesCount">
           Engagement
             <span class="tooltip-container">
-                <span class="tooltip-icon">?</span>
-                <span class="custom-tooltip">Number of messages in the past 30 days</span>
+            (last 30 days)
             </span>
         </th>
         <th data-sort="messageDate">Last Message</th>
