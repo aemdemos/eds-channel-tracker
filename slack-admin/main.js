@@ -157,22 +157,20 @@ const updateMessageCells = (channel, messagesCount, messageDate) => {
   thermometerFill.style.width = `${fillPercentage}%`;
 
   channel.messagesCount = messagesCount; // Save the messages count in the channel object
+  channel.messageDate = messageDate; // Save the last message date in the channel object
+
+  if (messagesCount > 10) {
+    activeChannelsCount++;
+    document.getElementById('active-channels-count').textContent = activeChannelsCount;
+  }
 
   // Update last message date
   const lastMessageCell = row.querySelector('.last-message');
   lastMessageCell.innerHTML = messageDate;
-  const currentDate = new Date();
-  const lastMessageDate = new Date(messageDate); // Convert to Date object
-  const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
-  const messageClass = lastMessageDate.getTime() && lastMessageDate.getTime() > thirtyDaysAgo ? 'recent-message' : 'old-message';
-  lastMessageCell.classList.remove('recent-message', 'old-message');
-  lastMessageCell.classList.add(messageClass);
 
-  if (messageClass === "recent-message") {
-    activeChannelsCount++;
-    document.getElementById('active-channels-count').textContent = activeChannelsCount;
-  }
-  channel.messageDate = messageDate; // Save the last message date in the channel object
+
+
+
 };
 
 const updateMembersCountCell = (channel, membersCount) => {
