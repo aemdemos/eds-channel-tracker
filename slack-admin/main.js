@@ -27,7 +27,7 @@ const initTable = (channels)  => {
   summary.classList.add('table-summary');
   summary.innerHTML = `
     <span>Total Channels: ${channels.length}</span> |
-    <span style="color: green;">Active Channels: <span id="active-channels-count">0</span></span></span>
+    <span style="color: green;">Active Channels: <span id="active-channels-count">0</span></span>
   `;
 
   slackChannelsContainer.appendChild(summary);
@@ -43,7 +43,13 @@ const initTable = (channels)  => {
         <th data-sort="name">Name</th>
         <th data-sort="purpose" class="sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
-        <th data-sort="messagesCount" title="Messages in last 30 days">Recent Activity</th>
+        <th data-sort="messagesCount">
+          Engagement
+           <span class="tooltip-container">
+            ❓
+             <span class="custom-tooltip">Number of messages in the past 30 days</span>
+           </span>
+        </th>
         <th data-sort="messageDate">Last Message</th>
         <th data-sort="membersCount">Members</th>
       </tr>
@@ -149,7 +155,8 @@ const updateMessageCells = (channel, messagesCount, messageDate) => {
   const maxMessagesCount = 1000; // Adjust this value based on your data
   const fillPercentage = Math.min((messagesCount / maxMessagesCount) * 100, 100);
   thermometerFill.style.width = `${fillPercentage}%`;
-    channel.messagesCount = messagesCount; // Save the messages count in the channel object
+
+  channel.messagesCount = messagesCount; // Save the messages count in the channel object
 
   // Update last message date
   const lastMessageCell = row.querySelector('.last-message');
@@ -174,6 +181,8 @@ const updateMembersCountCell = (channel, membersCount) => {
 
   const membersCountCell = row.querySelector('.members-count');
   membersCountCell.textContent = membersCount;
+
+  channel.membersCount = membersCount;
 
   membersCountCell._fetched = false;
   membersCountCell._modalData = null;
