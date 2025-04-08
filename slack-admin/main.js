@@ -152,7 +152,7 @@ const updateMessageCells = (channel, messagesCount, messageDate) => {
   channel.messagesCount = messagesCount; // Save the messages count in the channel object
   channel.messageDate = messageDate; // Save the last message date in the channel object
 
-  if (messagesCount > 4) {
+  if (messagesCount > 3) {
     activeChannelsCount++;
     document.getElementById('active-channels-count').textContent = activeChannelsCount;
   }
