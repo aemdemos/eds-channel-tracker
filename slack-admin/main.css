@@ -59,13 +59,6 @@
 .stat-column {
     width: 150px; /* Adjust the width as needed */
 }
-.recent-message {
-    color: green;
-}
-
-.old-message {
-    color: red;
-}
 
 .search-filters {
     display: flex;

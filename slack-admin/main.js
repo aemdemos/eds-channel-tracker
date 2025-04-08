@@ -84,14 +84,7 @@ const renderTable = (channels) => {
     const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0]; // Format the creation date
     const spinner = '<div class="spinner"></div>'; // Show a spinner if no message date is available
 
-    // Determine the class for the message date
-    let messageDateClass = '';
-    if (channel.messageDate) {
-      const messageDate = new Date(channel.messageDate);
-      const currentDate = new Date();
-      const dateDifference = (currentDate - messageDate) / (1000 * 60 * 60 * 24); // Difference in days
-      messageDateClass = dateDifference < 30 ? 'recent-message' : 'old-message';
-    }
+
     let fillPercentage;
     if (channel.messagesCount) {
       // Calculate the fill percentage for the thermometer
@@ -111,11 +104,11 @@ const renderTable = (channels) => {
       <td class="stat-column messages-count">
         <div class="thermometer">
           <div class="thermometer-fill" style="width: ${fillPercentage}%;"></div>
-          <div class="thermometer-label">${channel.messagesCount || spinner} </div>
+          <div class="thermometer-label">${channel.messagesCount ?? spinner} </div>
         </div>
       </td>
-      <td class="stat-column last-message ${messageDateClass}">${channel.messageDate || spinner}</td>
-      <td class="stat-column members-count title="View members">${channel.membersCount || spinner}</td>
+      <td class="stat-column last-message">${typeof channel.messageDate === 'string' ? channel.messageDate : spinner}</td>
+      <td class="stat-column members-count title="View members">${channel.membersCount ?? spinner}</td>
     `;
 
     tbody.appendChild(tr); // Add the row to the tbody
@@ -167,10 +160,6 @@ const updateMessageCells = (channel, messagesCount, messageDate) => {
   // Update last message date
   const lastMessageCell = row.querySelector('.last-message');
   lastMessageCell.innerHTML = messageDate;
-
-
-
-
 };
 
 const updateMembersCountCell = (channel, membersCount) => {
