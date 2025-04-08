@@ -112,9 +112,68 @@ const renderTable = (channels) => {
     `;
 
     tbody.appendChild(tr); // Add the row to the tbody
+
+    reattachModalHandlers();
+
   });
 
 };
+
+const reattachModalHandlers = () => {
+  const modal = document.getElementById('modal');
+  document.querySelectorAll('.members-count').forEach(cell => {
+    const row = cell.closest('tr');
+    const channelId = row.getAttribute('data-channel-id');
+
+    // Avoid duplicate handlers
+    if (cell._handlerAttached) return;
+    cell._handlerAttached = true;
+
+    cell.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      let modalVisible = true;
+
+      const channel = { id: channelId, name: row.querySelector('td:first-child').textContent };
+
+      let secondClickListener = () => {
+        hideModal(modal);
+        modalVisible = false;
+        document.removeEventListener("click", secondClickListener);
+      };
+
+      setTimeout(() => {
+        document.addEventListener("click", secondClickListener, { once: true });
+      }, 0);
+
+      positionModal(modal, cell);
+      modal.style.display = 'block';
+      requestAnimationFrame(() => modal.classList.add('show'));
+
+      if (cell._fetched) {
+        modal.innerHTML = cell._modalData;
+        return;
+      }
+
+      try {
+        const response = await getMemberIds(channel.id);
+        if (!response.ok) throw new Error('Failed to fetch members');
+
+        const { adobeMembers, nonAdobeMembers } = await countMembers(response.members);
+        adobeMembers.sort(alphaSort);
+        nonAdobeMembers.sort(alphaSort);
+
+        const modalContent = renderMembersTable(channel.name, adobeMembers, nonAdobeMembers);
+        modal.innerHTML = modalContent;
+        cell._fetched = true;
+        cell._modalData = modalContent;
+      } catch (err) {
+        modal.innerHTML = `<p style="color: red;">Error loading data</p>`;
+        console.error(err);
+      }
+    });
+  });
+};
+
 
 const addSortingToTable = (table, channels) => {
   const headers = table.querySelectorAll('th[data-sort]');
