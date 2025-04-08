@@ -88,7 +88,7 @@ const renderTable = (channels) => {
     let fillPercentage;
     if (channel.messagesCount) {
       // Calculate the fill percentage for the thermometer
-      const maxMessagesCount = 1000;
+      const maxMessagesCount = 10;
       fillPercentage = Math.min(
         (channel.messagesCount / maxMessagesCount) * 100, 100);
     }
@@ -145,7 +145,7 @@ const updateMessageCells = (channel, messagesCount, messageDate) => {
   const thermometerFill = messagesCountCell.querySelector('.thermometer-fill');
   const thermometerLabel = messagesCountCell.querySelector('.thermometer-label');
   thermometerLabel.textContent = messagesCount;
-  const maxMessagesCount = 1000; // Adjust this value based on your data
+  const maxMessagesCount = 10; // Adjust this value based on your data
   const fillPercentage = Math.min((messagesCount / maxMessagesCount) * 100, 100);
   thermometerFill.style.width = `${fillPercentage}%`;
 
