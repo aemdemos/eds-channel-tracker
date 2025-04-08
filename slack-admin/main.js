@@ -283,6 +283,17 @@ const updateMembersCountCell = (channel, membersCount) => {
 
 
 const startFetching = async () => {
+  // Get the button and its parent element
+  const loadButton = document.getElementById('channelisation');
+  const buttonParent = loadButton.parentNode;
+
+  // Create a spinner and replace the button with it
+  const spinner = document.createElement('span');
+  spinner.classList.add('spinner');
+  loadButton.style.visibility = 'hidden'; // Hide the button without affecting layout
+  buttonParent.appendChild(spinner); // Insert the spinner in the button's place
+
+
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
   const channelNameFilter = document.getElementById('channel-name').value.trim(); // Get the input value
   const channels = await getAllSlackChannels(channelNameFilter);
@@ -343,6 +354,10 @@ const startFetching = async () => {
       await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
     }
   }
+
+  // After all rows are loaded, hide the spinner and restore the button
+  spinner.remove(); // Remove the spinner
+  loadButton.style.visibility = 'visible'; // Restore the button visibility
 };
 
 document.getElementById('channelisation').addEventListener('click', startFetching);
