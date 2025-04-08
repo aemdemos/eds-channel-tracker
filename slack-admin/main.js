@@ -43,7 +43,7 @@ const initTable = (channels)  => {
         <th data-sort="name">Name</th>
         <th data-sort="purpose" class="sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
-        <th data-sort="messagesCount">Messages</th>
+        <th data-sort="messagesCount">Activity</th>
         <th data-sort="messageDate">Last Message</th>
         <th data-sort="membersCount">Members</th>
       </tr>
@@ -86,6 +86,13 @@ const renderTable = (channels) => {
       const dateDifference = (currentDate - messageDate) / (1000 * 60 * 60 * 24); // Difference in days
       messageDateClass = dateDifference < 30 ? 'recent-message' : 'old-message';
     }
+    let fillPercentage;
+    if (channel.messagesCount) {
+      // Calculate the fill percentage for the thermometer
+      const maxMessagesCount = 1000;
+      fillPercentage = Math.min(
+        (channel.messagesCount / maxMessagesCount) * 100, 100);
+    }
 
     // Add classes to the cells (you can apply any additional class that you need)
     tr.classList.add('channel-row');
@@ -95,7 +102,12 @@ const renderTable = (channels) => {
       <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
       <td>${channel.purpose?.value || ''}</td>
       <td class="stat-column">${createdDate}</td>
-      <td class="stat-column messages-count">${channel.messagesCount || spinner}</td>
+      <td class="stat-column messages-count">
+        <div class="thermometer">
+          <div class="thermometer-fill" style="width: ${fillPercentage}%;"></div>
+          <div class="thermometer-label">${channel.messagesCount || spinner} </div>
+        </div>
+      </td>
       <td class="stat-column last-message ${messageDateClass}">${channel.messageDate || spinner}</td>
       <td class="stat-column members-count title="View members">${channel.membersCount || spinner}</td>
     `;
@@ -127,25 +139,33 @@ const toggleSortDirection = () => {
 
 const updateMessageCells = (channel, messagesCount, messageDate) => {
   const row = document.querySelector(`tr[data-channel-id="${channel.id}"]`);
-  if (row) {
-    const messagesCountCell = row.querySelector('.messages-count');
-    messagesCountCell.textContent = messagesCount;
-    channel.messagesCount = messagesCount; // Save the messages count in the channel object
-    channel.messageDate = messageDate; // Save the last message date in the channel object
-    const lastMessageCell = row.querySelector('.last-message');
-    lastMessageCell.innerHTML = messageDate;
-    const currentDate = new Date();
-    const lastMessageDate = new Date(messageDate); // Convert to Date object
-    const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
-    const messageClass = lastMessageDate.getTime() && lastMessageDate.getTime() > thirtyDaysAgo ? 'recent-message' : 'old-message';
-    lastMessageCell.classList.remove('recent-message', 'old-message');
-    lastMessageCell.classList.add(messageClass);
+  if (!row) return;
 
-    if (messageClass === "recent-message") {
-      activeChannelsCount++;
-      document.getElementById('active-channels-count').textContent = activeChannelsCount;
-    }
+  // Update activity
+  const messagesCountCell = row.querySelector('.messages-count');
+  const thermometerFill = messagesCountCell.querySelector('.thermometer-fill');
+  const thermometerLabel = messagesCountCell.querySelector('.thermometer-label');
+  thermometerLabel.textContent = messagesCount;
+  const maxMessagesCount = 1000; // Adjust this value based on your data
+  const fillPercentage = Math.min((messagesCount / maxMessagesCount) * 100, 100);
+  thermometerFill.style.width = `${fillPercentage}%`;
+    channel.messagesCount = messagesCount; // Save the messages count in the channel object
+
+  // Update last message date
+  const lastMessageCell = row.querySelector('.last-message');
+  lastMessageCell.innerHTML = messageDate;
+  const currentDate = new Date();
+  const lastMessageDate = new Date(messageDate); // Convert to Date object
+  const thirtyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 30));
+  const messageClass = lastMessageDate.getTime() && lastMessageDate.getTime() > thirtyDaysAgo ? 'recent-message' : 'old-message';
+  lastMessageCell.classList.remove('recent-message', 'old-message');
+  lastMessageCell.classList.add(messageClass);
+
+  if (messageClass === "recent-message") {
+    activeChannelsCount++;
+    document.getElementById('active-channels-count').textContent = activeChannelsCount;
   }
+  channel.messageDate = messageDate; // Save the last message date in the channel object
 };
 
 const updateMembersCountCell = (channel, membersCount) => {
