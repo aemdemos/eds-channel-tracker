@@ -855,34 +855,4 @@ table + .form-field,
 .field-help-text p {
     margin: 0;
 }
-.thermometer {
-    height: 20px;
-    width: 100%;
-    background: linear-gradient(to left, navajowhite,white); /* Customize the gradient colors */
-    border-radius: 5px;
-    position: relative;
-}
 
-.thermometer-fill {
-    height: 100%;
-    background-color: red;
-    border-radius: 5px;
-    position: absolute;
-    top: 0;
-    left: 0;
-    opacity: 0.6;
-}
-.thermometer-label {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    font-size: 12px;
-    margin-top: 5px;
-}
-.thermometer-label span {
-    display: inline-block;
-    width: 100%;
-    text-align: center;
-}
