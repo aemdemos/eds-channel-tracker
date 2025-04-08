@@ -204,8 +204,22 @@
 .tooltip-container {
     position: relative;
     display: inline-block;
-    margin-left: -3px;
-    font-size: 12px;
+    margin-left: 3px;
+    cursor: pointer;
+}
+
+.tooltip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    font-size: 13px;
+    background-color: #d9534f; /* Bootstrap red */
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    line-height: 1;
 }
 
 .custom-tooltip {
@@ -219,11 +233,11 @@
     padding: 6px 8px;
     position: absolute;
     z-index: 1;
-    bottom: 125%; /* Position above the icon */
+    bottom: 125%; /* Position above icon */
     left: 50%;
     transform: translateX(-50%);
     transition: opacity 0.2s;
-    font-size: 12px;
+    font-size: 13px;
     white-space: normal;
 }
 
@@ -235,7 +249,7 @@
 .custom-tooltip::after {
     content: "";
     position: absolute;
-    top: 100%; /* Arrow at bottom of tooltip */
+    top: 100%;
     left: 50%;
     transform: translateX(-50%);
     border-width: 5px;

@@ -27,7 +27,7 @@ const initTable = (channels)  => {
   summary.classList.add('table-summary');
   summary.innerHTML = `
     <span>Total Channels: ${channels.length}</span> |
-    <span style="color: green;">Active Channels: <span id="active-channels-count">0</span></span>
+    <span>Active Channels: <span id="active-channels-count">0</span></span>
   `;
 
   slackChannelsContainer.appendChild(summary);
@@ -45,10 +45,10 @@ const initTable = (channels)  => {
         <th data-sort="created">Created</th>
         <th data-sort="messagesCount">
           Engagement
-           <span class="tooltip-container">
-            ❓
-             <span class="custom-tooltip">Number of messages in the past 30 days</span>
-           </span>
+            <span class="tooltip-container">
+                <span class="tooltip-icon">?</span>
+                <span class="custom-tooltip">Number of messages in the past 30 days</span>
+            </span>
         </th>
         <th data-sort="messageDate">Last Message</th>
         <th data-sort="membersCount">Members</th>
