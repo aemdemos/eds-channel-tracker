@@ -1,4 +1,4 @@
-@import './slack-admin.css';
+@import url('./slack-admin.css');
 
 .slack-admin #slack-channels-container {
   padding: 0 var(--horizontal-spacing);
@@ -12,7 +12,7 @@
     border-collapse: collapse;
     font-family: Arial, sans-serif;
     font-size: 14px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgb(0 0 0 / 10%);
 }
 
 .styled-table thead {
@@ -90,7 +90,7 @@
     align-items: center;
     gap: 8px;
     color: white;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -103,7 +103,7 @@
 
 .button-wrapper .button:hover {
     transform: scale(1.05);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 8px rgb(0 0 0 / 15%);
 }
 
 .slack-admin {
@@ -143,6 +143,7 @@
     gap: 5px;
 }
 .feedback-link:hover { color: #005a91; }
+
 .slack-logo {
     width: 20px;
     height: 20px;
@@ -158,9 +159,8 @@
     display: none;
     background-color: white;
     border: 1px solid #ccc;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 16px rgb(0 0 0 / 15%);
     z-index: 10;
-    transform: scale(0.85);
     opacity: 0;
     transition: transform 0.35s ease-out, opacity 0.35s ease-out;
     pointer-events: none;
@@ -173,8 +173,7 @@
     font-size: 14px;
     padding: 15px;
     max-height: 400px;   /* Set your desired fixed height */
-    overflow-y: auto;    /* Enable vertical scrolling when content overflows */
-    overflow-x: hidden;  /* Prevent horizontal scrolling */
+    overflow: hidden auto;    /* Enable vertical scrolling when content overflows */  /* Prevent horizontal scrolling */
 }
 
 .modal h4 {
@@ -247,5 +246,39 @@
     transform: translateX(-50%);
     border-width: 5px;
     border-style: solid;
-    border-color: #333 transparent transparent transparent;
+    border-color: #333 transparent transparent;
+}
+
+.thermometer {
+    height: 20px;
+    width: 100%;
+    background: linear-gradient(to left, navajowhite,white); /* Customize the gradient colors */
+    border-radius: 5px;
+    position: relative;
+}
+
+.thermometer-fill {
+    height: 100%;
+    background-color: red;
+    border-radius: 5px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0.6;
+}
+
+.thermometer-label {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.thermometer-label span {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
 }
