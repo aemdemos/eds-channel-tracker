@@ -206,6 +206,7 @@
     display: inline-block;
     margin-left: 3px;
     cursor: pointer;
+    opacity: 0.5;
 }
 
 .tooltip-icon {
