@@ -6,6 +6,7 @@ import {
 
 let sortDirection = 'asc';
 let activeChannelsCount = 0;
+let isSortingEnabled = false; // Flag to track sorting state
 const maxMessagesCount = 10; // Adjust this value based on your data
 
 const slackChannelsContainer = document.getElementById('slack-channels-container');
@@ -174,6 +175,7 @@ const addSortingToTable = (table, channels) => {
   const headers = table.querySelectorAll('th[data-sort]');
   headers.forEach(header => {
     header.addEventListener('click', () => {
+      if (!isSortingEnabled) return; // Prevent sorting if not enabled
       headers.forEach(h => h.classList.remove('sorted-asc', 'sorted-desc'));
       if (!header.classList.contains('sorting-disabled')) {
         const columnKey = header.getAttribute('data-sort');
@@ -322,7 +324,7 @@ const startFetching = async () => {
             ? new Date(messageJson.lastMessageTimestamp * 1000).toISOString().split(
               'T',
             )[0]
-            : 'Date unavailable',
+            : 'Unavailable',
         }));
       }
       return Promise.resolve({
@@ -365,6 +367,7 @@ const startFetching = async () => {
   // After all rows are loaded, hide the spinner and restore the button
   spinner.remove(); // Remove the spinner
   loadButton.style.visibility = 'visible'; // Restore the button visibility
+  isSortingEnabled = true; // Enable sorting after all rows are loaded
 };
 
 document.getElementById('channelisation').addEventListener('click', startFetching);
