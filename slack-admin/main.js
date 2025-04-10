@@ -213,7 +213,7 @@ const updateMessageCells = (channel, msgs, messagesCount, messageDate) => {
   const lastMessageCell = row.querySelector('.last-message');
   lastMessageCell.innerHTML = messageDate;
 
-  if (messagesCount > 3) {
+  if (messagesCount > 0) {
     activeChannelsCount += 1;
     document.getElementById('active-channels-count').textContent = activeChannelsCount;
   }
