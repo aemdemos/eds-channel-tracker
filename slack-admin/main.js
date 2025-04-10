@@ -319,12 +319,12 @@ const startFetching = async () => {
         return getMessageStats(channel.id).then((messageJson) => ({
           channelId: channel.id,
           msgs: messageJson?.totalMessages || 0,
-          messagesCount: messageJson?.messageCount || 0,
+          messagesCount: messageJson?.recentMessageCount || 0,
           messageDate: messageJson?.lastMessageTimestamp
             ? new Date(messageJson.lastMessageTimestamp * 1000).toISOString().split(
               'T',
             )[0]
-            : 'Unavailable',
+            : 'No Messages',
         }));
       }
       return Promise.resolve({
