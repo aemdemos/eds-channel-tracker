@@ -1,11 +1,12 @@
-// utils.js
+/* eslint-disable no-underscore-dangle */
+
 export const sortTable = (data, key, direction) => {
   const dataType = typeof data[0][key];
   return [...data].sort((a, b) => {
     let valueA = a[key];
     let valueB = b[key];
 
-    if (key === 'messageDate') {
+    if (key === 'lstMsgDt') {
       // Handle "No Messages" as a special case
       valueA = valueA === 'No Messages' ? null : new Date(valueA);
       valueB = valueB === 'No Messages' ? null : new Date(valueB);
@@ -32,18 +33,48 @@ export const sortTable = (data, key, direction) => {
 
 export const alphaSort = (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' });
 
-export const positionModal = (modal, cell) => {
+const positionModal = (modal, cell) => {
   const rect = cell.getBoundingClientRect();
   modal.style.top = `${window.scrollY + rect.top - 15}px`;
   modal.style.left = `${window.scrollX + rect.left + 35}px`;
 };
 
-export const hideModal = (modal) => {
+const hideModal = (modal) => {
   modal.classList.remove('show');
   modal.addEventListener('transitionend', () => {
     modal.innerHTML = '<span class="spinner"></span>';
     modal.style.display = 'none';
   }, { once: true });
+};
+
+// Utility function to handle modal interactions
+export const handleModalInteraction = async (cell, channelId, modal, fetchDataCallback) => {
+  const secondClickListener = () => {
+    hideModal(modal);
+    document.removeEventListener('click', secondClickListener);
+  };
+
+  setTimeout(() => {
+    document.addEventListener('click', secondClickListener, { once: true });
+  }, 0);
+
+  positionModal(modal, cell);
+  modal.style.display = 'block';
+  requestAnimationFrame(() => modal.classList.add('show'));
+
+  if (cell._fetched) {
+    modal.innerHTML = cell._modalData;
+    return;
+  }
+
+  try {
+    const data = await fetchDataCallback(channelId);
+    modal.innerHTML = data.modalContent;
+    cell._fetched = true;
+    cell._modalData = data.modalContent;
+  } catch (err) {
+    modal.innerHTML = '<p style="color: red;">Error loading data</p>';
+  }
 };
 
 export const renderMembersTable = (channelName, adobeMembers, nonAdobeMembers) => {
