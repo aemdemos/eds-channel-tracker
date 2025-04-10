@@ -1,10 +1,13 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-await-in-loop */
-
+/* eslint-disable max-len */
 import { getMessageStats, getMemberIds, getAllSlackChannels } from './api.js';
 import { countMembers } from './members.js';
 import {
-  sortTable, alphaSort, renderMembersTable, positionModal, hideModal,
+  sortTable,
+  alphaSort,
+  renderMembersTable,
+  handleModalInteraction,
 } from './utils.js';
 
 let sortDirection = 'asc';
@@ -37,42 +40,16 @@ const reattachModalHandlers = () => {
 
     cell.addEventListener('click', async (e) => {
       e.stopPropagation();
-
       const channel = { id: channelId, name: row.querySelector('td:first-child').textContent };
 
-      const secondClickListener = () => {
-        hideModal(modal);
-        document.removeEventListener('click', secondClickListener);
-      };
-
-      setTimeout(() => {
-        document.addEventListener('click', secondClickListener, { once: true });
-      }, 0);
-
-      positionModal(modal, cell);
-      modal.style.display = 'block';
-      requestAnimationFrame(() => modal.classList.add('show'));
-
-      if (cell._fetched) {
-        modal.innerHTML = cell._modalData;
-        return;
-      }
-
-      try {
-        const response = await getMemberIds(channel.id);
+      await handleModalInteraction(cell, channelId, modal, async (id) => {
+        const response = await getMemberIds(id);
         if (!response.ok) throw new Error('Failed to fetch members');
-
         const { adobeMembers, nonAdobeMembers } = await countMembers(response.members);
         adobeMembers.sort(alphaSort);
         nonAdobeMembers.sort(alphaSort);
-
-        const modalContent = renderMembersTable(channel.name, adobeMembers, nonAdobeMembers);
-        modal.innerHTML = modalContent;
-        cell._fetched = true;
-        cell._modalData = modalContent;
-      } catch (err) {
-        modal.innerHTML = '<p style="color: red;">Error loading data</p>';
-      }
+        return { modalContent: renderMembersTable(channel.name, adobeMembers, nonAdobeMembers) };
+      });
     });
   });
 };
@@ -90,8 +67,8 @@ const renderTable = (channels) => {
     const spinner = '<div class="spinner"></div>'; // Show a spinner if no message date is available
 
     let fillPercentage;
-    if (channel.messagesCount) {
-      fillPercentage = Math.min((channel.messagesCount / maxMessagesCount) * 100, 100);
+    if (channel.engagement) {
+      fillPercentage = Math.min((channel.engagement / maxMessagesCount) * 100, 100);
     }
 
     // Add classes to the cells (you can apply any additional class that you need)
@@ -102,14 +79,14 @@ const renderTable = (channels) => {
       <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
       <td>${channel.purpose?.value || ''}</td>
       <td class="stat-column">${createdDate}</td>
-      <td class="stat-column total-messages">${channel.msgs ?? spinner}</td>
+      <td class="stat-column total-messages">${channel.messages ?? spinner}</td>
       <td class="stat-column messages-count">
         <div class="thermometer">
           <div class="thermometer-fill" style="width: ${fillPercentage}%;"></div>
-          <div class="thermometer-label">${channel.messagesCount ?? spinner} </div>
+          <div class="thermometer-label">${channel.engagement ?? spinner} </div>
         </div>
       </td>
-      <td class="stat-column last-message">${typeof channel.messageDate === 'string' ? channel.messageDate : spinner}</td>
+      <td class="stat-column last-message">${typeof channel.lstMsgDt === 'string' ? channel.lstMsgDt : spinner}</td>
       <td class="stat-column members-count title=View members">${channel.membersCount ?? spinner}</td>
     `;
 
@@ -164,14 +141,14 @@ const initTable = (channels) => {
         <th data-sort="name">Name</th>
         <th data-sort="purpose" class="sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
-        <th data-sort="msgs">Total Messages</th>
-        <th data-sort="messagesCount">
+        <th data-sort="messages">Total Messages</th>
+        <th data-sort="engagement">
           Engagement
             <span class="tooltip-container">
             (last 30 days)
             </span>
         </th>
-        <th data-sort="messageDate">Last Message</th>
+        <th data-sort="lstMsgDt">Last Message</th>
         <th data-sort="membersCount">Members</th>
       </tr>
     </thead>
@@ -191,36 +168,36 @@ const initTable = (channels) => {
   renderTable(channels);
 };
 
-const updateMessageCells = (channel, msgs, messagesCount, messageDate) => {
+const updateMessageCells = (channel, messages, engagement, lstMsgDt) => {
   const row = document.querySelector(`tr[data-channel-id="${channel.id}"]`);
   if (!row) return;
 
   // Total Messages
   const messagesCell = row.querySelector('.total-messages');
-  messagesCell.textContent = msgs;
+  messagesCell.textContent = messages;
 
   // Engagement
-  const messagesCountCell = row.querySelector('.messages-count');
-  const thermometerFill = messagesCountCell.querySelector('.thermometer-fill');
-  const thermometerLabel = messagesCountCell.querySelector('.thermometer-label');
-  thermometerLabel.textContent = messagesCount;
+  const engagementCell = row.querySelector('.messages-count');
+  const thermometerFill = engagementCell.querySelector('.thermometer-fill');
+  const thermometerLabel = engagementCell.querySelector('.thermometer-label');
+  thermometerLabel.textContent = engagement;
 
-  const fillPercentage = Math.min((messagesCount / maxMessagesCount) * 100, 100);
+  const fillPercentage = Math.min((engagement / maxMessagesCount) * 100, 100);
   thermometerFill.style.width = `${fillPercentage}%`;
 
   // Last Message
   const lastMessageCell = row.querySelector('.last-message');
-  lastMessageCell.innerHTML = messageDate;
+  lastMessageCell.innerHTML = lstMsgDt;
 
-  if (messagesCount > 0) {
+  if (engagement > 0) {
     activeChannelsCount += 1;
     document.getElementById('active-channels-count').textContent = activeChannelsCount;
   }
 
   // Save the updated values back to the channel object for sorting
-  channel.msgs = msgs;
-  channel.messagesCount = messagesCount;
-  channel.messageDate = messageDate;
+  channel.messages = messages;
+  channel.engagement = engagement;
+  channel.lstMsgDt = lstMsgDt;
 };
 
 const updateMembersCountCell = (channel, membersCount) => {
@@ -235,47 +212,20 @@ const updateMembersCountCell = (channel, membersCount) => {
   membersCountCell._fetched = false;
   membersCountCell._modalData = null;
 
-  let secondClickListener = null;
   const modal = document.getElementById('modal');
 
   membersCountCell.addEventListener('click', async (e) => {
     e.stopPropagation(); // prevent the event from bubbling to the document
 
-    // Add one-time document click listener
-    secondClickListener = () => {
-      hideModal(modal);
-      document.removeEventListener('click', secondClickListener);
-      secondClickListener = null;
-    };
-
-    // Delay to avoid triggering on the same click
-    setTimeout(() => {
-      document.addEventListener('click', secondClickListener, { once: true });
-    }, 0);
-
-    positionModal(modal, membersCountCell);
-    modal.style.display = 'block';
-    requestAnimationFrame(() => modal.classList.add('show'));
-
-    if (membersCountCell._fetched) {
-      modal.innerHTML = membersCountCell._modalData;
-      return;
-    }
-
-    try {
-      const response = await getMemberIds(channel.id);
+    await handleModalInteraction(membersCountCell, channel.id, modal, async (id) => {
+      const response = await getMemberIds(id);
       if (!response.ok) throw new Error('Failed to fetch members');
 
       const { adobeMembers, nonAdobeMembers } = await countMembers(response.members);
       adobeMembers.sort(alphaSort);
       nonAdobeMembers.sort(alphaSort);
-      const modalContent = renderMembersTable(channel.name, adobeMembers, nonAdobeMembers);
-      modal.innerHTML = modalContent;
-      membersCountCell._fetched = true;
-      membersCountCell._modalData = modalContent;
-    } catch (err) {
-      modal.innerHTML = '<p style="color: red;">Error loading data</p>';
-    }
+      return { modalContent: renderMembersTable(channel.name, adobeMembers, nonAdobeMembers) };
+    });
   });
 };
 
@@ -307,12 +257,12 @@ const startFetching = async () => {
     const batch = channels.slice(i, i + batchSize);
 
     const messagePromises = batch.map((channel) => {
-      if (!channel.msgs || !channel.messagesCount || !channel.messageDate) {
+      if (!channel.messages || !channel.engagement || !channel.lstMsgDt) {
         return getMessageStats(channel.id).then((messageJson) => ({
           channelId: channel.id,
-          msgs: messageJson?.totalMessages || 0,
-          messagesCount: messageJson?.recentMessageCount || 0,
-          messageDate: messageJson?.lastMessageTimestamp
+          messages: messageJson?.totalMessages || 0,
+          engagement: messageJson?.recentMessageCount || 0,
+          lstMsgDt: messageJson?.lastMessageTimestamp
             ? new Date(messageJson.lastMessageTimestamp * 1000).toISOString().split(
               'T',
             )[0]
@@ -320,7 +270,7 @@ const startFetching = async () => {
         }));
       }
       return Promise.resolve({
-        channelId: channel.id, msgs: channel.msgs, messagesCount: channel.messagesCount, messageDate: channel.messageDate,
+        channelId: channel.id, messages: channel.messages, engagement: channel.engagement, lstMsgDt: channel.lstMsgDt,
       });
     });
 
@@ -339,10 +289,10 @@ const startFetching = async () => {
 
     // Update the table after each batch
     messageResults.forEach(({
-      channelId, msgs, messagesCount, messageDate,
+      channelId, messages, engagement, lstMsgDt,
     }) => {
       const channel = channels.find((c) => c.id === channelId);
-      updateMessageCells(channel, msgs, messagesCount, messageDate);
+      updateMessageCells(channel, messages, engagement, lstMsgDt);
     });
 
     memberResults.forEach(({ channelId, membersCount }) => {
