@@ -1,3 +1,6 @@
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-await-in-loop */
+
 import { getMessageStats, getMemberIds, getAllSlackChannels } from './api.js';
 import { countMembers } from './members.js';
 import {
@@ -21,6 +24,121 @@ if (sk) {
     document.querySelector('aem-sidekick').addEventListener('logged-out', doLogout);
   }, { once: true });
 }
+
+const reattachModalHandlers = () => {
+  const modal = document.getElementById('modal');
+  document.querySelectorAll('.members-count').forEach((cell) => {
+    const row = cell.closest('tr');
+    const channelId = row.getAttribute('data-channel-id');
+
+    // Avoid duplicate handlers
+    if (cell._handlerAttached) return;
+    cell._handlerAttached = true;
+
+    cell.addEventListener('click', async (e) => {
+      e.stopPropagation();
+
+      const channel = { id: channelId, name: row.querySelector('td:first-child').textContent };
+
+      const secondClickListener = () => {
+        hideModal(modal);
+        document.removeEventListener('click', secondClickListener);
+      };
+
+      setTimeout(() => {
+        document.addEventListener('click', secondClickListener, { once: true });
+      }, 0);
+
+      positionModal(modal, cell);
+      modal.style.display = 'block';
+      requestAnimationFrame(() => modal.classList.add('show'));
+
+      if (cell._fetched) {
+        modal.innerHTML = cell._modalData;
+        return;
+      }
+
+      try {
+        const response = await getMemberIds(channel.id);
+        if (!response.ok) throw new Error('Failed to fetch members');
+
+        const { adobeMembers, nonAdobeMembers } = await countMembers(response.members);
+        adobeMembers.sort(alphaSort);
+        nonAdobeMembers.sort(alphaSort);
+
+        const modalContent = renderMembersTable(channel.name, adobeMembers, nonAdobeMembers);
+        modal.innerHTML = modalContent;
+        cell._fetched = true;
+        cell._modalData = modalContent;
+      } catch (err) {
+        modal.innerHTML = '<p style="color: red;">Error loading data</p>';
+      }
+    });
+  });
+};
+
+const renderTable = (channels) => {
+  const tbody = document.getElementsByTagName('tbody').item(0);
+
+  tbody.innerHTML = ''; // Clear previous rows
+
+  // Loop through the channels and create rows
+  channels.forEach((channel) => {
+    const tr = document.createElement('tr'); // Create a row for each channel
+
+    const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0]; // Format the creation date
+    const spinner = '<div class="spinner"></div>'; // Show a spinner if no message date is available
+
+    let fillPercentage;
+    if (channel.messagesCount) {
+      fillPercentage = Math.min((channel.messagesCount / maxMessagesCount) * 100, 100);
+    }
+
+    // Add classes to the cells (you can apply any additional class that you need)
+    tr.classList.add('channel-row');
+    tr.setAttribute('data-channel-id', channel.id); // Set the channel ID as a data attribute
+
+    tr.innerHTML = `
+      <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
+      <td>${channel.purpose?.value || ''}</td>
+      <td class="stat-column">${createdDate}</td>
+      <td class="stat-column total-messages">${channel.msgs ?? spinner}</td>
+      <td class="stat-column messages-count">
+        <div class="thermometer">
+          <div class="thermometer-fill" style="width: ${fillPercentage}%;"></div>
+          <div class="thermometer-label">${channel.messagesCount ?? spinner} </div>
+        </div>
+      </td>
+      <td class="stat-column last-message">${typeof channel.messageDate === 'string' ? channel.messageDate : spinner}</td>
+      <td class="stat-column members-count title=View members">${channel.membersCount ?? spinner}</td>
+    `;
+
+    tbody.appendChild(tr); // Add the row to the tbody
+
+    reattachModalHandlers();
+  });
+};
+
+const toggleSortDirection = () => {
+  sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+};
+
+const addSortingToTable = (table, channels) => {
+  const headers = table.querySelectorAll('th[data-sort]');
+  headers.forEach((header) => {
+    header.addEventListener('click', () => {
+      if (!isSortingEnabled) return; // Prevent sorting if not enabled
+      headers.forEach((h) => h.classList.remove('sorted-asc', 'sorted-desc'));
+      if (!header.classList.contains('sorting-disabled')) {
+        const columnKey = header.getAttribute('data-sort');
+        const sortedData = sortTable(channels, columnKey, sortDirection);
+        header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+        renderTable(sortedData);
+        toggleSortDirection();
+      }
+    });
+  });
+};
 
 const initTable = (channels) => {
   slackChannelsContainer.innerHTML = ''; // Clear any previous content
@@ -73,125 +191,6 @@ const initTable = (channels) => {
   renderTable(channels);
 };
 
-const renderTable = (channels) => {
-  const tbody = document.getElementsByTagName('tbody').item(0);
-
-  tbody.innerHTML = ''; // Clear previous rows
-
-  // Loop through the channels and create rows
-  channels.forEach((channel) => {
-    const tr = document.createElement('tr'); // Create a row for each channel
-
-    const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0]; // Format the creation date
-    const spinner = '<div class="spinner"></div>'; // Show a spinner if no message date is available
-
-    let fillPercentage;
-    if (channel.messagesCount) {
-      fillPercentage = Math.min((channel.messagesCount / maxMessagesCount) * 100, 100);
-    }
-
-    // Add classes to the cells (you can apply any additional class that you need)
-    tr.classList.add('channel-row');
-    tr.setAttribute('data-channel-id', channel.id); // Set the channel ID as a data attribute
-
-    tr.innerHTML = `
-      <td><a href="slack://channel?team=T0385CHDU9E&id=${channel.id}" target="_blank">${channel.name}</a></td>
-      <td>${channel.purpose?.value || ''}</td>
-      <td class="stat-column">${createdDate}</td>
-      <td class="stat-column total-messages">${channel.msgs ?? spinner}</td>
-      <td class="stat-column messages-count">
-        <div class="thermometer">
-          <div class="thermometer-fill" style="width: ${fillPercentage}%;"></div>
-          <div class="thermometer-label">${channel.messagesCount ?? spinner} </div>
-        </div>
-      </td>
-      <td class="stat-column last-message">${typeof channel.messageDate === 'string' ? channel.messageDate : spinner}</td>
-      <td class="stat-column members-count title="View members">${channel.membersCount ?? spinner}</td>
-    `;
-
-    tbody.appendChild(tr); // Add the row to the tbody
-
-    reattachModalHandlers();
-  });
-};
-
-const reattachModalHandlers = () => {
-  const modal = document.getElementById('modal');
-  document.querySelectorAll('.members-count').forEach(cell => {
-    const row = cell.closest('tr');
-    const channelId = row.getAttribute('data-channel-id');
-
-    // Avoid duplicate handlers
-    if (cell._handlerAttached) return;
-    cell._handlerAttached = true;
-
-    cell.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      let modalVisible = true;
-
-      const channel = { id: channelId, name: row.querySelector('td:first-child').textContent };
-
-      let secondClickListener = () => {
-        hideModal(modal);
-        modalVisible = false;
-        document.removeEventListener('click', secondClickListener);
-      };
-
-      setTimeout(() => {
-        document.addEventListener('click', secondClickListener, { once: true });
-      }, 0);
-
-      positionModal(modal, cell);
-      modal.style.display = 'block';
-      requestAnimationFrame(() => modal.classList.add('show'));
-
-      if (cell._fetched) {
-        modal.innerHTML = cell._modalData;
-        return;
-      }
-
-      try {
-        const response = await getMemberIds(channel.id);
-        if (!response.ok) throw new Error('Failed to fetch members');
-
-        const { adobeMembers, nonAdobeMembers } = await countMembers(response.members);
-        adobeMembers.sort(alphaSort);
-        nonAdobeMembers.sort(alphaSort);
-
-        const modalContent = renderMembersTable(channel.name, adobeMembers, nonAdobeMembers);
-        modal.innerHTML = modalContent;
-        cell._fetched = true;
-        cell._modalData = modalContent;
-      } catch (err) {
-        modal.innerHTML = '<p style="color: red;">Error loading data</p>';
-        console.error(err);
-      }
-    });
-  });
-};
-
-
-const addSortingToTable = (table, channels) => {
-  const headers = table.querySelectorAll('th[data-sort]');
-  headers.forEach(header => {
-    header.addEventListener('click', () => {
-      if (!isSortingEnabled) return; // Prevent sorting if not enabled
-      headers.forEach(h => h.classList.remove('sorted-asc', 'sorted-desc'));
-      if (!header.classList.contains('sorting-disabled')) {
-        const columnKey = header.getAttribute('data-sort');
-        const sortedData = sortTable(channels, columnKey, sortDirection);
-        header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
-        renderTable(sortedData);
-        toggleSortDirection();
-      }
-    });
-  });
-}
-
-const toggleSortDirection = () => {
-  sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-};
-
 const updateMessageCells = (channel, msgs, messagesCount, messageDate) => {
   const row = document.querySelector(`tr[data-channel-id="${channel.id}"]`);
   if (!row) return;
@@ -236,26 +235,22 @@ const updateMembersCountCell = (channel, membersCount) => {
   membersCountCell._fetched = false;
   membersCountCell._modalData = null;
 
-  let modalVisible = false;
   let secondClickListener = null;
   const modal = document.getElementById('modal');
 
   membersCountCell.addEventListener('click', async (e) => {
     e.stopPropagation(); // prevent the event from bubbling to the document
 
-    modalVisible = true;
-
     // Add one-time document click listener
     secondClickListener = () => {
       hideModal(modal);
-      modalVisible = false;
-      document.removeEventListener("click", secondClickListener);
+      document.removeEventListener('click', secondClickListener);
       secondClickListener = null;
     };
 
     // Delay to avoid triggering on the same click
     setTimeout(() => {
-      document.addEventListener("click", secondClickListener, { once: true });
+      document.addEventListener('click', secondClickListener, { once: true });
     }, 0);
 
     positionModal(modal, membersCountCell);
@@ -279,8 +274,7 @@ const updateMembersCountCell = (channel, membersCount) => {
       membersCountCell._fetched = true;
       membersCountCell._modalData = modalContent;
     } catch (err) {
-      modal.innerHTML = `<p style="color: red;">Error loading data</p>`;
-      console.error(err);
+      modal.innerHTML = '<p style="color: red;">Error loading data</p>';
     }
   });
 };
@@ -296,11 +290,9 @@ const startFetching = async () => {
   loadButton.style.visibility = 'hidden'; // Hide the button without affecting layout
   buttonParent.appendChild(spinner); // Insert the spinner in the button's place
 
-
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
   const channelNameFilter = document.getElementById('channel-name').value.trim(); // Get the input value
   const channels = await getAllSlackChannels(channelNameFilter);
-
 
   // SORT BY NAME initially
   channels.sort((a, b) => a.name.localeCompare(b.name));
@@ -308,7 +300,7 @@ const startFetching = async () => {
   initTable(channels);
 
   // Load 20 rows at a time with a 1-second pause between each batch
-  const batchSize = 20;
+  const batchSize = 15;
   const totalChannels = channels.length;
 
   for (let i = 0; i < totalChannels; i += batchSize) {

@@ -2,15 +2,30 @@
 export const sortTable = (data, key, direction) => {
   const dataType = typeof data[0][key];
   return [...data].sort((a, b) => {
+    let valueA = a[key];
+    let valueB = b[key];
+
+    if (key === 'messageDate') {
+      // Handle "No Messages" as a special case
+      valueA = valueA === 'No Messages' ? null : new Date(valueA);
+      valueB = valueB === 'No Messages' ? null : new Date(valueB);
+
+      if (valueA === null) return direction === 'asc' ? -1 : 1;
+      if (valueB === null) return direction === 'asc' ? 1 : -1;
+    }
+
     if (dataType === 'string') {
       return direction === 'asc' ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
     }
+
     if (dataType === 'number') {
       return direction === 'asc' ? a[key] - b[key] : b[key] - a[key];
     }
+
     if (dataType === 'object' && a[key] instanceof Date && b[key] instanceof Date) {
       return direction === 'asc' ? a[key] - b[key] : b[key] - a[key];
     }
+
     return 0;
   });
 };
