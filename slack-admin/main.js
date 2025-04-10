@@ -357,11 +357,6 @@ const startFetching = async () => {
       const channel = channels.find((c) => c.id === channelId);
       updateMembersCountCell(channel, membersCount);
     });
-
-    // Pause for 1 second before processing the next batch
-    if (i + batchSize < totalChannels) {
-      await new Promise((resolve) => { setTimeout(resolve, 2000); }); // 2-second delay
-    }
   }
 
   // After all rows are loaded, hide the spinner and restore the button

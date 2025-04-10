@@ -15,7 +15,6 @@ export const sortTable = (data, key, direction) => {
   });
 };
 
-
 export const alphaSort = (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' });
 
 export const positionModal = (modal, cell) => {
@@ -36,7 +35,7 @@ export const renderMembersTable = (channelName, adobeMembers, nonAdobeMembers) =
   const maxLength = Math.max(adobeMembers.length, nonAdobeMembers.length);
   let rows = '';
 
-  for (let i = 0; i < maxLength; i++) {
+  for (let i = 0; i < maxLength; i += 1) {
     const adobe = adobeMembers[i] || '';
     const other = nonAdobeMembers[i] || '';
     const background = i % 2 === 0 ? '#f9f9f9' : '#ffffff';
