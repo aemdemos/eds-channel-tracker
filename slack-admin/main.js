@@ -136,14 +136,30 @@ const initTable = (channels) => {
   slackChannelsContainer.innerHTML = '';
   activeChannelsCount = 0;
 
+  const summaryWrapper = document.createElement('div');
+  summaryWrapper.classList.add('table-summary-wrapper');
+
+  const progressBarContainer = document.createElement('div');
+  progressBarContainer.classList.add('progress-container');
+  progressBarContainer.innerHTML = `
+  <div class="progress-bar">
+    <div class="progress-fill" style="width: 0%"></div>
+  </div>
+  <div class="progress-label">Loading 0 of ${escapeHTML(channels.length.toString())} channels…</div>
+`;
+
   const summary = document.createElement('div');
   summary.classList.add('table-summary');
+  summary.style.display = 'none';
   summary.innerHTML = `
-    <span>Total Channels: ${escapeHTML(channels.length.toString())}</span> |
-    <span>Active Channels: <span id="active-channels-count">0</span></span>
-  `;
+  <span>Total Channels: ${escapeHTML(channels.length.toString())}</span> |
+  <span>Active Channels: <span id="active-channels-count">0</span></span>
+`;
 
-  slackChannelsContainer.appendChild(summary);
+  summaryWrapper.appendChild(progressBarContainer);
+  summaryWrapper.appendChild(summary);
+
+  slackChannelsContainer.appendChild(summaryWrapper);
 
   const table = document.createElement('table');
   table.classList.add('styled-table');
@@ -221,12 +237,6 @@ const updateMembersCountCell = (channel, membersCount) => {
 };
 
 const startFetching = async () => {
-  const loadButton = document.getElementById('channelisation');
-  const buttonParent = loadButton.parentNode;
-  const spinner = document.createElement('span');
-  spinner.classList.add('spinner');
-  loadButton.style.visibility = 'hidden';
-  buttonParent.appendChild(spinner);
 
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
   const channelNameFilter = document.getElementById('channel-name').value.trim();
@@ -234,6 +244,10 @@ const startFetching = async () => {
 
   channels.sort((a, b) => a.name.localeCompare(b.name));
   initTable(channels);
+
+  const progressLabel = document.querySelector('.progress-label');
+  const progressFill = document.querySelector('.progress-fill');
+  let loadedCount = 0;
 
   const batchSize = 15;
   for (let i = 0; i < channels.length; i += batchSize) {
@@ -278,11 +292,17 @@ const startFetching = async () => {
       const channel = channels.find((c) => c.id === channelId);
       updateMembersCountCell(channel, membersCount);
     });
+
+    loadedCount += batch.length;
+    const percentage = Math.min((loadedCount / channels.length) * 100, 100);
+    progressFill.style.width = `${percentage}%`;
+    progressLabel.textContent = `Loading ${loadedCount} of ${channels.length} channels…`;
   }
 
-  spinner.remove();
-  loadButton.style.visibility = 'visible';
   isSortingEnabled = true;
+
+  document.querySelector('.progress-container').style.display = 'none';
+  document.querySelector('.table-summary').style.display = 'block';
 };
 
 document.getElementById('channelisation').addEventListener('click', startFetching);
