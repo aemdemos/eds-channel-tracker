@@ -196,8 +196,7 @@
 .tooltip-container {
     position: relative;
     display: inline-block;
-    cursor: pointer;
-    opacity: 0.4;
+    font-size: 12px;
 }
 
 .tooltip-icon {

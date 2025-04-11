@@ -172,7 +172,7 @@ const initTable = (channels) => {
         <th data-sort="created">Created</th>
         <th data-sort="messages">Total Messages</th>
         <th data-sort="engagement">
-          Engagement <span class="tooltip-container">(last 30 days)</span>
+          Messages <span class="tooltip-container">(Last 30 days)</span>
         </th>
         <th data-sort="lstMsgDt">Last Message</th>
         <th data-sort="membersCount">Members</th>
