@@ -120,16 +120,19 @@ const addSortingToTable = (table, channels) => {
   headers.forEach((header) => {
     header.addEventListener('click', () => {
       if (!isSortingEnabled) return;
+
+      const columnKey = header.getAttribute('data-sort');
+      // Remove sort classes from all headers
       headers.forEach((h) => h.classList.remove('sorted-asc', 'sorted-desc'));
-      if (!header.classList.contains('sorting-disabled')) {
-        const columnKey = header.getAttribute('data-sort');
-        const sortedData = sortTable(channels, columnKey, sortDirection);
-        header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
-        renderTable(sortedData);
-        toggleSortDirection();
-      }
+      // Sort data
+      const sortedData = sortTable(channels, columnKey, sortDirection);
+      // Add the appropriate arrow class
+      header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+      renderTable(sortedData);
+      toggleSortDirection();
     });
   });
+
 };
 
 const initTable = (channels) => {
@@ -153,7 +156,7 @@ const initTable = (channels) => {
   summary.style.display = 'none';
   summary.innerHTML = `
   <span>Total Channels: ${escapeHTML(channels.length.toString())}</span> |
-  <span>Active Channels: <span id="active-channels-count">0</span></span>
+  <span>Active Channels (Last 30 days): <span id="active-channels-count">0</span></span>
 `;
 
   summaryWrapper.appendChild(progressBarContainer);
@@ -168,7 +171,7 @@ const initTable = (channels) => {
     <thead>
       <tr>
         <th data-sort="name">Name</th>
-        <th data-sort="purpose" class="sorting-disabled">Description</th>
+        <th class="sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
         <th data-sort="messages">Total Messages</th>
         <th data-sort="engagement">
@@ -184,6 +187,13 @@ const initTable = (channels) => {
   table.appendChild(tbody);
   addSortingToTable(table, channels);
   slackChannelsContainer.appendChild(table);
+
+  const initialSortKey = 'name';
+  const sortedChannels = sortTable(channels, initialSortKey, sortDirection);
+  document.querySelector(`th[data-sort="${initialSortKey}"]`).classList.add('sorted-asc');
+  renderTable(sortedChannels);
+  toggleSortDirection();
+
   renderTable(channels);
 };
 

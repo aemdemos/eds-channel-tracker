@@ -316,3 +316,19 @@
     opacity: 1;
     pointer-events: auto;
 }
+
+th[data-sort]::after {
+    content: '⇅'; /* Default arrows when not sorted */
+    margin-left: 5px;
+    opacity: 0.5;
+}
+
+th.sorted-asc::after {
+    content: '↑';
+    opacity: 1;
+}
+
+th.sorted-desc::after {
+    content: '↓';
+    opacity: 1;
+}
