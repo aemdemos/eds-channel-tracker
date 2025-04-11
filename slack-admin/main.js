@@ -24,7 +24,7 @@ const escapeHTML = (str) => {
 
 const doLogout = () => window.location.reload();
 
-const sk = document.querySelector('aem-sidekick');
+const sk = document.getElementsByTagName('aem-sidekick');
 if (sk) {
   sk.addEventListener('logged-out', doLogout);
 } else {
