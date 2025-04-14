@@ -10,6 +10,45 @@
   <link rel="stylesheet" href="../styles/styles.css" />
   <script src="../slack-admin/main.js" type="module"></script>
   <link rel="stylesheet" href="../slack-admin/main.css" />
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+  <script>
+    let pendingSearchData = null;
+
+    // Attach listener to your Search button
+    document.getElementById("channelisation").addEventListener("click", async (e) => {
+      e.preventDefault();
+
+      const channelName = document.getElementById("channel-name").value;
+      const description = document.getElementById("description").value;
+
+      pendingSearchData = { channelName, description };
+
+      // Trigger invisible Turnstile
+      turnstile.execute();
+    });
+
+    async function onTurnstileSuccess(token) {
+      if (!pendingSearchData) return;
+
+      const { channelName, description } = pendingSearchData;
+      const url = new URL("https://eds-channels-tracker-worker.chrislotton.workers.dev/slack/channels");
+      url.searchParams.set("channelName", channelName);
+      url.searchParams.set("description", description);
+
+      const res = await fetch(url.toString(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ turnstile_token: token })
+      });
+
+      const json = await res.json();
+      console.log("Slack Channels:", json);
+      // TODO: render to #slack-channels-container if desired
+
+      pendingSearchData = null;
+    }
+  </script>
 </head>
 
 <body class="slack-admin">
@@ -22,25 +61,6 @@
        data-size="invisible">
   </div>
 </form>
-
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-
-<script>
-  function onTurnstileSuccess(token) {
-    document.getElementById("cf-turnstile-response").value = token;
-
-    fetch("https://eds-channels-tracker-worker.chrislotton.workers.dev", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ turnstile_token: token })
-    })
-    .then(res => res.text())
-    .then(console.log);
-  }
-</script>
-
-
-
 
 <div class="header">
   <a href="https://adobe-dx-support.enterprise.slack.com/archives/C08LDR6NP1V" target="_blank" class="feedback-link">
