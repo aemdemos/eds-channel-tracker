@@ -24,6 +24,7 @@ import {
 let sortDirection = 'asc';
 let activeChannelsCount = 0;
 let isSortingEnabled = false;
+let isVerified = false;
 const maxMessagesCount = 10;
 const slackChannelsContainer = document.getElementById('slack-channels-container');
 
@@ -35,43 +36,49 @@ const escapeHTML = (str) => {
 
 const doLogout = () => window.location.reload();
 
-// Attach listener to your Search button
-document.getElementById("channelisation").addEventListener("click", async (e) => {
-  e.preventDefault();
-  // Trigger invisible Turnstile
-  if (window.turnstile && typeof turnstile.execute === "function") {
-    turnstile.execute();
-  }
-});
+// Run Turnstile on page load
+window.onload = () => {
+  turnstile.execute();
+};
 
-async function onTurnstileSuccess(token) {
-  const url = new URL("https://eds-channels-tracker-worker.chrislotton.workers.dev/verify-turnstile");
+async function verifyToken(token) {
+  const url = "https://eds-channels-tracker-worker.chrislotton.workers.dev/turnstile-verify";
 
-  try {
-    const res = await fetch(url.toString(), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ turnstile_token: token })
-    });
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ turnstile_token: token })
+  });
 
-    if (!res.ok) {
-      // Turnstile failed – log out
-      console.warn("Turnstile verification failed. Logging out.");
-      doLogout(); // your custom logout function
-      return;
-    }
+  const data = await res.json();
 
-    const text = await res.text();
-    if (text !== "Turnstile verified") {
-      console.warn("Unexpected Turnstile response. Logging out.");
-      doLogout();
+  // Return verification result
+  return data.success;
+}
+
+function handleVerificationFailure() {
+  // Force logout by clearing session or redirecting
+  alert("Verification failed. Logging out...");
+  // Here we redirect to a logout URL or force a page reload
+  window.location.href = "/logout"; // Or clear sessionStorage / localStorage
+}
+
+function handleVerificationFailure() {
+  alert("Verification failed. Logging out...");
+  doLogout();
+}
+
+function onTurnstileSuccess(token) {
+  // Send the token to your backend for verification
+  verifyToken(token)
+  .then(isVerifiedResult => {
+    if (isVerifiedResult) {
+      isVerified = true; // Update the flag to true if the verification is successful
     } else {
-      console.log("Turnstile verified ✅");
+      handleVerificationFailure(); // If verification fails
     }
-  } catch (err) {
-    console.error("Turnstile verification error:", err);
-    doLogout();
-  }
+  })
+  .catch(handleVerificationFailure); // If there's an error verifying
 }
 
 const sk = document.querySelector('aem-sidekick');
