@@ -83,8 +83,6 @@
   async function onTurnstileSuccess(token) {
 
     const url = new URL("https://eds-channels-tracker-worker.chrislotton.workers.dev");
-    url.searchParams.set("channelName", channelName);
-    url.searchParams.set("description", description);
 
     const res = await fetch(url.toString(), {
       method: "POST",
