@@ -132,7 +132,6 @@ const addSortingToTable = (table, channels) => {
       toggleSortDirection();
     });
   });
-
 };
 
 const initTable = (channels) => {
@@ -146,7 +145,7 @@ const initTable = (channels) => {
   progressBarContainer.classList.add('progress-container');
   progressBarContainer.innerHTML = `
   <div class="progress-bar">
-    <div class="progress-fill" style="width: 0%"></div>
+    <div class="progress-fill" style="width: 0"></div>
   </div>
   <div class="progress-label">Loading 0 of ${escapeHTML(channels.length.toString())} channels…</div>
 `;
@@ -247,7 +246,6 @@ const updateMembersCountCell = (channel, membersCount) => {
 };
 
 const startFetching = async () => {
-
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
   const channelNameFilter = document.getElementById('channel-name').value.trim();
   const channels = await getAllSlackChannels(channelNameFilter);
@@ -293,7 +291,9 @@ const startFetching = async () => {
     const messageResults = await Promise.all(messagePromises);
     const memberResults = await Promise.all(memberPromises);
 
-    messageResults.forEach(({ channelId, messages, engagement, lstMsgDt }) => {
+    messageResults.forEach(({
+      channelId, messages, engagement, lstMsgDt,
+    }) => {
       const channel = channels.find((c) => c.id === channelId);
       updateMessageCells(channel, messages, engagement, lstMsgDt);
     });
