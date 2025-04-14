@@ -67,27 +67,5 @@
   <footer></footer>
 </body>
 
-<script>
-
-  // Attach listener to your Search button
-  document.getElementById("channelisation").addEventListener("click", async (e) => {
-    e.preventDefault();
-    // Trigger invisible Turnstile
-    if (window.turnstile && typeof turnstile.execute === "function") {
-      turnstile.execute();
-    }
-  });
-
-  async function onTurnstileSuccess(token) {
-
-    const url = new URL("https://eds-channels-tracker-worker.chrislotton.workers.dev/turnstile-verify");
-
-    const res = await fetch(url.toString(), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ turnstile_token: token })
-    });
-  }
-</script>
 
 </html>

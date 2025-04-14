@@ -35,6 +35,45 @@ const escapeHTML = (str) => {
 
 const doLogout = () => window.location.reload();
 
+// Attach listener to your Search button
+document.getElementById("channelisation").addEventListener("click", async (e) => {
+  e.preventDefault();
+  // Trigger invisible Turnstile
+  if (window.turnstile && typeof turnstile.execute === "function") {
+    turnstile.execute();
+  }
+});
+
+async function onTurnstileSuccess(token) {
+  const url = new URL("https://eds-channels-tracker-worker.chrislotton.workers.dev/verify-turnstile");
+
+  try {
+    const res = await fetch(url.toString(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ turnstile_token: token })
+    });
+
+    if (!res.ok) {
+      // Turnstile failed – log out
+      console.warn("Turnstile verification failed. Logging out.");
+      doLogout(); // your custom logout function
+      return;
+    }
+
+    const text = await res.text();
+    if (text !== "Turnstile verified") {
+      console.warn("Unexpected Turnstile response. Logging out.");
+      doLogout();
+    } else {
+      console.log("Turnstile verified ✅");
+    }
+  } catch (err) {
+    console.error("Turnstile verification error:", err);
+    doLogout();
+  }
+}
+
 const sk = document.querySelector('aem-sidekick');
 if (sk) {
   sk.addEventListener('logged-out', doLogout);
