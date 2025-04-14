@@ -15,12 +15,12 @@
 
 <body class="slack-admin">
 
-<form id="my-form">
+<form id="turnstile">
   <input type="hidden" id="cf-turnstile-response" />
   <div class="cf-turnstile"
        data-sitekey="0x4AAAAAABLhLEKQIks54XXH"
        data-callback="onTurnstileSuccess"
-       data-size="normal">
+       data-size="invisible">
   </div>
 </form>
 
@@ -68,12 +68,10 @@
 </body>
 
 <script>
-  let pendingSearchData = null;
 
   // Attach listener to your Search button
   document.getElementById("channelisation").addEventListener("click", async (e) => {
     e.preventDefault();
-
     // Trigger invisible Turnstile
     if (window.turnstile && typeof turnstile.execute === "function") {
       turnstile.execute();
