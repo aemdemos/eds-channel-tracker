@@ -74,20 +74,15 @@
   document.getElementById("channelisation").addEventListener("click", async (e) => {
     e.preventDefault();
 
-    const channelName = document.getElementById("channel-name").value;
-    const description = document.getElementById("description").value;
-
-    pendingSearchData = { channelName, description };
-
     // Trigger invisible Turnstile
-    turnstile.execute();
+    if (window.turnstile && typeof turnstile.execute === "function") {
+      turnstile.execute();
+    }
   });
 
   async function onTurnstileSuccess(token) {
-    if (!pendingSearchData) return;
 
-    const { channelName, description } = pendingSearchData;
-    const url = new URL("https://eds-channels-tracker-worker.chrislotton.workers.dev/slack/channels");
+    const url = new URL("https://eds-channels-tracker-worker.chrislotton.workers.dev");
     url.searchParams.set("channelName", channelName);
     url.searchParams.set("description", description);
 
@@ -96,12 +91,6 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ turnstile_token: token })
     });
-
-    const json = await res.json();
-    console.log("Slack Channels:", json);
-    // TODO: render to #slack-channels-container if desired
-
-    pendingSearchData = null;
   }
 </script>
 
