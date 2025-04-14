@@ -24,7 +24,6 @@ import {
 let sortDirection = 'asc';
 let activeChannelsCount = 0;
 let isSortingEnabled = false;
-let isVerified = false;
 const maxMessagesCount = 10;
 const slackChannelsContainer = document.getElementById('slack-channels-container');
 
