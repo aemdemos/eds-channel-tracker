@@ -80,7 +80,7 @@
 
   async function onTurnstileSuccess(token) {
 
-    const url = new URL("https://eds-channels-tracker-worker.chrislotton.workers.dev");
+    const url = new URL("https://eds-channels-tracker-worker.chrislotton.workers.dev/verify-turnstile");
 
     const res = await fetch(url.toString(), {
       method: "POST",
