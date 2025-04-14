@@ -9,10 +9,38 @@
   <script src="../scripts/scripts.js" type="module"></script>
   <link rel="stylesheet" href="../styles/styles.css" />
   <script src="../slack-admin/main.js" type="module"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <link rel="stylesheet" href="../slack-admin/main.css" />
+
+  <script>
+    function onTurnstileSuccess(token) {
+      document.getElementById("cf-turnstile-response").value = token;
+
+      // Now send request to your Worker
+      fetch('https://eds-channels-tracker-worker.chrislotton.workers.dev/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ turnstile_token: token }),
+      })
+      .then(r => r.json())
+      .then(console.log);
+    }
+  </script>
 </head>
 
 <body class="slack-admin">
+
+
+<form id="my-form">
+  <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response" />
+  <div class="cf-turnstile"
+       data-sitekey="0x4AAAAAABLhLEKQIks54XXH"
+       data-callback="onTurnstileSuccess"
+       data-theme="light"
+       data-size="invisible"></div>
+</form>
+
+
 <div class="header">
   <a href="https://adobe-dx-support.enterprise.slack.com/archives/C08LDR6NP1V" target="_blank" class="feedback-link">
     <img src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" alt="Slack" class="slack-logo">
