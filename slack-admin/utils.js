@@ -120,3 +120,16 @@ export const renderMembersTable = (channelName, adobeMembers, nonAdobeMembers) =
     </table>
   `;
 };
+
+export const onTurnstileSuccess = (token) => {
+  document.getElementById("cf-turnstile-response").value = token;
+
+  // Now send request to your Worker
+  fetch('https://eds-channels-tracker-worker.chrislotton.workers.dev/data', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ turnstile_token: token }),
+  })
+  .then(r => r.json())
+  .then(console.log);
+}
