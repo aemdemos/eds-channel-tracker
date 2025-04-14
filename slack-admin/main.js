@@ -1,3 +1,14 @@
+/*
+ * Copyright 2025 Adobe. All rights reserved.
+ * This file is licensed to you under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License. You may obtain a copy
+ * of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable max-len */
@@ -132,7 +143,6 @@ const addSortingToTable = (table, channels) => {
       toggleSortDirection();
     });
   });
-
 };
 
 const initTable = (channels) => {
@@ -146,7 +156,7 @@ const initTable = (channels) => {
   progressBarContainer.classList.add('progress-container');
   progressBarContainer.innerHTML = `
   <div class="progress-bar">
-    <div class="progress-fill" style="width: 0%"></div>
+    <div class="progress-fill" style="width: 0"></div>
   </div>
   <div class="progress-label">Loading 0 of ${escapeHTML(channels.length.toString())} channels…</div>
 `;
@@ -247,7 +257,6 @@ const updateMembersCountCell = (channel, membersCount) => {
 };
 
 const startFetching = async () => {
-
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
   const channelNameFilter = document.getElementById('channel-name').value.trim();
   const channels = await getAllSlackChannels(channelNameFilter);
@@ -293,7 +302,9 @@ const startFetching = async () => {
     const messageResults = await Promise.all(messagePromises);
     const memberResults = await Promise.all(memberPromises);
 
-    messageResults.forEach(({ channelId, messages, engagement, lstMsgDt }) => {
+    messageResults.forEach(({
+      channelId, messages, engagement, lstMsgDt,
+    }) => {
       const channel = channels.find((c) => c.id === channelId);
       updateMessageCells(channel, messages, engagement, lstMsgDt);
     });
