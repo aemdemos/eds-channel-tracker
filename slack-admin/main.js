@@ -36,51 +36,6 @@ const escapeHTML = (str) => {
 
 const doLogout = () => window.location.reload();
 
-// Run Turnstile on page load
-window.onload = () => {
-  turnstile.execute();
-};
-
-async function verifyToken(token) {
-  const url = "https://eds-channels-tracker-worker.chrislotton.workers.dev/turnstile-verify";
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ turnstile_token: token })
-  });
-
-  const data = await res.json();
-
-  // Return verification result
-  return data.success;
-}
-
-function handleVerificationFailure() {
-  // Force logout by clearing session or redirecting
-  alert("Verification failed. Logging out...");
-  // Here we redirect to a logout URL or force a page reload
-  window.location.href = "/logout"; // Or clear sessionStorage / localStorage
-}
-
-function handleVerificationFailure() {
-  alert("Verification failed. Logging out...");
-  doLogout();
-}
-
-function onTurnstileSuccess(token) {
-  // Send the token to your backend for verification
-  verifyToken(token)
-  .then(isVerifiedResult => {
-    if (isVerifiedResult) {
-      isVerified = true; // Update the flag to true if the verification is successful
-    } else {
-      handleVerificationFailure(); // If verification fails
-    }
-  })
-  .catch(handleVerificationFailure); // If there's an error verifying
-}
-
 const sk = document.querySelector('aem-sidekick');
 if (sk) {
   sk.addEventListener('logged-out', doLogout);
