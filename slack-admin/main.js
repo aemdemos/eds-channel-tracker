@@ -92,7 +92,8 @@ const renderTable = (channels) => {
     link.textContent = channel.name;
     nameCell.appendChild(link);
 
-    const purposeCell = createCell(channel.purpose?.value || '');
+    const purposeText = decodeHTML(channel.purpose?.value || '');
+    const purposeCell = createCell(purposeText);
     const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0];
     const createdCell = createCell(createdDate, 'stat-column');
     const messagesCell = createCell(channel.messages ?? '', 'stat-column total-messages');

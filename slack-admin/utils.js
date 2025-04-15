@@ -88,6 +88,12 @@ export const handleModalInteraction = async (cell, channelId, modal, fetchDataCa
   }
 };
 
+export const decodeHTML = (str) => {
+  const txt = document.createElement('textarea');
+  txt.innerHTML = str;
+  return txt.value;
+};
+
 export const renderMembersTable = (channelName, adobeMembers, nonAdobeMembers) => {
   const maxLength = Math.max(adobeMembers.length, nonAdobeMembers.length);
   let rows = '';
