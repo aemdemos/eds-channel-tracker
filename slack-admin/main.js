@@ -258,7 +258,9 @@ const updateMembersCountCell = (channel, membersCount) => {
 
 const startFetching = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
-  const channelNameFilter = document.getElementById('channel-name').value.trim();
+
+  const rawInput = document.getElementById('channel-name').value.trim();
+  const channelNameFilter = rawInput === '' || rawInput === '*' ? undefined : rawInput;
   const channels = await getAllSlackChannels(channelNameFilter);
 
   channels.sort((a, b) => a.name.localeCompare(b.name));
