@@ -19,6 +19,7 @@ import {
   alphaSort,
   renderMembersTable,
   handleModalInteraction,
+  decodeHTML
 } from './utils.js';
 
 let sortDirection = 'asc';
