@@ -259,9 +259,13 @@ const updateMembersCountCell = (channel, membersCount) => {
 const startFetching = async () => {
   slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
 
-  const rawInput = document.getElementById('channel-name').value.trim();
-  const channelNameFilter = rawInput === '' || rawInput === '*' ? undefined : rawInput;
-  const channels = await getAllSlackChannels(channelNameFilter);
+  const rawChannel = document.getElementById('channel-name').value.trim();
+  const rawDescription = document.getElementById('channel-description').value.trim();
+
+  const channelNameFilter = rawChannel === '' || rawChannel === '*' ? undefined : rawChannel;
+  const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
+
+  const channels = await getAllSlackChannels(channelNameFilter, descriptionFilter);
 
   channels.sort((a, b) => a.name.localeCompare(b.name));
   initTable(channels);
