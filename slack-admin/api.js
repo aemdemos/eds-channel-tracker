@@ -31,11 +31,21 @@ export const fetchWithRetry = async (url, attempts = 0) => {
   }
 };
 
-export const getAllSlackChannels = async (channelName = 'aem-', description = 'Edge Delivery') => {
+export const getAllSlackChannels = async (channelName = '', description = '') => {
   try {
     const url = new URL(`${API_ENDPOINT}/slack/channels`);
-    url.searchParams.append('channelName', channelName.replace(/\*/g, ''));
-    url.searchParams.append('description', description);
+
+    const cleanedChannelName = channelName.trim();
+    const cleanedDescription = description.trim();
+
+    if (cleanedChannelName && cleanedChannelName !== '*') {
+      url.searchParams.append('channelName', cleanedChannelName.replace(/\*/g, ''));
+    }
+
+    if (cleanedDescription && cleanedDescription !== '*') {
+      url.searchParams.append('description', cleanedDescription.replace(/\*/g, ''));
+    }
+
     const response = await fetch(url.toString());
     return response.ok ? response.json() : [];
   } catch (e) { /* empty */ }
