@@ -58,28 +58,6 @@ const hideModal = (modal) => {
   }, { once: true });
 };
 
-// Utility function to handle modal interactions
-export const handleModalInteraction = async (cell, channelId, modal, fetchDataCallback) => {
-  positionModal(modal, cell);
-  modal.style.display = 'block';
-  requestAnimationFrame(() => modal.classList.add('show'));
-
-  if (cell._fetched) {
-    modal.innerHTML = cell._modalData;
-    return;
-  }
-
-  try {
-    const data = await fetchDataCallback(channelId);
-    const wrapped = wrapWithCloseButton(data.modalContent, () => hideModal(modal));
-    modal.innerHTML = ''; // clear previous content
-    modal.appendChild(wrapped);
-    cell._modalData = wrapped.outerHTML; // for caching (optional, or update if needed)
-  } catch (err) {
-    modal.innerHTML = '<p style="color: red;">Error loading data</p>';
-  }
-};
-
 export const wrapWithCloseButton = (content, onClose) => {
   const wrapper = document.createElement('div');
   wrapper.classList.add('modal-content');
@@ -101,6 +79,27 @@ export const wrapWithCloseButton = (content, onClose) => {
   return wrapper; // return the actual DOM node
 };
 
+// Utility function to handle modal interactions
+export const handleModalInteraction = async (cell, channelId, modal, fetchDataCallback) => {
+  positionModal(modal, cell);
+  modal.style.display = 'block';
+  requestAnimationFrame(() => modal.classList.add('show'));
+
+  if (cell._fetched) {
+    modal.innerHTML = cell._modalData;
+    return;
+  }
+
+  try {
+    const data = await fetchDataCallback(channelId);
+    const wrapped = wrapWithCloseButton(data.modalContent, () => hideModal(modal));
+    modal.innerHTML = ''; // clear previous content
+    modal.appendChild(wrapped);
+    cell._modalData = wrapped.outerHTML; // for caching (optional, or update if needed)
+  } catch (err) {
+    modal.innerHTML = '<p style="color: red;">Error loading data</p>';
+  }
+};
 
 export const decodeHTML = (str) => {
   const txt = document.createElement('textarea');
