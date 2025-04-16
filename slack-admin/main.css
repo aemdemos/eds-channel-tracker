@@ -275,6 +275,7 @@ th.sorted-desc::after {
     background: linear-gradient(to left, navajowhite,white); /* Customize the gradient colors */
     border-radius: 5px;
     position: relative;
+    overflow: hidden; /* Ensure content stays within the thermometer */
 }
 
 .thermometer-fill {
@@ -285,16 +286,19 @@ th.sorted-desc::after {
     top: 0;
     left: 0;
     opacity: 0.6;
+    z-index: 1; /* Ensure it stays below the label */
 }
 
 .thermometer-label {
     position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    text-align: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     font-size: 12px;
-    margin-top: 5px;
+    color: black; /* Ensure visibility over the fill */
+    z-index: 2; /* Ensure it stays above the fill */
+    text-align: center;
+    white-space: nowrap; /* Prevent text wrapping */
 }
 
 .thermometer-label span {
@@ -347,12 +351,12 @@ th[data-sort]::after {
 .modal-header {
     display: flex;
     justify-content: flex-end;
-    margin: 0px !important;
+    margin: 0 !important;
     padding-right: 5px !important;
 }
 
 .modal-content {
-    margin: 0px !important;
-    padding: 0px !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
