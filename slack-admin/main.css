@@ -294,7 +294,6 @@ th.sorted-desc::after {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 12px;
     color: black; /* Ensure visibility over the fill */
     z-index: 2; /* Ensure it stays above the fill */
     text-align: center;
