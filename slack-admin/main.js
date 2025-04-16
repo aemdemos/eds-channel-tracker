@@ -19,7 +19,7 @@ import {
   alphaSort,
   renderMembersTable,
   handleModalInteraction,
-  decodeHTML
+  decodeHTML,
 } from './utils.js';
 
 let sortDirection = 'asc';
@@ -91,6 +91,7 @@ const renderTable = (channels) => {
     link.href = `slack://channel?team=T0385CHDU9E&id=${channel.id}`;
     link.target = '_blank';
     link.textContent = channel.name;
+    link.title = 'View channel';
     nameCell.appendChild(link);
 
     const purposeText = decodeHTML(channel.purpose?.value || '');
