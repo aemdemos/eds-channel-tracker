@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site Admin</title>
+  <script src="../scripts/aem.js" type="module"></script>
+  <script src="../scripts/scripts.js" type="module"></script>
+  <link rel="stylesheet" href="../styles/styles.css" />
+  <script src="../teams-admin/report.js" type="module"></script>
+  <link rel="stylesheet" href="../teams-admin/report.css" />
+</head>
+
+<body class="teams-admin">
+  <header></header>
+  <main>
+    <!-- TITLE -->
+    <div>
+      <h1>Manage teams</h1>
+    </div>
+
+    <!-- TEAMS FORM -->
+    <div>
+      <form>
+        <div class="form-field">
+          <label for="key">API key</label>
+          <input name="key" id="key" required />
+          <div class="field-help-text">
+            <p>Your API key</p>
+          </div>
+        </div>
+        <p class="button-wrapper">
+          <button type="reset" id="view" class="button">View report</button>
+        </p>
+      </form>
+    </div>
+
+    <!-- TEAMS CONTAINER -->
+    <div id="report-container">
+    </div>
+
+  </main>
+  <footer></footer>
+</body>
+
+</html>

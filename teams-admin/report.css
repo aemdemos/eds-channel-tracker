@@ -1,0 +1,41 @@
+@import url('./teams-admin.css');
+
+.teams-admin #report-container {
+  padding: 0 var(--horizontal-spacing);
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.teams-admin #report-container table th, .teams-admin #report-container table td {
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.teams-admin #report-container table th {
+  background-color: var(--blue-100);
+}
+
+.teams-admin #report-container table .nobreak {
+  white-space: nowrap;
+}
+
+.teams-admin #report-container table ul {
+  padding-left: 0;
+}
+
+.teams-admin #report-container table ul li {
+  list-style-type: none;
+}
+
+.teams-admin #report-container table td.inactive {
+  background-color: var(--red-300);
+}
+
+.teams-admin #report-container table td.slowing-down {
+  background-color: var(--orange-300);
+}
+
+.teams-admin #report-container table td.owner-mismatch {
+  background-color: var(--red-300);
+}
