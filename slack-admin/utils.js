@@ -60,15 +60,6 @@ const hideModal = (modal) => {
 
 // Utility function to handle modal interactions
 export const handleModalInteraction = async (cell, channelId, modal, fetchDataCallback) => {
-  const secondClickListener = () => {
-    hideModal(modal);
-    document.removeEventListener('click', secondClickListener);
-  };
-
-  setTimeout(() => {
-    document.addEventListener('click', secondClickListener, { once: true });
-  }, 0);
-
   positionModal(modal, cell);
   modal.style.display = 'block';
   requestAnimationFrame(() => modal.classList.add('show'));
@@ -80,13 +71,36 @@ export const handleModalInteraction = async (cell, channelId, modal, fetchDataCa
 
   try {
     const data = await fetchDataCallback(channelId);
-    modal.innerHTML = data.modalContent;
-    cell._fetched = true;
-    cell._modalData = data.modalContent;
+    const wrapped = wrapWithCloseButton(data.modalContent, () => hideModal(modal));
+    modal.innerHTML = ''; // clear previous content
+    modal.appendChild(wrapped);
+    cell._modalData = wrapped.outerHTML; // for caching (optional, or update if needed)
   } catch (err) {
     modal.innerHTML = '<p style="color: red;">Error loading data</p>';
   }
 };
+
+export const wrapWithCloseButton = (content, onClose) => {
+  const wrapper = document.createElement('div');
+  wrapper.classList.add('modal-content');
+  wrapper.innerHTML = `
+    <div class="modal-header">
+      <button class="modal-close-button" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;" aria-label="Close modal">&times;</button>
+    </div>
+    <div class="modal-body">${content}</div>
+  `;
+
+  const closeBtn = wrapper.querySelector('.modal-close-button');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      onClose();
+    });
+  }
+
+  return wrapper; // return the actual DOM node
+};
+
 
 export const decodeHTML = (str) => {
   const txt = document.createElement('textarea');
@@ -126,16 +140,3 @@ export const renderMembersTable = (channelName, adobeMembers, nonAdobeMembers) =
     </table>
   `;
 };
-
-export const onTurnstileSuccess = (token) => {
-  document.getElementById("cf-turnstile-response").value = token;
-
-  // Now send request to your Worker
-  fetch('https://eds-channels-tracker-worker.chrislotton.workers.dev/data', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ turnstile_token: token }),
-  })
-  .then(r => r.json())
-  .then(console.log);
-}

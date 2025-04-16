@@ -344,3 +344,15 @@ th[data-sort]::after {
     opacity: 0.5;
 }
 
+.modal-header {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0px !important;
+    padding-right: 5px !important;
+}
+
+.modal-content {
+    margin: 0px !important;
+    padding: 0px !important;
+}
+
