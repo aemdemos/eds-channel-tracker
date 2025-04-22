@@ -335,4 +335,10 @@ const startFetching = async () => {
   document.querySelector('.table-summary').style.display = 'block';
 };
 
+// search triggered by pressing enter
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    startFetching().then(() => {});
+  }
+});
 document.getElementById('channelisation').addEventListener('click', startFetching);
