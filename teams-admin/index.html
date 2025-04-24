@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EDS Microsoft Teams Channels</title>
+  <title>EDS Microsoft Teams</title>
   <script src="../scripts/aem.js" type="module"></script>
   <script src="../scripts/scripts.js" type="module"></script>
   <link rel="stylesheet" href="../styles/styles.css" />
@@ -23,21 +23,21 @@
   <main>
     <div class="title-container">
       <img src="../icons/adobe.png" alt="Adobe Logo" class="adobe-logo" />
-      <h2>Edge Delivery Services - Microsoft Teams Channels</h2>
+      <h2>Edge Delivery Services - Microsoft Teams</h2>
     </div>
     <!-- Search Filters -->
     <div class="search-filters">
       <div>
-        <label for="channel-name">Name Contains</label>
-        <input type="text" id="channel-name" value="aem-" placeholder="Channel Name" />
+        <label for="team-name">Name Contains</label>
+        <input type="text" id="team-name" value="aem-" placeholder="Team Name" />
       </div>
       <div>
-        <label for="channel-description">Description Contains</label>
-        <input type="text" id="channel-description" value="Edge Delivery" placeholder="Description" />
+        <label for="team-description">Description Contains</label>
+        <input type="text" id="team-description" value="Edge Delivery" placeholder="Description" />
       </div>
       <div>
         <p class="button-wrapper">
-          <button type="reset" id="channelisation" class="button">
+          <button type="reset" id="teams" class="button">
             Search
             <img src="https://cdn.worldvectorlogo.com/logos/microsoft-teams-1.svg" alt="Microsoft Teams Logo" style="height: 20px;" />
           </button>
@@ -45,8 +45,8 @@
       </div>
     </div>
 
-    <!-- Teams Channels Container -->
-    <div id="teams-channels-container">
+    <!-- Teams Container -->
+    <div id="teams-container">
     </div>
 
     <div id="modal" class="modal">
@@ -56,6 +56,5 @@
   </main>
   <footer></footer>
 </body>
-
 
 </html>

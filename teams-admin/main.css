@@ -11,7 +11,7 @@
  */
 @import url('./teams-admin.css');
 
-.teams-admin #teams-channels-container {
+.teams-admin #teams-container {
   padding: 0 var(--horizontal-spacing);
   display: flex;
   justify-content: center;

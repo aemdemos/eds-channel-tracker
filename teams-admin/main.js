@@ -12,7 +12,9 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable max-len */
-import { getMessageStats, getMemberIds, getAllTeamsChannels } from './api.js';
+import {
+  getMessageStats, getMemberIds, getAllTeams, getTeam,
+} from './api.js';
 import { countMembers } from './members.js';
 import {
   sortTable,
@@ -23,10 +25,10 @@ import {
 } from './utils.js';
 
 let sortDirection = 'asc';
-let activeChannelsCount = 0;
+let activeTeamsCount = 0;
 let isSortingEnabled = false;
 const maxMessagesCount = 10;
-const teamsChannelsContainer = document.getElementById('teams-channels-container');
+const teamsContainer = document.getElementById('teams-container');
 
 const escapeHTML = (str) => {
   const div = document.createElement('div');
@@ -49,22 +51,22 @@ const reattachModalHandlers = () => {
   const modal = document.getElementById('modal');
   document.querySelectorAll('.members-count').forEach((cell) => {
     const row = cell.closest('tr');
-    const channelId = row.getAttribute('data-channel-id');
+    const teamId = row.getAttribute('data-team-id');
 
     if (cell._handlerAttached) return;
     cell._handlerAttached = true;
 
     cell.addEventListener('click', async (e) => {
       e.stopPropagation();
-      const channel = { id: channelId, name: row.querySelector('td:first-child').textContent };
+      const team = { id: teamId, name: row.querySelector('td:first-child').textContent };
 
-      await handleModalInteraction(cell, channelId, modal, async (id) => {
+      await handleModalInteraction(cell, teamId, modal, async (id) => {
         const response = await getMemberIds(id);
         if (!response.ok) throw new Error('Failed to fetch members');
         const { adobeMembers, nonAdobeMembers } = await countMembers(response.members);
         adobeMembers.sort(alphaSort);
         nonAdobeMembers.sort(alphaSort);
-        return { modalContent: renderMembersTable(channel.name, adobeMembers, nonAdobeMembers) };
+        return { modalContent: renderMembersTable(team.name, adobeMembers, nonAdobeMembers) };
       });
     });
   });
@@ -77,27 +79,21 @@ const createCell = (content, className = '') => {
   return td;
 };
 
-const renderTable = (channels) => {
+const renderTable = (teams) => {
   const tbody = document.querySelector('tbody');
   tbody.innerHTML = '';
 
-  channels.forEach((channel) => {
+  teams.forEach((team) => {
     const tr = document.createElement('tr');
-    tr.classList.add('channel-row');
-    tr.setAttribute('data-channel-id', channel.id);
+    tr.classList.add('team-row');
+    tr.setAttribute('data-team-id', team.id);
 
-    const nameCell = document.createElement('td');
-    const link = document.createElement('a');
-    link.textContent = channel.name;
-    link.title = 'View channel';
-    nameCell.appendChild(link);
+    const nameCell = createCell(team.displayName, 'name');
+    const descriptionText = decodeHTML(team.description);
+    const descriptionCell = createCell(descriptionText);
+    const createdCell = createCell(team.created || '', 'stat-column created');
 
-    const purposeText = decodeHTML(channel.purpose?.value || '');
-    const purposeCell = createCell(purposeText);
-    const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0];
-    const createdCell = createCell(createdDate, 'stat-column');
-    const messagesCell = createCell(channel.messages ?? '', 'stat-column total-messages');
-
+    const messagesCell = createCell(team.messages ?? '', 'stat-column total-messages');
     const thermometerCell = document.createElement('td');
     thermometerCell.className = 'stat-column messages-count';
     const thermometer = document.createElement('div');
@@ -106,28 +102,28 @@ const renderTable = (channels) => {
     fill.className = 'thermometer-fill';
     const label = document.createElement('div');
     label.className = 'thermometer-label';
-    const fillPercentage = Math.min((channel.engagement / maxMessagesCount) * 100, 100);
+    const fillPercentage = Math.min((team.engagement / maxMessagesCount) * 100, 100);
     fill.style.width = `${fillPercentage}%`;
-    label.textContent = channel.engagement ?? '';
+    label.textContent = team.engagement ?? '';
     thermometer.append(fill, label);
     thermometerCell.appendChild(thermometer);
 
-    const lastMessageCell = createCell(channel.lstMsgDt || '', 'stat-column last-message');
-    const membersCountCell = createCell(channel.membersCount ?? '', 'stat-column members-count');
+    const lastMessageCell = createCell(team.lstMsgDt || '', 'stat-column last-message');
+    const membersCountCell = createCell(team.membersCount ?? '', 'stat-column members-count');
     membersCountCell.title = 'View members';
 
-    tr.append(nameCell, purposeCell, createdCell, messagesCell, thermometerCell, lastMessageCell, membersCountCell);
+    tr.append(nameCell, descriptionCell, createdCell, messagesCell, thermometerCell, lastMessageCell, membersCountCell);
     tbody.appendChild(tr);
   });
 
-  reattachModalHandlers();
+  // reattachModalHandlers();
 };
 
 const toggleSortDirection = () => {
   sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
 };
 
-const addSortingToTable = (table, channels) => {
+const addSortingToTable = (table, teams) => {
   const headers = table.querySelectorAll('th[data-sort]');
   headers.forEach((header) => {
     header.addEventListener('click', () => {
@@ -137,7 +133,7 @@ const addSortingToTable = (table, channels) => {
       // Remove sort classes from all headers
       headers.forEach((h) => h.classList.remove('sorted-asc', 'sorted-desc'));
       // Sort data
-      const sortedData = sortTable(channels, columnKey, sortDirection);
+      const sortedData = sortTable(teams, columnKey, sortDirection);
       // Add the appropriate arrow class
       header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
       renderTable(sortedData);
@@ -146,9 +142,9 @@ const addSortingToTable = (table, channels) => {
   });
 };
 
-const initTable = (channels) => {
-  teamsChannelsContainer.innerHTML = '';
-  activeChannelsCount = 0;
+const initTable = (teams) => {
+  teamsContainer.innerHTML = '';
+  activeTeamsCount = 0;
 
   const summaryWrapper = document.createElement('div');
   summaryWrapper.classList.add('table-summary-wrapper');
@@ -159,21 +155,21 @@ const initTable = (channels) => {
   <div class="progress-bar">
     <div class="progress-fill" style="width: 0"></div>
   </div>
-  <div class="progress-label">Loading 0 of ${escapeHTML(channels.length.toString())} channels…</div>
+  <div class="progress-label">Loading 0 of ${escapeHTML(teams.length.toString())} teams…</div>
 `;
 
   const summary = document.createElement('div');
   summary.classList.add('table-summary');
   summary.style.display = 'none';
   summary.innerHTML = `
-  <span>Total Channels: ${escapeHTML(channels.length.toString())}</span> |
-  <span>Active Channels (Last 30 days): <span id="active-channels-count">0</span></span>
+  <span>Total Teams: ${escapeHTML(teams.length.toString())}</span> |
+  <span>Active Teams (Last 30 days): <span id="active-teams-count">0</span></span>
 `;
 
   summaryWrapper.appendChild(progressBarContainer);
   summaryWrapper.appendChild(summary);
 
-  teamsChannelsContainer.appendChild(summaryWrapper);
+  teamsContainer.appendChild(summaryWrapper);
 
   const table = document.createElement('table');
   table.classList.add('styled-table');
@@ -181,8 +177,8 @@ const initTable = (channels) => {
   table.innerHTML = `
     <thead>
       <tr>
-        <th data-sort="name">Name</th>
-        <th class="sorting-disabled">Description</th>
+        <th data-sort="name">Team</th>
+        <th class=" description sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
         <th data-sort="messages">Total Messages</th>
         <th data-sort="engagement">
@@ -196,20 +192,47 @@ const initTable = (channels) => {
 
   const tbody = document.createElement('tbody');
   table.appendChild(tbody);
-  addSortingToTable(table, channels);
-  teamsChannelsContainer.appendChild(table);
+  addSortingToTable(table, teams);
+  teamsContainer.appendChild(table);
 
   const initialSortKey = 'name';
-  const sortedChannels = sortTable(channels, initialSortKey, sortDirection);
+  const sortedTeams = sortTable(teams, initialSortKey, sortDirection);
   document.querySelector(`th[data-sort="${initialSortKey}"]`).classList.add('sorted-asc');
-  renderTable(sortedChannels);
+  renderTable(sortedTeams);
   toggleSortDirection();
 
-  renderTable(channels);
+  renderTable(teams);
 };
 
-const updateMessageCells = (channel, messages, engagement, lstMsgDt) => {
-  const row = document.querySelector(`tr[data-channel-id="${channel.id}"]`);
+const addLinkToCell = (cell, linkText, linkHref) => {
+  // Clear the cell's existing content
+  cell.textContent = '';
+
+  // Create the link element
+  const link = document.createElement('a');
+  link.textContent = linkText; // Set the link text
+  link.href = linkHref; // Set the link URL
+  link.target = '_blank'; // Open the link in a new tab
+  link.title = 'Open in Microsoft Teams'; // Optional: Set a tooltip
+
+  // Append the link to the cell
+  cell.appendChild(link);
+};
+
+const updateTeamCells = (team, created, webUrl) => {
+  const row = document.querySelector(`tr[data-team-id="${team.id}"]`);
+
+  if (!row) return;
+  const nameCell = row.querySelector('.name'); // Select the target cell
+  addLinkToCell(nameCell, team.displayName, webUrl);
+  row.querySelector('.created').textContent = created;
+
+  team.created = created;
+  team.webUrl = webUrl;
+};
+
+const updateMessageCells = (team, messages, engagement, lstMsgDt) => {
+  const row = document.querySelector(`tr[data-team-id="${team.id}"]`);
   if (!row) return;
 
   row.querySelector('.total-messages').textContent = messages;
@@ -222,22 +245,22 @@ const updateMessageCells = (channel, messages, engagement, lstMsgDt) => {
   row.querySelector('.last-message').textContent = lstMsgDt;
 
   if (engagement > 0) {
-    activeChannelsCount += 1;
-    document.getElementById('active-channels-count').textContent = activeChannelsCount;
+    activeTeamsCount += 1;
+    document.getElementById('active-teams-count').textContent = activeTeamsCount;
   }
 
-  channel.messages = messages;
-  channel.engagement = engagement;
-  channel.lstMsgDt = lstMsgDt;
+  team.messages = messages;
+  team.engagement = engagement;
+  team.lstMsgDt = lstMsgDt;
 };
 
-const updateMembersCountCell = (channel, membersCount) => {
-  const row = document.querySelector(`tr[data-channel-id="${channel.id}"]`);
+const updateMembersCountCell = (team, membersCount) => {
+  const row = document.querySelector(`tr[data-team-id="${team.id}"]`);
   if (!row) return;
 
   const membersCountCell = row.querySelector('.members-count');
   membersCountCell.textContent = membersCount;
-  channel.membersCount = membersCount;
+  team.membersCount = membersCount;
   membersCountCell._fetched = false;
   membersCountCell._modalData = null;
 
@@ -245,86 +268,102 @@ const updateMembersCountCell = (channel, membersCount) => {
 
   membersCountCell.addEventListener('click', async (e) => {
     e.stopPropagation();
-    await handleModalInteraction(membersCountCell, channel.id, modal, async (id) => {
+    await handleModalInteraction(membersCountCell, team.id, modal, async (id) => {
       const response = await getMemberIds(id);
       if (!response.ok) throw new Error('Failed to fetch members');
 
       const { adobeMembers, nonAdobeMembers } = await countMembers(response.members);
       adobeMembers.sort(alphaSort);
       nonAdobeMembers.sort(alphaSort);
-      return { modalContent: renderMembersTable(channel.name, adobeMembers, nonAdobeMembers) };
+      return { modalContent: renderMembersTable(team.name, adobeMembers, nonAdobeMembers) };
     });
   });
 };
 
 const startFetching = async () => {
-  teamsChannelsContainer.innerHTML = '<span class="spinner"></span>';
+  teamsContainer.innerHTML = '<span class="spinner"></span>';
 
-  const rawChannel = document.getElementById('channel-name').value.trim();
-  const rawDescription = document.getElementById('channel-description').value.trim();
+  const rawName = document.getElementById('team-name').value.trim();
+  const rawDescription = document.getElementById('team-description').value.trim();
 
-  const channelNameFilter = rawChannel === '' || rawChannel === '*' ? undefined : rawChannel;
+  const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
 
-  const channels = await getAllTeamsChannels(channelNameFilter, descriptionFilter);
+  const teams = await getAllTeams(nameFilter, descriptionFilter);
 
-  channels.sort((a, b) => a.name.localeCompare(b.name));
-  initTable(channels);
+  teams.sort((a, b) => a.displayName.localeCompare(b.displayName));
+  initTable(teams);
 
   const progressLabel = document.querySelector('.progress-label');
   const progressFill = document.querySelector('.progress-fill');
   let loadedCount = 0;
 
-  const batchSize = 15;
-  for (let i = 0; i < channels.length; i += batchSize) {
-    const batch = channels.slice(i, i + batchSize);
+  const batchSize = 20;
+  for (let i = 0; i < teams.length; i += batchSize) {
+    const batch = teams.slice(i, i + batchSize);
+    const teamPromises = batch.map((team) => {
+      if (!team.created) {
+        return getTeam(team.id).then((t) => ({
+          teamId: team.id,
+          created: t?.createdDateTime ? new Date(t.createdDateTime).toISOString().split('T')[0] : 'No Date',
+          webUrl: t?.webUrl || '',
+        }));
+      }
 
-    const messagePromises = batch.map((channel) => {
-      if (!channel.messages || !channel.engagement || !channel.lstMsgDt) {
-        return getMessageStats(channel.id).then((msg) => ({
-          channelId: channel.id,
+      return Promise.resolve({ teamId: team.id, created: team.created, webUrl: team.webUrl });
+    });
+    const messagePromises = batch.map((team) => {
+      if (!team.messages || !team.engagement || !team.lstMsgDt) {
+        return getMessageStats(team.id).then((msg) => ({
+          teamId: team.id,
           messages: msg?.totalMessages || 0,
           engagement: msg?.recentMessageCount || 0,
           lstMsgDt: msg?.lastMessageTimestamp ? new Date(msg.lastMessageTimestamp * 1000).toISOString().split('T')[0] : 'No Messages',
         }));
       }
       return Promise.resolve({
-        channelId: channel.id,
-        messages: channel.messages,
-        engagement: channel.engagement,
-        lstMsgDt: channel.lstMsgDt,
+        teamId: team.id,
+        messages: team.messages,
+        engagement: team.engagement,
+        lstMsgDt: team.lstMsgDt,
       });
     });
 
-    const memberPromises = batch.map((channel) => {
-      if (!channel.membersCount) {
-        return getMemberIds(channel.id).then((m) => ({
-          channelId: channel.id,
+    const memberPromises = batch.map((team) => {
+      if (!team.membersCount) {
+        return getMemberIds(team.id).then((m) => ({
+          teamId: team.id,
           membersCount: m?.members?.length || 0,
         }));
       }
-      return Promise.resolve({ channelId: channel.id, membersCount: channel.membersCount });
+      return Promise.resolve({ teamId: team.id, membersCount: team.membersCount });
     });
 
-    const messageResults = await Promise.all(messagePromises);
-    const memberResults = await Promise.all(memberPromises);
+    const teamResults = await Promise.all(teamPromises);
+    //  const messageResults = await Promise.all(messagePromises);
+    //  const memberResults = await Promise.all(memberPromises);
 
+    teamResults.forEach(({ teamId, created, webUrl }) => {
+      const team = teams.find((t) => t.id === teamId);
+      updateTeamCells(team, created, webUrl);
+    });
+/*
     messageResults.forEach(({
-      channelId, messages, engagement, lstMsgDt,
+      teamId, messages, engagement, lstMsgDt,
     }) => {
-      const channel = channels.find((c) => c.id === channelId);
-      updateMessageCells(channel, messages, engagement, lstMsgDt);
+      const team = teams.find((t) => t.id === teamId);
+      updateMessageCells(team, messages, engagement, lstMsgDt);
     });
 
-    memberResults.forEach(({ channelId, membersCount }) => {
-      const channel = channels.find((c) => c.id === channelId);
-      updateMembersCountCell(channel, membersCount);
+    memberResults.forEach(({ teamId, membersCount }) => {
+      const team = teams.find((t) => t.id === teamId);
+      updateMembersCountCell(team, membersCount);
     });
-
+*/
     loadedCount += batch.length;
-    const percentage = Math.min((loadedCount / channels.length) * 100, 100);
+    const percentage = Math.min((loadedCount / teams.length) * 100, 100);
     progressFill.style.width = `${percentage}%`;
-    progressLabel.textContent = `Loading ${loadedCount} of ${channels.length} channels…`;
+    progressLabel.textContent = `Loading ${loadedCount} of ${teams.length} teams…`;
   }
 
   isSortingEnabled = true;
@@ -333,4 +372,4 @@ const startFetching = async () => {
   document.querySelector('.table-summary').style.display = 'block';
 };
 
-document.getElementById('channelisation').addEventListener('click', startFetching);
+document.getElementById('teams').addEventListener('click', startFetching);
