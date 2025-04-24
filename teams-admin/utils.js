@@ -11,33 +11,22 @@
  */
 /* eslint-disable no-underscore-dangle */
 
-export const sortTable = (data, key, direction) => {
-  const getComparableValue = (val) => {
-    if (key !== 'lstMsgDt') return val;
+export const sortTable = (teams, columnKey, direction) => {
+  const sortedTeams = [...teams];
+  sortedTeams.sort((a, b) => {
+    let valA = a[columnKey];
+    let valB = b[columnKey];
 
-    const isNoMessages = val === 'No Messages';
-    return isNoMessages ? null : new Date(val);
-  };
-
-  return [...data].sort((a, b) => {
-    const valueA = getComparableValue(a[key]);
-    const valueB = getComparableValue(b[key]);
-
-    if (valueA === null) return direction === 'asc' ? -1 : 1;
-    if (valueB === null) return direction === 'asc' ? 1 : -1;
-
-    if (typeof valueA === 'string') {
-      return direction === 'asc'
-        ? valueA.localeCompare(valueB)
-        : valueB.localeCompare(valueA);
+    if (columnKey === 'name') { // Handle sorting by displayName
+      valA = a.displayName.toLowerCase();
+      valB = b.displayName.toLowerCase();
     }
 
-    if (typeof valueA === 'number' || valueA instanceof Date) {
-      return direction === 'asc' ? valueA - valueB : valueB - valueA;
-    }
-
+    if (valA < valB) return direction === 'asc' ? -1 : 1;
+    if (valA > valB) return direction === 'asc' ? 1 : -1;
     return 0;
   });
+  return sortedTeams;
 };
 
 export const alphaSort = (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' });

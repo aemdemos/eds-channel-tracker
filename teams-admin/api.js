@@ -59,3 +59,4 @@ export const getMemberIds = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/te
 export const getUserInfo = async (userId) => fetchWithRetry(`${API_ENDPOINT}/teams/user/info?userId=${userId}`);
 
 export const getTeam = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/team/${teamId}`);
+export const getChannels = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/channels/team/${teamId}`);

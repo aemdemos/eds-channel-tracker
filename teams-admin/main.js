@@ -13,7 +13,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable max-len */
 import {
-  getMessageStats, getMemberIds, getAllTeams, getTeam,
+  getMessageStats, getMemberIds, getAllTeams, getTeam, getChannels,
 } from './api.js';
 import { countMembers } from './members.js';
 import {
@@ -29,6 +29,7 @@ let activeTeamsCount = 0;
 let isSortingEnabled = false;
 const maxMessagesCount = 10;
 const teamsContainer = document.getElementById('teams-container');
+const BATCH_SIZE = 20;
 
 const escapeHTML = (str) => {
   const div = document.createElement('div');
@@ -88,11 +89,23 @@ const renderTable = (teams) => {
     tr.classList.add('team-row');
     tr.setAttribute('data-team-id', team.id);
 
-    const nameCell = createCell(team.displayName, 'name');
+    const nameCell = document.createElement('td');
+    nameCell.className = 'name';
+    if (team.webUrl) {
+      const link = document.createElement('a');
+      link.textContent = team.displayName;
+      link.href = team.webUrl;
+      link.target = '_blank';
+      link.title = 'Open in Microsoft Teams';
+      nameCell.appendChild(link);
+    } else {
+      nameCell.textContent = team.displayName;
+    }
+
     const descriptionText = decodeHTML(team.description);
     const descriptionCell = createCell(descriptionText);
     const createdCell = createCell(team.created || '', 'stat-column created');
-
+    const channelsCountCell = createCell(team.channelsCount || '', 'stat-column channels-count');
     const messagesCell = createCell(team.messages ?? '', 'stat-column total-messages');
     const thermometerCell = document.createElement('td');
     thermometerCell.className = 'stat-column messages-count';
@@ -112,7 +125,7 @@ const renderTable = (teams) => {
     const membersCountCell = createCell(team.membersCount ?? '', 'stat-column members-count');
     membersCountCell.title = 'View members';
 
-    tr.append(nameCell, descriptionCell, createdCell, messagesCell, thermometerCell, lastMessageCell, membersCountCell);
+    tr.append(nameCell, descriptionCell, createdCell, channelsCountCell, messagesCell, thermometerCell, lastMessageCell, membersCountCell);
     tbody.appendChild(tr);
   });
 
@@ -180,7 +193,7 @@ const initTable = (teams) => {
         <th data-sort="name">Team</th>
         <th class=" description sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
-        <th data-sort="channels">Channels</th>
+        <th data-sort="channelsCount">Channels</th>
         <th data-sort="messages">Total Messages</th>
         <th data-sort="engagement">
           Messages <span class="tooltip-container">(Last 30 days)</span>
@@ -201,6 +214,8 @@ const initTable = (teams) => {
   document.querySelector(`th[data-sort="${initialSortKey}"]`).classList.add('sorted-asc');
   renderTable(sortedTeams);
   toggleSortDirection();
+
+  renderTable(teams);
 };
 
 const addLinkToCell = (cell, linkText, linkHref) => {
@@ -228,6 +243,14 @@ const updateTeamCells = (team, created, webUrl) => {
 
   team.created = created;
   team.webUrl = webUrl;
+};
+const updateChannelCells = (team, channelsCount) => {
+  const row = document.querySelector(`tr[data-team-id="${team.id}"]`);
+  if (!row) return;
+
+  const channelsCountCell = row.querySelector('.channels-count');
+  channelsCountCell.textContent = channelsCount;
+  team.channelsCount = channelsCount;
 };
 
 const updateMessageCells = (team, messages, engagement, lstMsgDt) => {
@@ -297,7 +320,7 @@ const startFetching = async () => {
   const progressFill = document.querySelector('.progress-fill');
   let loadedCount = 0;
 
-  const batchSize = 20;
+  const batchSize = BATCH_SIZE;
   for (let i = 0; i < teams.length; i += batchSize) {
     const batch = teams.slice(i, i + batchSize);
     const teamPromises = batch.map((team) => {
@@ -311,6 +334,18 @@ const startFetching = async () => {
 
       return Promise.resolve({ teamId: team.id, created: team.created, webUrl: team.webUrl });
     });
+
+    const channelPromises = batch.map((team) => {
+      if (!team.channelsCount) {
+        return getChannels(team.id).then((t) => ({
+          teamId: team.id,
+          channelsCount: t?.['@odata.count'] || 0,
+        }));
+      }
+
+      return Promise.resolve({ teamId: team.id, channelsCount: team.channelsCount });
+    });
+
     const messagePromises = batch.map((team) => {
       if (!team.messages || !team.engagement || !team.lstMsgDt) {
         return getMessageStats(team.id).then((msg) => ({
@@ -339,12 +374,17 @@ const startFetching = async () => {
     });
 
     const teamResults = await Promise.all(teamPromises);
+    const channelResults = await Promise.all(channelPromises);
     //  const messageResults = await Promise.all(messagePromises);
     //  const memberResults = await Promise.all(memberPromises);
 
     teamResults.forEach(({ teamId, created, webUrl }) => {
       const team = teams.find((t) => t.id === teamId);
       updateTeamCells(team, created, webUrl);
+    });
+    channelResults.forEach(({ teamId, channelsCount }) => {
+      const team = teams.find((t) => t.id === teamId);
+      updateChannelCells(team, channelsCount);
     });
 /*
     messageResults.forEach(({
