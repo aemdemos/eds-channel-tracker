@@ -180,6 +180,7 @@ const initTable = (teams) => {
         <th data-sort="name">Team</th>
         <th class=" description sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
+        <th data-sort="channels">Channels</th>
         <th data-sort="messages">Total Messages</th>
         <th data-sort="engagement">
           Messages <span class="tooltip-container">(Last 30 days)</span>
@@ -200,8 +201,6 @@ const initTable = (teams) => {
   document.querySelector(`th[data-sort="${initialSortKey}"]`).classList.add('sorted-asc');
   renderTable(sortedTeams);
   toggleSortDirection();
-
-  renderTable(teams);
 };
 
 const addLinkToCell = (cell, linkText, linkHref) => {
