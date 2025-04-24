@@ -31,15 +31,15 @@ export const fetchWithRetry = async (url, attempts = 0) => {
   }
 };
 
-export const getAllTeamsChannels = async (channelName = '', description = '') => {
+export const getAllTeams = async (name = '', description = '') => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams/allTeams`);
 
-    const cleanedChannelName = channelName.trim();
+    const cleanedName = name.trim();
     const cleanedDescription = description.trim();
 
-    if (cleanedChannelName && cleanedChannelName !== '*') {
-      url.searchParams.append('channelName', cleanedChannelName.replace(/\*/g, ''));
+    if (cleanedName && cleanedName !== '*') {
+      url.searchParams.append('name', cleanedName.replace(/\*/g, ''));
     }
 
     if (cleanedDescription && cleanedDescription !== '*') {
@@ -52,8 +52,10 @@ export const getAllTeamsChannels = async (channelName = '', description = '') =>
   return [];
 };
 
-export const getMessageStats = async (channelId) => fetchWithRetry(`${API_ENDPOINT}/teams/messageStats?channelId=${channelId}`);
+export const getMessageStats = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/messageStats?channelId=${teamId}`);
 
-export const getMemberIds = async (channelId) => fetchWithRetry(`${API_ENDPOINT}/teams/members?channelId=${channelId}`);
+export const getMemberIds = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/members?teamId=${teamId}`);
 
 export const getUserInfo = async (userId) => fetchWithRetry(`${API_ENDPOINT}/teams/user/info?userId=${userId}`);
+
+export const getTeam = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/team/${teamId}`);
