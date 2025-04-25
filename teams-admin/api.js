@@ -52,11 +52,11 @@ export const getAllTeams = async (name = '', description = '') => {
   return [];
 };
 
-export const getMessageStats = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/messageStats?channelId=${teamId}`);
+export const getMessageStats = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/channelStats?teamId=${teamId}&channelId=${channelId}`);
 
 export const getMemberIds = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/members?teamId=${teamId}`);
 
 export const getUserInfo = async (userId) => fetchWithRetry(`${API_ENDPOINT}/teams/user/info?userId=${userId}`);
 
-export const getTeam = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/team/${teamId}`);
-export const getChannels = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/channels/team/${teamId}`);
+export const getTeam = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/team?teamId=${teamId}`);
+export const getChannels = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/channels?teamId=${teamId}`);
