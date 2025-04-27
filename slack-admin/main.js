@@ -259,18 +259,21 @@ const updateMembersCountCell = (channel, membersCount) => {
   });
 };
 
-const startFetching = async () => {
-  slackChannelsContainer.innerHTML = '<span class="spinner"></span>';
-
+async function startFetching() {
   const rawChannel = document.getElementById('channel-name').value.trim();
   const rawDescription = document.getElementById('channel-description').value.trim();
 
   const channelNameFilter = rawChannel === '' || rawChannel === '*' ? undefined : rawChannel;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
 
-  const channels = await getAllSlackChannels(channelNameFilter, descriptionFilter);
+  const activeOnly = document.getElementById('active-only-checkbox').checked;
 
+  let channels = await getAllSlackChannels(channelNameFilter, descriptionFilter);
+
+  // Sort early for predictable loading
   channels.sort((a, b) => a.name.localeCompare(b.name));
+
+  // Initialize table initially with empty stats
   initTable(channels);
 
   const progressLabel = document.querySelector('.progress-label');
@@ -287,7 +290,9 @@ const startFetching = async () => {
           channelId: channel.id,
           messages: msg?.totalMessages || 0,
           engagement: msg?.recentMessageCount || 0,
-          lstMsgDt: msg?.lastMessageTimestamp ? new Date(msg.lastMessageTimestamp * 1000).toISOString().split('T')[0] : 'No Messages',
+          lstMsgDt: msg?.lastMessageTimestamp
+            ? new Date(msg.lastMessageTimestamp * 1000).toISOString().split('T')[0]
+            : 'No Messages',
         }));
       }
       return Promise.resolve({
@@ -305,15 +310,16 @@ const startFetching = async () => {
           membersCount: m?.members?.length || 0,
         }));
       }
-      return Promise.resolve({ channelId: channel.id, membersCount: channel.membersCount });
+      return Promise.resolve({
+        channelId: channel.id,
+        membersCount: channel.membersCount,
+      });
     });
 
     const messageResults = await Promise.all(messagePromises);
     const memberResults = await Promise.all(memberPromises);
 
-    messageResults.forEach(({
-      channelId, messages, engagement, lstMsgDt,
-    }) => {
+    messageResults.forEach(({ channelId, messages, engagement, lstMsgDt }) => {
       const channel = channels.find((c) => c.id === channelId);
       updateMessageCells(channel, messages, engagement, lstMsgDt);
     });
@@ -329,8 +335,27 @@ const startFetching = async () => {
     progressLabel.textContent = `Loading ${loadedCount} of ${channels.length} channels…`;
   }
 
-  isSortingEnabled = true;
+  // ❗ Now all channels are enriched with lstMsgDt
+  if (activeOnly) {
+    const now = new Date();
+    const days30Ago = new Date();
+    days30Ago.setDate(now.getDate() - 30);
 
+    channels = channels.filter((channel) => {
+      if (!channel.lstMsgDt || channel.lstMsgDt === 'No Messages') return false;
+      const lastMessageDate = new Date(channel.lstMsgDt);
+      return lastMessageDate >= days30Ago;
+    });
+
+    // Re-render the filtered list
+    initTable(channels);
+
+    // Update the active channels count
+    const activeChannelsCount = channels.length;
+    document.getElementById('active-channels-count').textContent = activeChannelsCount;
+  }
+
+  isSortingEnabled = true;
   document.querySelector('.progress-container').style.display = 'none';
   document.querySelector('.table-summary').style.display = 'block';
 };
