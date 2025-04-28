@@ -75,7 +75,7 @@ const renderTable = (teams) => {
       nameCell.textContent = team.displayName;
     }
 
-    const descriptionText = decodeHTML(team?.description.value || '');
+    const descriptionText = decodeHTML(team.description || '');
     const descriptionCell = createCell(descriptionText);
     const createdCell = createCell(team.created || '', 'stat-column created');
     const channelCountCell = createCell(team.channelCount || '', 'stat-column channels-count');
