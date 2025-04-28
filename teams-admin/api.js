@@ -60,3 +60,4 @@ export const getUserInfo = async (userId) => fetchWithRetry(`${API_ENDPOINT}/tea
 
 export const getTeam = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/team?teamId=${teamId}`);
 export const getChannels = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/channels?teamId=${teamId}`);
+export const getChannelStats = async (teamId, channelId) => fetchWithRetry(`${API_ENDPOINT}/teams/channelStats?teamId=${teamId}&channelId=${channelId}`);

@@ -13,23 +13,21 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable max-len */
 import {
-  getMessageStats, getMemberIds, getAllTeams, getTeam, getChannels,
+  getAllTeams, getTeam, getChannels, getMessageStats,
 } from './api.js';
-import { countMembers } from './members.js';
+
 import {
   sortTable,
-  alphaSort,
-  renderMembersTable,
-  handleModalInteraction,
   decodeHTML,
 } from './utils.js';
 
 let sortDirection = 'asc';
 let activeTeamsCount = 0;
 let isSortingEnabled = false;
-const maxMessagesCount = 10;
+const maxMessageCount = 10;
+const BATCH_SIZE = 10;
+
 const teamsContainer = document.getElementById('teams-container');
-const BATCH_SIZE = 20;
 
 const escapeHTML = (str) => {
   const div = document.createElement('div');
@@ -47,31 +45,6 @@ if (sk) {
     document.querySelector('aem-sidekick').addEventListener('logged-out', doLogout);
   }, { once: true });
 }
-
-const reattachModalHandlers = () => {
-  const modal = document.getElementById('modal');
-  document.querySelectorAll('.members-count').forEach((cell) => {
-    const row = cell.closest('tr');
-    const teamId = row.getAttribute('data-team-id');
-
-    if (cell._handlerAttached) return;
-    cell._handlerAttached = true;
-
-    cell.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const team = { id: teamId, name: row.querySelector('td:first-child').textContent };
-
-      await handleModalInteraction(cell, teamId, modal, async (id) => {
-        const response = await getMemberIds(id);
-        if (!response.ok) throw new Error('Failed to fetch members');
-        const { adobeMembers, nonAdobeMembers } = await countMembers(response.members);
-        adobeMembers.sort(alphaSort);
-        nonAdobeMembers.sort(alphaSort);
-        return { modalContent: renderMembersTable(team.name, adobeMembers, nonAdobeMembers) };
-      });
-    });
-  });
-};
 
 const createCell = (content, className = '') => {
   const td = document.createElement('td');
@@ -102,34 +75,33 @@ const renderTable = (teams) => {
       nameCell.textContent = team.displayName;
     }
 
-    const descriptionText = decodeHTML(team.description);
+    const descriptionText = decodeHTML(team?.description.value || '');
     const descriptionCell = createCell(descriptionText);
     const createdCell = createCell(team.created || '', 'stat-column created');
-    const channelsCountCell = createCell(team.channelsCount || '', 'stat-column channels-count');
-    const messagesCell = createCell(team.messages ?? '', 'stat-column total-messages');
+    const channelCountCell = createCell(team.channelCount || '', 'stat-column channels-count');
+    const totalMessagesCell = createCell(team.totalMessages ?? '', 'stat-column total-messages');
+
     const thermometerCell = document.createElement('td');
-    thermometerCell.className = 'stat-column messages-count';
+    thermometerCell.className = 'stat-column total-messages-count';
     const thermometer = document.createElement('div');
     thermometer.className = 'thermometer';
     const fill = document.createElement('div');
     fill.className = 'thermometer-fill';
     const label = document.createElement('div');
     label.className = 'thermometer-label';
-    const fillPercentage = Math.min((team.engagement / maxMessagesCount) * 100, 100);
+    const fillPercentage = Math.min((team.recentCount / maxMessageCount) * 100, 100);
     fill.style.width = `${fillPercentage}%`;
-    label.textContent = team.engagement ?? '';
+    label.textContent = team.recentCount ?? '';
     thermometer.append(fill, label);
     thermometerCell.appendChild(thermometer);
 
-    const lastMessageCell = createCell(team.lstMsgDt || '', 'stat-column last-message');
+    const lastMessageCell = createCell(team.lastActivity || '', 'stat-column last-message');
     const membersCountCell = createCell(team.membersCount ?? '', 'stat-column members-count');
     membersCountCell.title = 'View members';
 
-    tr.append(nameCell, descriptionCell, createdCell, channelsCountCell, messagesCell, thermometerCell, lastMessageCell, membersCountCell);
+    tr.append(nameCell, descriptionCell, createdCell, channelCountCell, totalMessagesCell, thermometerCell, lastMessageCell, membersCountCell);
     tbody.appendChild(tr);
   });
-
-  // reattachModalHandlers();
 };
 
 const toggleSortDirection = () => {
@@ -191,14 +163,12 @@ const initTable = (teams) => {
     <thead>
       <tr>
         <th data-sort="name">Team</th>
-        <th class=" description sorting-disabled">Description</th>
+        <th class="sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
-        <th data-sort="channelsCount">Channels</th>
-        <th data-sort="messages">Total Messages</th>
-        <th data-sort="engagement">
-          Messages <span class="tooltip-container">(Last 30 days)</span>
-        </th>
-        <th data-sort="lstMsgDt">Last Message</th>
+        <th data-sort="channelCount">Channels</th>
+        <th data-sort="totalMessages">Total Messages</th>
+        <th data-sort="recentCount">Messages <span class="tooltip-container">(Last 30 days)</span</th>
+        <th data-sort="lastActivity">Last Message</th>
         <th data-sort="membersCount">Members</th>
       </tr>
     </thead>
@@ -244,62 +214,31 @@ const updateTeamCells = (team, created, webUrl) => {
   team.created = created;
   team.webUrl = webUrl;
 };
-const updateChannelCells = (team, channelsCount) => {
+
+const updateMessageCells = (team, channelCount, totalMessages, recentCount, lastActivity) => {
   const row = document.querySelector(`tr[data-team-id="${team.id}"]`);
   if (!row) return;
+  const channelCountCell = row.querySelector('.channels-count');
+  channelCountCell.textContent = channelCount;
+  team.channelCount = channelCount;
 
-  const channelsCountCell = row.querySelector('.channels-count');
-  channelsCountCell.textContent = channelsCount;
-  team.channelsCount = channelsCount;
-};
+  row.querySelector('.total-messages').textContent = totalMessages;
+/*
+  const recentCountCell = row.querySelector('.messages-count');
+  recentCountCell.querySelector('.thermometer-label').textContent = recentCount;
+  const fillPercentage = Math.min((recentCount / maxMessageCount) * 100, 100);
+  recentCountCell.querySelector('.thermometer-fill').style.width = `${fillPercentage}%`;
+*/
+  row.querySelector('.last-message').textContent = lastActivity;
 
-const updateMessageCells = (team, messages, engagement, lstMsgDt) => {
-  const row = document.querySelector(`tr[data-team-id="${team.id}"]`);
-  if (!row) return;
-
-  row.querySelector('.total-messages').textContent = messages;
-
-  const engagementCell = row.querySelector('.messages-count');
-  engagementCell.querySelector('.thermometer-label').textContent = engagement;
-  const fillPercentage = Math.min((engagement / maxMessagesCount) * 100, 100);
-  engagementCell.querySelector('.thermometer-fill').style.width = `${fillPercentage}%`;
-
-  row.querySelector('.last-message').textContent = lstMsgDt;
-
-  if (engagement > 0) {
+  if (recentCount > 0) {
     activeTeamsCount += 1;
     document.getElementById('active-teams-count').textContent = activeTeamsCount;
   }
 
-  team.messages = messages;
-  team.engagement = engagement;
-  team.lstMsgDt = lstMsgDt;
-};
-
-const updateMembersCountCell = (team, membersCount) => {
-  const row = document.querySelector(`tr[data-team-id="${team.id}"]`);
-  if (!row) return;
-
-  const membersCountCell = row.querySelector('.members-count');
-  membersCountCell.textContent = membersCount;
-  team.membersCount = membersCount;
-  membersCountCell._fetched = false;
-  membersCountCell._modalData = null;
-
-  const modal = document.getElementById('modal');
-
-  membersCountCell.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    await handleModalInteraction(membersCountCell, team.id, modal, async (id) => {
-      const response = await getMemberIds(id);
-      if (!response.ok) throw new Error('Failed to fetch members');
-
-      const { adobeMembers, nonAdobeMembers } = await countMembers(response.members);
-      adobeMembers.sort(alphaSort);
-      nonAdobeMembers.sort(alphaSort);
-      return { modalContent: renderMembersTable(team.name, adobeMembers, nonAdobeMembers) };
-    });
-  });
+  team.totalMessages = totalMessages;
+  team.recentCount = recentCount;
+  team.lastActivity = lastActivity;
 };
 
 const startFetching = async () => {
@@ -335,65 +274,67 @@ const startFetching = async () => {
       return Promise.resolve({ teamId: team.id, created: team.created, webUrl: team.webUrl });
     });
 
-    const channelPromises = batch.map((team) => {
-      if (!team.channelsCount) {
-        return getChannels(team.id).then((t) => ({
-          teamId: team.id,
-          channelsCount: t?.['@odata.count'] || 0,
-        }));
-      }
+    const messagePromises = batch.map(async (team) => {
+      if (!team.channelCount || !team.totalMessages || !team.recentCount || !team.lastActivity) {
+        const channelsResponse = await getChannels(team.id);
+        if (!channelsResponse || !channelsResponse.value) {
+          return {
+            teamId: team.id,
+            totalMessages: 0,
+            recentCount: 0,
+            lastActivity: 'No Messages',
+            channelCount: 0,
+          };
+        }
+        const channels = channelsResponse.value;
+        const channelCount = channels.length;
+        const statsPromises = channels.map(async (channel) => {
+          const stats = await getMessageStats(team.id, channel.id);
+          return stats || { totalMessages: 0, recentMessageCount: 0, lastActivity: null };
+        });
+        const statsResults = await Promise.all(statsPromises);
+        const totalMessages = statsResults.reduce((sum, stats) => sum + stats.totalMessages, 0);
+        const recentCount = statsResults.reduce((sum, stats) => sum + stats.recentMessageCount, 0);
+        const lastActivity = statsResults
+          .map((stats) => stats.lastActivity)
+          .filter(Boolean)
+          .sort()
+          .pop();
 
-      return Promise.resolve({ teamId: team.id, channelsCount: team.channelsCount });
-    });
-
-    const messagePromises = batch.map((team) => {
-      if (!team.messages || !team.engagement || !team.lstMsgDt) {
-        return getMessageStats(team.id).then((msg) => ({
+        return {
           teamId: team.id,
-          messages: msg?.totalMessages || 0,
-          engagement: msg?.recentMessageCount || 0,
-          lstMsgDt: msg?.lastMessageTimestamp ? new Date(msg.lastMessageTimestamp * 1000).toISOString().split('T')[0] : 'No Messages',
-        }));
+          totalMessages,
+          recentCount,
+          lastActivity: lastActivity
+            ? new Date(lastActivity).toISOString().split('T')[0]
+            : 'No Messages',
+          channelCount,
+        };
       }
       return Promise.resolve({
         teamId: team.id,
-        messages: team.messages,
-        engagement: team.engagement,
-        lstMsgDt: team.lstMsgDt,
+        channelCount: team.channelCount,
+        totalMessages: team.totalMessages,
+        recentCount: team.recentCount,
+        lastActivity: team.lastActivity,
       });
     });
-
-    const memberPromises = batch.map((team) => {
-      if (!team.membersCount) {
-        return getMemberIds(team.id).then((m) => ({
-          teamId: team.id,
-          membersCount: m?.members?.length || 0,
-        }));
-      }
-      return Promise.resolve({ teamId: team.id, membersCount: team.membersCount });
-    });
-
     const teamResults = await Promise.all(teamPromises);
-    const channelResults = await Promise.all(channelPromises);
-    //  const messageResults = await Promise.all(messagePromises);
+    const messageResults = await Promise.all(messagePromises);
     //  const memberResults = await Promise.all(memberPromises);
 
     teamResults.forEach(({ teamId, created, webUrl }) => {
       const team = teams.find((t) => t.id === teamId);
       updateTeamCells(team, created, webUrl);
     });
-    channelResults.forEach(({ teamId, channelsCount }) => {
-      const team = teams.find((t) => t.id === teamId);
-      updateChannelCells(team, channelsCount);
-    });
-/*
+
     messageResults.forEach(({
-      teamId, messages, engagement, lstMsgDt,
+      teamId, channelCount, totalMessages, recentCount, lastActivity,
     }) => {
       const team = teams.find((t) => t.id === teamId);
-      updateMessageCells(team, messages, engagement, lstMsgDt);
+      updateMessageCells(team, channelCount, totalMessages, recentCount, lastActivity);
     });
-
+    /*
     memberResults.forEach(({ teamId, membersCount }) => {
       const team = teams.find((t) => t.id === teamId);
       updateMembersCountCell(team, membersCount);
