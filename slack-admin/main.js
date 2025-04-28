@@ -161,7 +161,7 @@ const initTable = (channels) => {
   <div class="progress-bar">
     <div class="progress-fill" style="width: 0"></div>
   </div>
-  <div class="progress-label">Loading 0 of ${escapeHTML(channels.length.toString())} channels…</div>
+  <div class="progress-label">Analyzing 0 of ${escapeHTML(channels.length.toString())} channels…</div>
 `;
 
   const summary = document.createElement('div');
@@ -268,12 +268,16 @@ async function startFetching() {
 
   const activeOnly = document.getElementById('active-only-checkbox').checked;
 
+// Immediately show empty loading UI
+  initTable([]);
+
+// Now fetch channels asynchronously
   let channels = await getAllSlackChannels(channelNameFilter, descriptionFilter);
 
-  // Sort early for predictable loading
+// Sort early for predictable loading
   channels.sort((a, b) => a.name.localeCompare(b.name));
 
-  // Initialize table initially with empty stats
+// Re-initialize the table now that we have real channels
   initTable(channels);
 
   const progressLabel = document.querySelector('.progress-label');
@@ -332,7 +336,7 @@ async function startFetching() {
     loadedCount += batch.length;
     const percentage = Math.min((loadedCount / channels.length) * 100, 100);
     progressFill.style.width = `${percentage}%`;
-    progressLabel.textContent = `Loading ${loadedCount} of ${channels.length} channels…`;
+    progressLabel.textContent = `Analyzing ${loadedCount} of ${channels.length} channels…`;
   }
 
   // ❗ Now all channels are enriched with lstMsgDt

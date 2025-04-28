@@ -39,11 +39,11 @@ export const getAllTeams = async (name = '', description = '') => {
     const cleanedDescription = description.trim();
 
     if (cleanedName && cleanedName !== '*') {
-      url.searchParams.append('name', cleanedName.replace(/\*/g, ''));
+      url.searchParams.append('nameFilter', cleanedName.replace(/\*/g, ''));
     }
 
     if (cleanedDescription && cleanedDescription !== '*') {
-      url.searchParams.append('description', cleanedDescription.replace(/\*/g, ''));
+      url.searchParams.append('descriptionFilter', cleanedDescription.replace(/\*/g, ''));
     }
 
     const response = await fetch(url.toString());
