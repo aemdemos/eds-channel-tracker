@@ -236,6 +236,7 @@ const updateMessageCells = (team, channelCount, totalMessages, recentCount, last
     document.getElementById('active-teams-count').textContent = activeTeamsCount;
   }
 
+  team.channelCount = channelCount;
   team.totalMessages = totalMessages;
   team.recentCount = recentCount;
   team.lastActivity = lastActivity;
