@@ -223,12 +223,12 @@ const updateMessageCells = (team, channelCount, totalMessages, recentCount, last
   team.channelCount = channelCount;
 
   row.querySelector('.total-messages').textContent = totalMessages;
-/*
-  const recentCountCell = row.querySelector('.messages-count');
+
+  const recentCountCell = row.querySelector('.total-messages-count');
   recentCountCell.querySelector('.thermometer-label').textContent = recentCount;
   const fillPercentage = Math.min((recentCount / maxMessageCount) * 100, 100);
   recentCountCell.querySelector('.thermometer-fill').style.width = `${fillPercentage}%`;
-*/
+
   row.querySelector('.last-message').textContent = lastActivity;
 
   if (recentCount > 0) {
