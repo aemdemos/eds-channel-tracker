@@ -162,7 +162,7 @@ const initTable = (teams) => {
   table.innerHTML = `
     <thead>
       <tr>
-        <th data-sort="name">Team</th>
+        <th data-sort="name">Name</th>
         <th class="sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
         <th data-sort="channelCount">Channels</th>
