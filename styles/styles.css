@@ -856,3 +856,95 @@ table + .form-field,
     margin: 0;
 }
 
+.feedback-link {
+    color: #0077c8;
+    font-weight: 500;
+    text-decoration: underline;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.feedback-link:hover { color: #005a91; }
+
+.slack-logo {
+    width: 20px;
+    height: 20px;
+}
+
+.adobe-logo {
+    width: 90px;
+    height: auto;
+}
+
+.header {
+    padding: 30px;
+    float: right;
+}
+
+.title-container .default-content-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding-left: 5px;
+}
+
+.title-container h2 {
+    padding: 0;
+    margin: 0;
+}
+
+.admin {
+    background-color: white;
+}
+
+.two-card-layout {
+    display: inline-flex;
+}
+
+.channel-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0; /* Lighter border */
+    padding: 2rem 1.5rem;
+    width: 280px; /* Slightly slimmer */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); /* Softer shadow */
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.channel-card:hover {
+    transform: translateY(-6px); /* Slightly more lift on hover */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.channel-card-link {
+    text-decoration: none !important;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.channel-card-image img {
+    height: 48px;
+    margin-bottom: 1rem;
+}
+
+.channel-card-body {
+    text-align: center;
+    text-decoration: none;
+}
+
+.channel-card-body h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.channel-card-body p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #666;
+    line-height: 1.4;
+}
