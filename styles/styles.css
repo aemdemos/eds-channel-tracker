@@ -882,6 +882,11 @@ table + .form-field,
     float: right;
 }
 
+.header-left {
+    padding: 30px;
+    float: left;
+}
+
 .title-container .default-content-wrapper {
     display: inline-flex;
     align-items: center;
