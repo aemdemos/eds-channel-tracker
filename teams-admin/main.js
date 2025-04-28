@@ -75,7 +75,7 @@ const renderTable = (teams) => {
       nameCell.textContent = team.displayName;
     }
 
-    const descriptionText = decodeHTML(team?.description.value || '');
+    const descriptionText = decodeHTML(team.description || '');
     const descriptionCell = createCell(descriptionText);
     const createdCell = createCell(team.created || '', 'stat-column created');
     const channelCountCell = createCell(team.channelCount || '', 'stat-column channels-count');
@@ -162,7 +162,7 @@ const initTable = (teams) => {
   table.innerHTML = `
     <thead>
       <tr>
-        <th data-sort="name">Team</th>
+        <th data-sort="name">Name</th>
         <th class="sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
         <th data-sort="channelCount">Channels</th>
