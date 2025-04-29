@@ -140,7 +140,7 @@ const initTable = (teams) => {
   <div class="progress-bar">
     <div class="progress-fill" style="width: 0"></div>
   </div>
-  <div class="progress-label">Loading 0 of ${escapeHTML(teams.length.toString())} teams…</div>
+  <div class="progress-label">Analyzing 0 of ${escapeHTML(teams.length.toString())} teams…</div>
 `;
 
   const summary = document.createElement('div');
@@ -263,6 +263,7 @@ const startFetching = async () => {
   const batchSize = BATCH_SIZE;
   for (let i = 0; i < teams.length; i += batchSize) {
     const batch = teams.slice(i, i + batchSize);
+    progressLabel.textContent = `Analyzing ${batch.length} of ${teams.length} teams…`;
     const teamPromises = batch.map((team) => {
       if (!team.created) {
         return getTeam(team.id).then((t) => ({
@@ -344,7 +345,7 @@ const startFetching = async () => {
     loadedCount += batch.length;
     const percentage = Math.min((loadedCount / teams.length) * 100, 100);
     progressFill.style.width = `${percentage}%`;
-    progressLabel.textContent = `Loading ${loadedCount} of ${teams.length} teams…`;
+    progressLabel.textContent = `Analyzing ${loadedCount} of ${teams.length} teams…`;
   }
 
   isSortingEnabled = true;
@@ -353,4 +354,10 @@ const startFetching = async () => {
   document.querySelector('.table-summary').style.display = 'block';
 };
 
+// search triggered by pressing enter
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    startFetching().then(() => {});
+  }
+});
 document.getElementById('teams').addEventListener('click', startFetching);
