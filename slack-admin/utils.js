@@ -143,3 +143,4 @@ export const renderMembersTable = (channelName, adobeMembers, nonAdobeMembers) =
     </table>
   `;
 };
+
