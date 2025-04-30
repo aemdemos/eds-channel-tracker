@@ -23,7 +23,6 @@ import {
 
 let sortDirection = 'asc';
 let activeTeamsCount = 0;
-let isSortingEnabled = false;
 
 const teamsContainer = document.getElementById('teams-container');
 
@@ -98,8 +97,6 @@ const addSortingToTable = (table, teams) => {
   const headers = table.querySelectorAll('th[data-sort]');
   headers.forEach((header) => {
     header.addEventListener('click', () => {
-      if (!isSortingEnabled) return;
-
       const columnKey = header.getAttribute('data-sort');
       // Remove sort classes from all headers
       headers.forEach((h) => h.classList.remove('sorted-asc', 'sorted-desc'));
@@ -137,13 +134,13 @@ const initTable = (teams) => {
   table.innerHTML = `
     <thead>
       <tr>
-        <th data-sort="name">Name</th>
+        <th data-sort="teamName">Name</th>
         <th class=" description sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
-        <th data-sort="activeChannels">Active Channels</th>
+        <th data-sort="activeChannels">Total Channels</th>
         <th data-sort="messageCount">Total Messages</th>
-        <th data-sort="lastActivity">Last Activity</th>
-        <th data-sort="membersCount">Members</th>
+        <th data-sort="lastActivityDate">Last Activity</th>
+        <th data-sort="memberCount">Total Members</th>
       </tr>
     </thead>
   `;
@@ -153,7 +150,7 @@ const initTable = (teams) => {
   addSortingToTable(table, teams);
   teamsContainer.appendChild(table);
 
-  const initialSortKey = 'name';
+  const initialSortKey = 'teamName';
   const sortedTeams = sortTable(teams, initialSortKey, sortDirection);
   document.querySelector(`th[data-sort="${initialSortKey}"]`).classList.add('sorted-asc');
   renderTable(sortedTeams);

@@ -207,13 +207,6 @@ th.sorted-desc::after {
     pointer-events: auto;
 }
 
-.members-count {
-    cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    color: #007bff;
-    text-decoration: underline;
-}
-
 .tooltip-container {
     position: relative;
     display: inline-block;

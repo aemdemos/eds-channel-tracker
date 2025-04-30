@@ -17,7 +17,7 @@ export const sortTable = (teams, columnKey, direction) => {
     let valA = a[columnKey];
     let valB = b[columnKey];
 
-    if (columnKey === 'name') { // Handle sorting by displayName
+    if (columnKey === 'teamName') { // Handle sorting by displayName
       valA = a.teamName.toLowerCase();
       valB = b.teamName.toLowerCase();
     }
