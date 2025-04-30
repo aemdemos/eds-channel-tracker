@@ -31,7 +31,7 @@ export const fetchWithRetry = async (url, attempts = 0) => {
   }
 };
 
-export const getAllTeams = async (name = '', description = '') => {
+export const getTeamsActivity = async (name = '', description = '') => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams/allTeams`);
 
@@ -51,13 +51,3 @@ export const getAllTeams = async (name = '', description = '') => {
   } catch (e) { /* empty */ }
   return [];
 };
-
-export const getMessageStats = async (teamId, channelId) => fetchWithRetry(`${API_ENDPOINT}/teams/channelStats?teamId=${teamId}&channelId=${channelId}`);
-
-export const getMemberIds = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/members?teamId=${teamId}`);
-
-export const getUserInfo = async (userId) => fetchWithRetry(`${API_ENDPOINT}/teams/user/info?userId=${userId}`);
-
-export const getTeam = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/team?teamId=${teamId}`);
-export const getChannels = async (teamId) => fetchWithRetry(`${API_ENDPOINT}/teams/channels?teamId=${teamId}`);
-export const getChannelStats = async (teamId, channelId) => fetchWithRetry(`${API_ENDPOINT}/teams/channelStats?teamId=${teamId}&channelId=${channelId}`);
