@@ -52,18 +52,15 @@ export const getTeamsActivity = async (name = '', description = '') => {
   return [];
 };
 
-export const getProfile = async () => {
-
+export const getUserProfile = async () => {
   try {
-
     const response = await fetch('https://admin.hlx.page/status/aemdemos/eds-channel-tracker/main/index.html');
 
-    return response.ok ? response.json() : [];
+    if (!response.ok) return null;
+
+    const json = await response.json();
+    return json.profile;
   } catch (e) {
-    console.log(e);
+    return null;
   }
-
-  return [];
-
-
 };

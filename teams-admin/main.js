@@ -13,8 +13,8 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable max-len */
 import {
- getTeamsActivity,
- getProfile,
+  getTeamsActivity,
+  getUserProfile, getUserProfile,
 } from './api.js';
 
 import {
@@ -167,9 +167,9 @@ const startFetching = async () => {
 
   let teams = await getTeamsActivity(nameFilter, descriptionFilter);
 
-  const profile = await getProfile();
+  const profile = await getUserProfile();
 
-  console.log(profile);
+  console.log(profile.email);
 
   // Filter out null or invalid items
   teams = teams.filter(team => team && typeof team === 'object');
