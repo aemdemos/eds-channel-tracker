@@ -14,6 +14,7 @@
 /* eslint-disable max-len */
 import {
  getTeamsActivity,
+ getProfile,
 } from './api.js';
 
 import {
@@ -164,6 +165,10 @@ const startFetching = async () => {
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
 
   let teams = await getTeamsActivity(nameFilter, descriptionFilter);
+
+  const profile = await getProfile();
+
+  console.log(profile);
 
   // Filter out null or invalid items
   teams = teams.filter(team => team && typeof team === 'object');

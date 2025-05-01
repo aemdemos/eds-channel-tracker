@@ -51,3 +51,19 @@ export const getTeamsActivity = async (name = '', description = '') => {
   } catch (e) { /* empty */ }
   return [];
 };
+
+export const getProfile = async () => {
+
+  try {
+    const url = new URL('https://admin.hlx.page/profile');
+
+    const response = await fetch(url.toString());
+    return response.ok ? response.json() : [];
+  } catch (e) {
+    console.log(e);
+  }
+
+  return [];
+
+
+};
