@@ -36,7 +36,6 @@ if (sk) {
 } else {
   document.addEventListener('sidekick-ready', () => {
     document.querySelector('aem-sidekick').addEventListener('logged-out', doLogout);
-    sk = window.hlx?.sidekick;
   }, { once: true });
 }
 
@@ -165,11 +164,10 @@ const startFetching = async () => {
   const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
 
+  const userProfile = await getUserProfile();
+  console.log(userProfile.email);
+
   let teams = await getTeamsActivity(nameFilter, descriptionFilter);
-
-  const profile = await getUserProfile();
-
-  console.log(profile.email);
 
   // Filter out null or invalid items
   teams = teams.filter(team => team && typeof team === 'object');
