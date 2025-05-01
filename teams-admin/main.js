@@ -34,12 +34,21 @@ const escapeHTML = (str) => {
 
 const doLogout = () => window.location.reload();
 
+const doLogin = (event) => {
+  // Assuming event.detail contains the user details like email
+  const userEmail = event.detail?.email || 'Unknown user';
+  console.log(userEmail + " LOGGED IN");
+}
+
 const sk = document.querySelector('aem-sidekick');
 if (sk) {
   sk.addEventListener('logged-out', doLogout);
+  sk.addEventListener('logged-in', (event) => doLogin(event));  // Ensures the event is passed explicitly
 } else {
-  document.addEventListener('sidekick-ready', () => {
-    document.querySelector('aem-sidekick').addEventListener('logged-out', doLogout);
+  document.addEventListener('sidekick-ready', (event) => {
+    const sidekick = document.querySelector('aem-sidekick');
+    sidekick.addEventListener('logged-out', doLogout);
+    sidekick.addEventListener('logged-in', (event) => doLogin(event));  // Ensures the event is passed explicitly
   }, { once: true });
 }
 
