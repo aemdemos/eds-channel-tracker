@@ -14,7 +14,7 @@
 /* eslint-disable max-len */
 import {
   getTeamsActivity,
-  getUserProfile, getUserProfile,
+  getUserProfile,
 } from './api.js';
 
 import {
