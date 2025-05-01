@@ -56,14 +56,7 @@ export const getProfile = async () => {
 
   try {
 
-    const sk = window.hlx?.sidekick;
-    const token = await sk?.getAdminToken?.();
-
-    const response = await fetch('https://admin.hlx.page/profile', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    const response = await fetch('https://admin.hlx.page/status/aemdemos/eds-channel-tracker/main/index.html');
 
     return response.ok ? response.json() : [];
   } catch (e) {
