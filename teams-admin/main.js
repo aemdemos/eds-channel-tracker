@@ -20,35 +20,21 @@ import {
   sortTable,
   decodeHTML,
   getActiveTeamsCount,
+  escapeHTML,
 } from './utils.js';
 
 let sortDirection = 'asc';
 
 const teamsContainer = document.getElementById('teams-container');
 
-const escapeHTML = (str) => {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-};
-
 const doLogout = () => window.location.reload();
-
-const doLogin = (event) => {
-  // Assuming event.detail contains the user details like email
-  const userEmail = event.detail?.email || 'Unknown user';
-  console.log(userEmail + " LOGGED IN");
-}
 
 const sk = document.querySelector('aem-sidekick');
 if (sk) {
   sk.addEventListener('logged-out', doLogout);
-  sk.addEventListener('logged-in', (event) => doLogin(event));  // Ensures the event is passed explicitly
 } else {
-  document.addEventListener('sidekick-ready', (event) => {
-    const sidekick = document.querySelector('aem-sidekick');
-    sidekick.addEventListener('logged-out', doLogout);
-    sidekick.addEventListener('logged-in', (event) => doLogin(event));  // Ensures the event is passed explicitly
+  document.addEventListener('sidekick-ready', () => {
+    document.querySelector('aem-sidekick').addEventListener('logged-out', doLogout);
   }, { once: true });
 }
 
