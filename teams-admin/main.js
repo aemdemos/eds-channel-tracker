@@ -19,10 +19,10 @@ import {
 import {
   sortTable,
   decodeHTML,
+  getActiveTeamsCount,
 } from './utils.js';
 
 let sortDirection = 'asc';
-let activeTeamsCount = 0;
 
 const teamsContainer = document.getElementById('teams-container');
 
@@ -112,14 +112,12 @@ const addSortingToTable = (table, teams) => {
 
 const initTable = (teams) => {
   teamsContainer.innerHTML = '';
-  activeTeamsCount = 0;
 
   const summaryWrapper = document.createElement('div');
   summaryWrapper.classList.add('table-summary-wrapper');
 
   const summary = document.createElement('div');
   summary.classList.add('table-summary');
-  summary.style.display = 'none';
   summary.innerHTML = `
   <span>Total Teams: ${escapeHTML(teams.length.toString())}</span> |
   <span>Active Teams (Last 30 days): <span id="active-teams-count">0</span></span>
@@ -127,6 +125,8 @@ const initTable = (teams) => {
 
   summaryWrapper.appendChild(summary);
   teamsContainer.appendChild(summaryWrapper);
+
+  document.getElementById('active-teams-count').textContent = getActiveTeamsCount(teams).toString();
 
   const table = document.createElement('table');
   table.classList.add('styled-table');

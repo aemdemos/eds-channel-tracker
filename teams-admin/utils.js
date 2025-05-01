@@ -34,3 +34,14 @@ export const decodeHTML = (str) => {
   txt.innerHTML = str;
   return txt.value;
 };
+
+export const getActiveTeamsCount = (teams) => {
+  const now = new Date();
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+  return teams.filter(team => {
+    if (!team.lastActivityDate) return false;
+    const lastActivity = new Date(team.lastActivityDate);
+    return now - lastActivity <= THIRTY_DAYS_MS;
+  }).length;
+};
