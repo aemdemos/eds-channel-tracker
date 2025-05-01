@@ -30,12 +30,13 @@ const teamsContainer = document.getElementById('teams-container');
 
 const doLogout = () => window.location.reload();
 
-const sk = document.querySelector('aem-sidekick');
+let sk = document.querySelector('aem-sidekick');
 if (sk) {
   sk.addEventListener('logged-out', doLogout);
 } else {
   document.addEventListener('sidekick-ready', () => {
     document.querySelector('aem-sidekick').addEventListener('logged-out', doLogout);
+    sk = window.hlx?.sidekick;
   }, { once: true });
 }
 
