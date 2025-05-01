@@ -55,9 +55,16 @@ export const getTeamsActivity = async (name = '', description = '') => {
 export const getProfile = async () => {
 
   try {
-    const url = new URL('https://admin.hlx.page/profile');
 
-    const response = await fetch(url.toString());
+    const sk = window.hlx?.sidekick;
+    const token = await sk?.getAdminToken?.();
+
+    const response = await fetch('https://admin.hlx.page/profile', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
     return response.ok ? response.json() : [];
   } catch (e) {
     console.log(e);
