@@ -9,5 +9,5 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
-const API_ENDPOINT = window.location.href.includes('localhost') ? 'http://localhost:8787' : 'eds-slack-channels-worker.chrislotton.workers.dev';
+const API_ENDPOINT = window.location.href.includes('localhost') ? 'http://localhost:8787' : 'https://eds-slack-channels-worker.chrislotton.workers.dev';
 export default API_ENDPOINT;
