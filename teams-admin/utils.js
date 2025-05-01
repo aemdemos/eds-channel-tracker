@@ -45,3 +45,9 @@ export const getActiveTeamsCount = (teams) => {
     return now - lastActivity <= THIRTY_DAYS_MS;
   }).length;
 };
+
+const escapeHTML = (str) => {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+};
