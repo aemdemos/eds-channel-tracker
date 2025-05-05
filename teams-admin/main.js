@@ -15,6 +15,7 @@
 import {
   getTeamsActivity,
   getUserProfile,
+  getTeamSummaries
 } from './api.js';
 
 import {
@@ -70,11 +71,10 @@ const renderTable = (teams) => {
 
     const descriptionText = decodeHTML(team.description || '');
     const descriptionCell = createCell(descriptionText);
-    const dateTime = team.created || '';
-    const dateOnly = new Date(dateTime).toISOString().split("T")[0];
+    const dateOnly = team.created ? new Date(team.created).toISOString().split("T")[0] : "N/A";
     const createdCell = createCell(dateOnly, 'stat-column created');
     const channelCountCell = createCell(team.activeChannels || '', 'stat-column channels-count');
-    const totalMessagesCell = createCell(team.messageCount ?? '', 'stat-column total-messages');
+    const totalMessagesCell = createCell(team.channelMessages ?? '', 'stat-column total-messages');
 
     const lastMessageCell = createCell(team.lastActivityDate || '', 'stat-column last-message');
     const membersCountCell = createCell(team.memberCount ?? '', 'stat-column members-count');
@@ -171,6 +171,22 @@ const startFetching = async () => {
 
   // Filter out null or invalid items
   teams = teams.filter(team => team && typeof team === 'object');
+
+  // Extract teamIds from teams to fetch summaries
+  const teamIds = teams.map(team => team.id);
+
+  // Fetch summaries for teams (up to 40 per request)
+  const teamSummaries = await getTeamSummaries(teamIds);
+
+  // Merge the fetched summaries with teams data
+  teams = teams.map(team => {
+    const summary = teamSummaries.find(summary => summary.teamId === team.id);
+    return {
+      ...team,
+      created: summary ? summary.created : null,
+      memberCount: summary ? summary.memberCount : null,
+    };
+  });
 
   // Sort safely by teamName
   teams.sort((a, b) => {

@@ -64,3 +64,37 @@ export const getUserProfile = async () => {
     return null;
   }
 };
+
+export const getTeamSummaries = async (teamIds) => {
+
+  const url = new URL(`${API_ENDPOINT}/teams/summary`);
+
+  // Ensure the request is limited to 40 teamIds
+  const chunkedTeamIds = [];
+  for (let i = 0; i < teamIds.length; i += 40) {
+    chunkedTeamIds.push(teamIds.slice(i, i + 40));
+  }
+
+  // Fetch summaries for all chunks concurrently
+  const allSummaries = await Promise.all(
+    chunkedTeamIds.map(async (chunk) => {
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ teamIds: chunk }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error fetching summaries for chunk: ${response.statusText}`);
+      }
+
+      return response.json();
+    })
+  );
+
+  // Flatten the array of results
+  return allSummaries.flat();
+};
+
