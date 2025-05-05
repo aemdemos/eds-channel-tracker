@@ -351,3 +351,20 @@ th[data-sort]::after {
     margin: 0 !important;
     padding: 0 !important;
 }
+
+.badge-member {
+    background-color: green;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+tr.add {
+    background-color: #cce5ff;
+}
+
+tr.remove {
+    background-color: #f8d7da;
+}

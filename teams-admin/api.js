@@ -11,27 +11,16 @@
  */
 import API_ENDPOINT from './config.js';
 
-export const fetchWithRetry = async (url, attempts = 0) => {
-  if (attempts >= 10) {
-    return null;
-  }
+export const getMyTeams = async (email) => {
   try {
-    const response = await fetch(url);
-    if (response.ok) {
-      return await response.json();
-    }
-    if (response.status === 429) {
-      const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
-      await new Promise((resolve) => { setTimeout(resolve, retryAfter * 1000); });
-      return await fetchWithRetry(url, attempts + 1);
-    }
-    return null;
-  } catch (e) {
-    return null;
-  }
+    const url = new URL(`${API_ENDPOINT}/teams/userTeams?emailId=${email}`);
+    const response = await fetch(url.toString());
+    return response.ok ? await response.json() : [];
+  } catch (e) { /* empty */ }
+  return [];
 };
 
-export const getTeamsActivity = async (name = '', description = '') => {
+export const getTeamsActivity = async (email, name = '', description = '') => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams/allTeams`);
 
@@ -47,7 +36,16 @@ export const getTeamsActivity = async (name = '', description = '') => {
     }
 
     const response = await fetch(url.toString());
-    return response.ok ? response.json() : [];
+    const allTeams = response.ok ? await response.json() : [];
+
+    // Fetch user's teams
+    const myTeams = await getMyTeams(email);
+    const myTeamIds = new Set(myTeams.map((team) => team.id));
+    // Add `isMember` property to each team
+    return allTeams.map((team) => ({
+      ...team,
+      isMember: myTeamIds.has(team.teamId),
+    }));
   } catch (e) { /* empty */ }
   return [];
 };
@@ -63,6 +61,21 @@ export const getUserProfile = async () => {
   } catch (e) {
     return null;
   }
+};
+
+export const addRemoveMemberFromTeams = async (email, body) => {
+  try {
+    const url = new URL(`${API_ENDPOINT}/teams/addRemoveTeamMember?emailId=${email}`);
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body), // Send body as JSON payload
+    });
+    return response.ok ? await response.json() : [];
+  } catch (e) { /* empty */ }
+  return [];
 };
 
 export const getTeamSummaries = async (teamIds) => {
@@ -91,10 +104,9 @@ export const getTeamSummaries = async (teamIds) => {
       }
 
       return response.json();
-    })
+    }),
   );
 
   // Flatten the array of results
   return allSummaries.flat();
 };
-

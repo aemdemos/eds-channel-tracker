@@ -15,7 +15,7 @@
 import {
   getTeamsActivity,
   getUserProfile,
-  getTeamSummaries
+  getTeamSummaries, addRemoveMemberFromTeams,
 } from './api.js';
 
 import {
@@ -31,7 +31,7 @@ const teamsContainer = document.getElementById('teams-container');
 
 const doLogout = () => window.location.reload();
 
-let sk = document.querySelector('aem-sidekick');
+const sk = document.querySelector('aem-sidekick');
 if (sk) {
   sk.addEventListener('logged-out', doLogout);
 } else {
@@ -46,6 +46,13 @@ const createCell = (content, className = '') => {
   td.textContent = content;
   return td;
 };
+const refreshSaveButton = () => {
+  const button = document.getElementById('save');
+  const add = document.querySelectorAll('tr.add');
+  const remove = document.querySelectorAll('tr.remove');
+
+  button.disabled = !(add.length || remove.length);
+};
 
 const renderTable = (teams) => {
   const tbody = document.querySelector('tbody');
@@ -54,7 +61,7 @@ const renderTable = (teams) => {
   teams.forEach((team) => {
     const tr = document.createElement('tr');
     tr.classList.add('team-row');
-    tr.setAttribute('data-team-id', team.id);
+    tr.setAttribute('data-team-id', team.teamId);
 
     const nameCell = document.createElement('td');
     nameCell.className = 'name';
@@ -69,9 +76,17 @@ const renderTable = (teams) => {
       nameCell.textContent = team.teamName;
     }
 
+    // Add membership badge
+    if (team.isMember) {
+      const badge = document.createElement('span');
+      badge.className = 'badge badge-member';
+      badge.textContent = 'Member';
+      nameCell.appendChild(badge);
+    }
+
     const descriptionText = decodeHTML(team.description || '');
     const descriptionCell = createCell(descriptionText);
-    const dateOnly = team.created ? new Date(team.created).toISOString().split("T")[0] : "N/A";
+    const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
     const createdCell = createCell(dateOnly, 'stat-column created');
     const channelCountCell = createCell(team.activeChannels || '', 'stat-column channels-count');
     const totalMessagesCell = createCell(team.channelMessages ?? '', 'stat-column total-messages');
@@ -82,6 +97,14 @@ const renderTable = (teams) => {
 
     tr.append(nameCell, descriptionCell, createdCell, channelCountCell, totalMessagesCell, lastMessageCell, membersCountCell);
     tbody.appendChild(tr);
+    tr.addEventListener('click', () => {
+      if (team.isMember) {
+        tr.classList.toggle('remove'); // Mark for removal
+      } else {
+        tr.classList.toggle('add'); // Mark for addition
+      }
+      refreshSaveButton();
+    });
   });
 };
 
@@ -106,7 +129,7 @@ const addSortingToTable = (table, teams) => {
   });
 };
 
-const initTable = (teams) => {
+const initTable = (email, teams) => {
   teamsContainer.innerHTML = '';
 
   const summaryWrapper = document.createElement('div');
@@ -153,34 +176,42 @@ const initTable = (teams) => {
   toggleSortDirection();
 
   renderTable(teams);
+
+  // Add the Save button after the table is initialized
+  // eslint-disable-next-line no-use-before-define
+  addSaveButton(email);
 };
 
-const startFetching = async () => {
+const displayTeams = async () => {
   teamsContainer.innerHTML = '<span class="spinner"></span>';
 
-  const rawName = document.getElementById('team-name').value.trim();
-  const rawDescription = document.getElementById('team-description').value.trim();
+  const rawName = document.getElementById('team-name')
+    .value
+    .trim();
+  const rawDescription = document.getElementById('team-description')
+    .value
+    .trim();
 
   const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
-  const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
+  const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined
+    : rawDescription;
 
-  // const userProfile = await getUserProfile();
-  //console.log(userProfile.email);
+  const userProfile = await getUserProfile();
 
-  let teams = await getTeamsActivity(nameFilter, descriptionFilter);
+  let teams = await getTeamsActivity(userProfile.email, nameFilter, descriptionFilter);
 
   // Filter out null or invalid items
-  teams = teams.filter(team => team && typeof team === 'object');
+  teams = teams.filter((team) => team && typeof team === 'object');
 
   // Extract teamIds from teams to fetch summaries
-  const teamIds = teams.map(team => team.id);
+  const teamIds = teams.map((team) => team.id);
 
   // Fetch summaries for teams (up to 40 per request)
   const teamSummaries = await getTeamSummaries(teamIds);
 
   // Merge the fetched summaries with teams data
-  teams = teams.map(team => {
-    const summary = teamSummaries.find(summary => summary.teamId === team.id);
+  teams = teams.map((team) => {
+    const summary = teamSummaries.find((s) => s.teamId === team.id);
     return {
       ...team,
       created: summary ? summary.created : null,
@@ -195,14 +226,54 @@ const startFetching = async () => {
     return nameA.localeCompare(nameB);
   });
 
-  initTable(teams);
+  initTable(userProfile.email, teams);
+};
 
+const addSaveButton = (email) => {
+  const button = document.createElement('button');
+  button.id = 'save';
+  button.textContent = 'Save';
+  button.disabled = true;
+  button.classList.add('button');
+
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner"></span>';
+
+    const body = {
+      add: [],
+      remove: [],
+    };
+
+    // Collect teams to add
+    document.querySelectorAll('tr.add').forEach((tr) => {
+      const teamId = tr.getAttribute('data-team-id');
+      body.add.push(teamId);
+    });
+
+    // Collect teams to remove
+    document.querySelectorAll('tr.remove').forEach((tr) => {
+      const teamId = tr.getAttribute('data-team-id');
+      console.log('Removing teamId:', teamId);
+      body.remove.push(teamId);
+    });
+
+    console.log('body:', body);
+    await addRemoveMemberFromTeams(email, body);
+
+    await displayTeams();
+  });
+
+  const wrapper = document.createElement('p');
+  wrapper.classList.add('button-wrapper');
+  wrapper.appendChild(button);
+  teamsContainer.appendChild(wrapper);
 };
 
 // search triggered by pressing enter
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
-    startFetching().then(() => {});
+    displayTeams().then(() => {});
   }
 });
-document.getElementById('teams').addEventListener('click', startFetching);
+document.getElementById('teams').addEventListener('click', displayTeams);
