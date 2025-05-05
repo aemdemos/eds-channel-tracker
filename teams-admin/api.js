@@ -46,8 +46,8 @@ export const getTeamsActivity = async (name = '', description = '') => {
       url.searchParams.append('descriptionFilter', cleanedDescription.replace(/\*/g, ''));
     }
 
-    const response = await fetchWithRetry(url.toString());
-    return response;
+    const response = await fetch(url.toString());
+    return response.ok ? response.json() : [];
   } catch (e) { /* empty */ }
   return [];
 };
