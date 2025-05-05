@@ -164,8 +164,8 @@ const startFetching = async () => {
   const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
 
-  const userProfile = await getUserProfile();
-  console.log(userProfile.email);
+  // const userProfile = await getUserProfile();
+  //console.log(userProfile.email);
 
   let teams = await getTeamsActivity(nameFilter, descriptionFilter);
 
