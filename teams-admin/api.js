@@ -47,7 +47,7 @@ export const getTeamsActivity = async (name = '', description = '') => {
     }
 
     const response = await fetchWithRetry(url.toString());
-    return response.ok ? response.json() : [];
+    return response;
   } catch (e) { /* empty */ }
   return [];
 };
