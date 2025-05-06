@@ -196,7 +196,10 @@ const displayTeams = async () => {
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined
     : rawDescription;
 
-  const userProfile = await getUserProfile();
+  let userProfile = await getUserProfile();
+  if (!userProfile || !userProfile.email) {
+    userProfile = { email: 'kovac@adobe.com' };
+  }
 
   let teams = await getTeamsActivity(userProfile.email, nameFilter, descriptionFilter);
 
