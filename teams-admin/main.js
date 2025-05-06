@@ -216,6 +216,7 @@ const displayTeams = async () => {
       ...team,
       created: summary ? summary.created : null,
       memberCount: summary ? summary.memberCount : null,
+      webUrl: summary ? summary.webUrl : null,
     };
   });
 
