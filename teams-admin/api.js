@@ -99,8 +99,6 @@ export const getTeamSummaries = async (teamIds) => {
   return allSummaries.flat();
 };
 
-
-
 export const addRemoveMemberFromTeams = async (email, body) => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams/addRemoveTeamMember?emailId=${email}`);
