@@ -20,6 +20,9 @@ export const sortTable = (teams, columnKey, direction) => {
     if (columnKey === 'teamName') { // Handle sorting by displayName
       valA = a.teamName.toLowerCase();
       valB = b.teamName.toLowerCase();
+    } else if (columnKey === 'status') {
+      valA = a.isMember ? 1 : 0; // Convert boolean to numeric for sorting
+      valB = b.isMember ? 1 : 0;
     }
 
     if (valA < valB) return direction === 'asc' ? -1 : 1;
@@ -39,7 +42,7 @@ export const getActiveTeamsCount = (teams) => {
   const now = new Date();
   const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
-  return teams.filter(team => {
+  return teams.filter((team) => {
     if (!team.lastActivityDate) return false;
     const lastActivity = new Date(team.lastActivityDate);
     return now - lastActivity <= THIRTY_DAYS_MS;

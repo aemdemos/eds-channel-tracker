@@ -9,13 +9,10 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable no-await-in-loop */
-/* eslint-disable max-len */
 import {
   getTeamsActivity,
-  getUserProfile,
-  getTeamSummaries, addRemoveMemberFromTeams,
+  getTeamSummaries,
+  addRemoveMemberFromTeams,
 } from './api.js';
 
 import {
@@ -46,13 +43,6 @@ const createCell = (content, className = '') => {
   td.textContent = content;
   return td;
 };
-const refreshSaveButton = () => {
-  const button = document.getElementById('save');
-  const add = document.querySelectorAll('tr.add');
-  const remove = document.querySelectorAll('tr.remove');
-
-  button.disabled = !(add.length || remove.length);
-};
 
 const renderTable = (teams) => {
   const tbody = document.querySelector('tbody');
@@ -76,35 +66,71 @@ const renderTable = (teams) => {
       nameCell.textContent = team.teamName;
     }
 
-    // Add membership badge
-    if (team.isMember) {
-      const badge = document.createElement('span');
-      badge.className = 'badge badge-member';
-      badge.textContent = 'Member';
-      nameCell.appendChild(badge);
-    }
-
     const descriptionText = decodeHTML(team.description || '');
     const descriptionCell = createCell(descriptionText);
     const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
     const createdCell = createCell(dateOnly, 'stat-column created');
     const channelCountCell = createCell(team.activeChannels || '', 'stat-column channels-count');
     const totalMessagesCell = createCell(team.channelMessages ?? '', 'stat-column total-messages');
-
     const lastMessageCell = createCell(team.lastActivityDate || '', 'stat-column last-message');
     const membersCountCell = createCell(team.memberCount ?? '', 'stat-column members-count');
     membersCountCell.title = 'View members';
 
-    tr.append(nameCell, descriptionCell, createdCell, channelCountCell, totalMessagesCell, lastMessageCell, membersCountCell);
-    tbody.appendChild(tr);
-    tr.addEventListener('click', () => {
-      if (team.isMember) {
-        tr.classList.toggle('remove'); // Mark for removal
+    const statusCell = document.createElement('td');
+    statusCell.className = 'status-column';
+    statusCell.textContent = team.isMember ? 'Member' : 'Not a Member';
+    statusCell.style.color = team.isMember ? 'blue' : 'red';
+
+    const joinCell = document.createElement('td');
+    joinCell.className = 'join-column';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = team.isMember;
+    checkbox.title = 'Check to add user to team; uncheck to remove.';
+    checkbox.addEventListener('change', async () => {
+      const body = {
+        add: [],
+        remove: [],
+      };
+
+      const previousState = checkbox.checked;
+
+      if (checkbox.checked) {
+        body.add.push(team.teamId);
+        statusCell.textContent = 'Member';
+        statusCell.style.color = 'blue';
       } else {
-        tr.classList.toggle('add'); // Mark for addition
+        body.remove.push(team.teamId);
+        statusCell.textContent = 'Not a Member';
+        statusCell.style.color = 'red';
       }
-      refreshSaveButton();
+
+      try {
+        await addRemoveMemberFromTeams('kovac@adobe.com', body);
+      } catch (error) {
+        console.error('Error updating team membership:', error);
+        // Revert checkbox state and status cell
+        checkbox.checked = previousState;
+        statusCell.textContent = previousState ? 'Member' : 'Not a Member';
+        statusCell.style.color = previousState ? 'blue' : 'red';
+        alert('Failed to update team membership. Please try again.');
+      }
     });
+
+    joinCell.appendChild(checkbox);
+
+    tr.append(
+      nameCell,
+      descriptionCell,
+      createdCell,
+      channelCountCell,
+      totalMessagesCell,
+      lastMessageCell,
+      membersCountCell,
+      statusCell,
+      joinCell,
+    );
+    tbody.appendChild(tr);
   });
 };
 
@@ -129,7 +155,7 @@ const addSortingToTable = (table, teams) => {
   });
 };
 
-const initTable = (email, teams) => {
+const initTable = (teams) => {
   teamsContainer.innerHTML = '';
 
   const summaryWrapper = document.createElement('div');
@@ -160,6 +186,8 @@ const initTable = (email, teams) => {
         <th data-sort="messageCount">Total Messages</th>
         <th data-sort="lastActivityDate">Last Activity</th>
         <th data-sort="memberCount">Total Members</th>
+        <th data-sort="status">Status</th>
+        <th class=" join sorting-disabled">Add/Remove</th>
       </tr>
     </thead>
   `;
@@ -176,10 +204,6 @@ const initTable = (email, teams) => {
   toggleSortDirection();
 
   renderTable(teams);
-
-  // Add the Save button after the table is initialized
-  // eslint-disable-next-line no-use-before-define
-  addSaveButton(email);
 };
 
 const displayTeams = async () => {
@@ -196,12 +220,7 @@ const displayTeams = async () => {
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined
     : rawDescription;
 
-  let userProfile = await getUserProfile();
-  if (!userProfile || !userProfile.email) {
-    userProfile = { email: 'kovac@adobe.com' };
-  }
-
-  let teams = await getTeamsActivity(userProfile.email, nameFilter, descriptionFilter);
+  let teams = await getTeamsActivity(nameFilter, descriptionFilter);
 
   // Filter out null or invalid items
   teams = teams.filter((team) => team && typeof team === 'object');
@@ -230,48 +249,7 @@ const displayTeams = async () => {
     return nameA.localeCompare(nameB);
   });
 
-  initTable(userProfile.email, teams);
-};
-
-const addSaveButton = (email) => {
-  const button = document.createElement('button');
-  button.id = 'save';
-  button.textContent = 'Save';
-  button.disabled = true;
-  button.classList.add('button');
-
-  button.addEventListener('click', async () => {
-    button.disabled = true;
-    button.innerHTML = '<span class="spinner"></span>';
-
-    const body = {
-      add: [],
-      remove: [],
-    };
-
-    // Collect teams to add
-    document.querySelectorAll('tr.add').forEach((tr) => {
-      const teamId = tr.getAttribute('data-team-id');
-      body.add.push(teamId);
-    });
-
-    // Collect teams to remove
-    document.querySelectorAll('tr.remove').forEach((tr) => {
-      const teamId = tr.getAttribute('data-team-id');
-      console.log('Removing teamId:', teamId);
-      body.remove.push(teamId);
-    });
-
-    console.log('body:', body);
-    await addRemoveMemberFromTeams(email, body);
-
-    await displayTeams();
-  });
-
-  const wrapper = document.createElement('p');
-  wrapper.classList.add('button-wrapper');
-  wrapper.appendChild(button);
-  teamsContainer.appendChild(wrapper);
+  initTable(teams);
 };
 
 // search triggered by pressing enter

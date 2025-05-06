@@ -11,6 +11,19 @@
  */
 import API_ENDPOINT from './config.js';
 
+export const getUserProfile = async () => {
+  try {
+    const response = await fetch('https://admin.hlx.page/status/aemdemos/eds-channel-tracker/main/index.html');
+
+    if (!response.ok) return null;
+
+    const json = await response.json();
+    return json.profile;
+  } catch (e) {
+    return null;
+  }
+};
+
 export const getMyTeams = async (email) => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams/userTeams?emailId=${email}`);
@@ -20,7 +33,7 @@ export const getMyTeams = async (email) => {
   return [];
 };
 
-export const getTeamsActivity = async (email, name = '', description = '') => {
+export const getTeamsActivity = async (name = '', description = '') => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams/allTeams`);
 
@@ -39,7 +52,11 @@ export const getTeamsActivity = async (email, name = '', description = '') => {
     const allTeams = response.ok ? await response.json() : [];
 
     // Fetch user's teams
-    const myTeams = await getMyTeams(email);
+    let userProfile = await getUserProfile();
+    if (!userProfile || !userProfile.email) {
+      userProfile = { email: 'kovac@adobe.com' };
+    }
+    const myTeams = await getMyTeams(userProfile.email);
     const myTeamIds = new Set(myTeams.map((team) => team.id));
     // Add `isMember` property to each team
     return allTeams.map((team) => ({
@@ -50,36 +67,7 @@ export const getTeamsActivity = async (email, name = '', description = '') => {
   return [];
 };
 
-export const getUserProfile = async () => {
-  try {
-    const response = await fetch('https://admin.hlx.page/status/aemdemos/eds-channel-tracker/main/index.html');
-
-    if (!response.ok) return null;
-
-    const json = await response.json();
-    return json.profile;
-  } catch (e) {
-    return null;
-  }
-};
-
-export const addRemoveMemberFromTeams = async (email, body) => {
-  try {
-    const url = new URL(`${API_ENDPOINT}/teams/addRemoveTeamMember?emailId=${email}`);
-    const response = await fetch(url.toString(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body), // Send body as JSON payload
-    });
-    return response.ok ? await response.json() : [];
-  } catch (e) { /* empty */ }
-  return [];
-};
-
 export const getTeamSummaries = async (teamIds) => {
-
   const url = new URL(`${API_ENDPOINT}/teams/summary`);
 
   // Ensure the request is limited to 40 teamIds
@@ -109,4 +97,21 @@ export const getTeamSummaries = async (teamIds) => {
 
   // Flatten the array of results
   return allSummaries.flat();
+};
+
+
+
+export const addRemoveMemberFromTeams = async (email, body) => {
+  try {
+    const url = new URL(`${API_ENDPOINT}/teams/addRemoveTeamMember?emailId=${email}`);
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body), // Send body as JSON payload
+    });
+    return response.ok ? await response.json() : [];
+  } catch (e) { /* empty */ }
+  return [];
 };

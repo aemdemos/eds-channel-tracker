@@ -262,77 +262,6 @@ th.sorted-desc::after {
     border-color: #333 transparent transparent;
 }
 
-.thermometer {
-    height: 20px;
-    width: 100%;
-    background: linear-gradient(to left, navajowhite,white); /* Customize the gradient colors */
-    border-radius: 5px;
-    position: relative;
-    overflow: hidden; /* Ensure content stays within the thermometer */
-}
-
-.thermometer-fill {
-    height: 100%;
-    background-color: red;
-    border-radius: 5px;
-    position: absolute;
-    top: 0;
-    left: 0;
-    opacity: 0.6;
-    z-index: 1; /* Ensure it stays below the label */
-}
-
-.thermometer-label {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: black; /* Ensure visibility over the fill */
-    z-index: 2; /* Ensure it stays above the fill */
-    text-align: center;
-    white-space: nowrap; /* Prevent text wrapping */
-}
-
-.thermometer-label span {
-    display: inline-block;
-    width: 100%;
-    text-align: center;
-}
-
-.progress-container {
-    margin-bottom: 1rem;
-}
-
-.progress-bar {
-    height: 8px;
-    background-color: #ddd;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 0.5rem;
-}
-
-.progress-fill {
-    height: 100%;
-    background-color: #007bff;
-    width: 0;
-    transition: width 0.3s ease;
-}
-
-.progress-label {
-    font-size: 14px;
-    color: #333;
-}
-
-.fade {
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    pointer-events: none;
-}
-
-.fade.visible {
-    opacity: 1;
-    pointer-events: auto;
-}
 
 th[data-sort]::after {
     content: '⇅'; /* Default arrows when not sorted */
@@ -340,31 +269,14 @@ th[data-sort]::after {
     opacity: 0.5;
 }
 
-.modal-header {
-    display: flex;
-    justify-content: flex-end;
-    margin: 0 !important;
-    padding-right: 5px !important;
+.join-column {
+    width: 10%;
+    text-align: center;
 }
 
-.modal-content {
-    margin: 0 !important;
-    padding: 0 !important;
+/* Checkbox styling */
+.join-column input[type="checkbox"] {
+    transform: scale(1.2);
+    cursor: pointer;
 }
 
-.badge-member {
-    background-color: green;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 12px;
-    margin-left: 10px;
-}
-
-tr.add {
-    background-color: #cce5ff;
-}
-
-tr.remove {
-    background-color: #f8d7da;
-}
