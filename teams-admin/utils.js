@@ -20,7 +20,7 @@ export const sortTable = (teams, columnKey, direction) => {
     if (columnKey === 'teamName') { // Handle sorting by displayName
       valA = a.teamName.toLowerCase();
       valB = b.teamName.toLowerCase();
-    } else if (columnKey === 'status') {
+    } else if (columnKey === 'isMember') {
       valA = a.isMember ? 1 : 0; // Convert boolean to numeric for sorting
       valB = b.isMember ? 1 : 0;
     }
