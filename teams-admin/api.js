@@ -11,18 +11,7 @@
  */
 import API_ENDPOINT from './config.js';
 
-export const getUserProfile = async () => {
-  try {
-    const response = await fetch('https://admin.hlx.page/status/aemdemos/eds-channel-tracker/main/index.html');
-
-    if (!response.ok) return null;
-
-    const json = await response.json();
-    return json.profile;
-  } catch (e) {
-    return null;
-  }
-};
+import getUserProfile from './userProfile.js';
 
 export const getMyTeams = async (email) => {
   try {
@@ -52,12 +41,15 @@ export const getTeamsActivity = async (name = '', description = '') => {
     const allTeams = response.ok ? await response.json() : [];
 
     // Fetch user's teams
-    let userProfile = await getUserProfile();
-    if (!userProfile || !userProfile.email) {
-      userProfile = { email: 'kovac@adobe.com' };
+    const userProfile = await getUserProfile();
+    const email = userProfile?.email;
+    if (!email) {
+      console.error('User profile not found or email is missing');
+      return [];
     }
-    const myTeams = await getMyTeams(userProfile.email);
+    const myTeams = await getMyTeams(email);
     const myTeamIds = new Set(myTeams.map((team) => team.id));
+
     // Add `isMember` property to each team
     return allTeams.map((team) => ({
       ...team,
@@ -100,6 +92,10 @@ export const getTeamSummaries = async (teamIds) => {
 };
 
 export const addRemoveMemberFromTeams = async (email, body) => {
+  if (!email || email.trim() === '') {
+    console.error('Invalid userEmail: Cannot proceed with addRemoveMemberFromTeams');
+    return [];
+  }
   try {
     const url = new URL(`${API_ENDPOINT}/teams/addRemoveTeamMember?emailId=${email}`);
     const response = await fetch(url.toString(), {

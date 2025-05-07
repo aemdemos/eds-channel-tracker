@@ -9,6 +9,8 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
+import getUserProfile from './userProfile.js';
+
 import {
   getTeamsActivity,
   getTeamSummaries,
@@ -22,6 +24,7 @@ import {
   escapeHTML,
 } from './utils.js';
 
+let userEmail = null;
 let sortDirection = 'asc';
 
 const teamsContainer = document.getElementById('teams-container');
@@ -106,14 +109,13 @@ const renderTable = (teams) => {
       }
 
       try {
-        await addRemoveMemberFromTeams('kovac@adobe.com', body);
+        await addRemoveMemberFromTeams(userEmail, body);
       } catch (error) {
         console.error('Error updating team membership:', error);
         // Revert checkbox state and status cell
         checkbox.checked = previousState;
         statusCell.textContent = previousState ? 'Member' : 'Not a Member';
         statusCell.style.color = previousState ? 'blue' : 'red';
-        alert('Failed to update team membership. Please try again.');
       }
     });
 
@@ -219,6 +221,22 @@ const displayTeams = async () => {
   const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined
     : rawDescription;
+
+  if (!userEmail) {
+    try {
+      const userProfile = await getUserProfile();
+      if (!userProfile || !userProfile.email) {
+        console.error('User profile is invalid or email is missing');
+        teamsContainer.innerHTML = '<p class="error">Failed to fetch user email. Please try again later.</p>';
+        return;
+      }
+      userEmail = userProfile.email;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
+      return;
+    }
+  }
 
   let teams = await getTeamsActivity(nameFilter, descriptionFilter);
 
