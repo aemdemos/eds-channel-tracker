@@ -79,13 +79,8 @@ const renderTable = (teams) => {
     const membersCountCell = createCell(team.memberCount ?? '', 'stat-column members-count');
     membersCountCell.title = 'View members';
 
-    const statusCell = document.createElement('td');
-    statusCell.className = 'status-column';
-    statusCell.textContent = team.isMember ? 'Member' : 'Not a Member';
-    statusCell.style.color = team.isMember ? 'blue' : 'red';
-
-    const joinCell = document.createElement('td');
-    joinCell.className = 'join-column';
+    const memberCell = document.createElement('td');
+    memberCell.className = 'member-column';
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.checked = team.isMember;
@@ -100,26 +95,20 @@ const renderTable = (teams) => {
 
       if (checkbox.checked) {
         body.add.push(team.teamId);
-        statusCell.textContent = 'Member';
-        statusCell.style.color = 'blue';
       } else {
         body.remove.push(team.teamId);
-        statusCell.textContent = 'Not a Member';
-        statusCell.style.color = 'red';
       }
 
       try {
         await addRemoveMemberFromTeams(userEmail, body);
       } catch (error) {
         console.error('Error updating team membership:', error);
-        // Revert checkbox state and status cell
+        // Revert checkbox state if the API call fails
         checkbox.checked = previousState;
-        statusCell.textContent = previousState ? 'Member' : 'Not a Member';
-        statusCell.style.color = previousState ? 'blue' : 'red';
       }
     });
 
-    joinCell.appendChild(checkbox);
+    memberCell.appendChild(checkbox);
 
     tr.append(
       nameCell,
@@ -129,8 +118,7 @@ const renderTable = (teams) => {
       totalMessagesCell,
       lastMessageCell,
       membersCountCell,
-      statusCell,
-      joinCell,
+      memberCell,
     );
     tbody.appendChild(tr);
   });
@@ -188,8 +176,7 @@ const initTable = (teams) => {
         <th data-sort="messageCount">Total Messages</th>
         <th data-sort="lastActivityDate">Last Activity</th>
         <th data-sort="memberCount">Total Members</th>
-        <th data-sort="status">Status</th>
-        <th class=" join sorting-disabled">Add/Remove</th>
+        <th class="member sorting-disabled">Member</th>
       </tr>
     </thead>
   `;
@@ -227,7 +214,7 @@ const displayTeams = async () => {
       const userProfile = await getUserProfile();
       if (!userProfile || !userProfile.email) {
         console.error('User profile is invalid or email is missing');
-        teamsContainer.innerHTML = '<p class="error">Failed to fetch user email. Please try again later.</p>';
+        teamsContainer.innerHTML = '<p class="error">Failed to fetch user email. Please log in again and try.</p>';
         return;
       }
       userEmail = userProfile.email;
