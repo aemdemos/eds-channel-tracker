@@ -53,7 +53,7 @@ export const getTeamsActivity = async (name = '', description = '') => {
     // Add `isMember` property to each team
     return allTeams.map((team) => ({
       ...team,
-      isMember: myTeamIds.has(team.teamId),
+      isMember: myTeamIds.has(team.id),
     }));
   } catch (e) { /* empty */ }
   return [];
