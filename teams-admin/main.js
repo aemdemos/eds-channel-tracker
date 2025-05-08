@@ -48,15 +48,49 @@ const addRemoveMemberFromTeamsWithTracking = async (email, body) => {
     await addRemoveMemberFromTeams(email, body);
   } finally {
     pendingApiCalls.delete(call);
-    console.log('addRemoveMemberFromTeamsWithTracking  pendingApiCalls:', pendingApiCalls);
   }
 };
 
+const addSelectAllCheckbox = (table, teams) => {
+  const selectAllHeader = document.querySelector('th.member');
+  const selectAllCheckbox = document.createElement('input');
+  selectAllCheckbox.type = 'checkbox';
+  selectAllCheckbox.title = 'Select/Unselect all to join/leave teams';
+  selectAllCheckbox.addEventListener('change', async () => {
+    const body = {
+      add: [],
+      remove: [],
+    };
+
+    teams.forEach((team) => {
+      const checkbox = document.querySelector(`tr[data-team-id="${team.teamId}"] .member-column input[type="checkbox"]`);
+      if (selectAllCheckbox.checked && !checkbox.checked) {
+        body.add.push(team.teamId);
+        checkbox.checked = true;
+      } else if (!selectAllCheckbox.checked && checkbox.checked) {
+        body.remove.push(team.teamId);
+        checkbox.checked = false;
+      }
+    });
+    try {
+      await addRemoveMemberFromTeamsWithTracking(userEmail, body);
+    } catch (error) {
+      console.error('Error updating team memberships:', error);
+      // Revert all checkboxes to their previous state if the API call fails
+      teams.forEach((team) => {
+        const checkbox = document.querySelector(`tr[data-team-id="${team.teamId}"] .member-column input[type="checkbox"]`);
+        checkbox.checked = team.isMember;
+      });
+      selectAllCheckbox.checked = false;
+    }
+  });
+
+  selectAllHeader.appendChild(selectAllCheckbox);
+};
+
 window.addEventListener('beforeunload', (event) => {
-  console.log('beforeunload pendingApiCalls:', pendingApiCalls.size);
   if (pendingApiCalls.size > 0) {
     event.preventDefault();
-    event.returnValue = 'There are pending changes. Are you sure you want to leave?';
   }
 });
 
@@ -203,6 +237,9 @@ const initTable = (teams) => {
   addSortingToTable(table, teams);
   teamsContainer.appendChild(table);
 
+  // Add "Select All" checkbox
+  addSelectAllCheckbox(table, teams);
+
   const initialSortKey = 'displayName';
   const sortedTeams = sortTable(teams, initialSortKey, sortDirection);
   document.querySelector(`th[data-sort="${initialSortKey}"]`).classList.add('sorted-asc');
@@ -286,7 +323,6 @@ document.addEventListener('keydown', (event) => {
 // Disable Search button if there are pending API calls
 const searchButton = document.getElementById('teams');
 searchButton.addEventListener('click', async () => {
-  console.log('search pendingApiCalls:', pendingApiCalls.size);
   if (pendingApiCalls.size > 0) {
     alert('Please wait for all pending changes to complete before searching.');
     return;
