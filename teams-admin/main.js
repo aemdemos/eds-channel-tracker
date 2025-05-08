@@ -26,6 +26,8 @@ import {
 
 let userEmail = null;
 let sortDirection = 'asc';
+let currentTeams = [];
+
 const pendingApiCalls = new Set();
 
 const teamsContainer = document.getElementById('teams-container');
@@ -182,25 +184,30 @@ const toggleSortDirection = () => {
   sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
 };
 
-const addSortingToTable = (table, teams) => {
+const addSortingToTable = (table) => {
   const headers = table.querySelectorAll('th[data-sort]');
   headers.forEach((header) => {
     header.addEventListener('click', () => {
       const columnKey = header.getAttribute('data-sort');
-      // Remove sort classes from all headers
+
+      // Clear all sort classes
       headers.forEach((h) => h.classList.remove('sorted-asc', 'sorted-desc'));
-      // Sort data
-      const sortedData = sortTable(teams, columnKey, sortDirection);
-      // Add the appropriate arrow class
+
+      // Sort and toggle direction
+      const sorted = sortTable(currentTeams, columnKey, sortDirection);
+      currentTeams = sorted; // Update reference
       header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
-      renderTable(sortedData);
+      renderTable(currentTeams);
       toggleSortDirection();
     });
   });
 };
 
+
 // Modify initTable to accept the combinedTeams array
 const initTable = (teams) => {
+  currentTeams = [...teams]; // Save for sorting
+
   teamsContainer.innerHTML = ''; // Clear any existing spinner or content
 
   const summaryWrapper = document.createElement('div');
@@ -243,8 +250,8 @@ const initTable = (teams) => {
   const initialSortKey = 'displayName';
   const sortedTeams = sortTable(teams, initialSortKey, sortDirection);
   document.querySelector(`th[data-sort="${initialSortKey}"]`).classList.add('sorted-asc');
-  renderTable(sortedTeams);
-  toggleSortDirection();
+  renderTable(currentTeams);
+  addSortingToTable()
 };
 
 const displayTeams = async () => {
