@@ -165,7 +165,7 @@ const renderTable = (teams) => {
       totalMessagesCell,
       lastMessageCell,
       membersCountCell,
-      memberCell
+      memberCell,
     );
 
     tbody.appendChild(tr);
@@ -307,7 +307,6 @@ const displayTeams = async () => {
   // Update active team count
   document.getElementById('active-teams-count').textContent = getActiveTeamsCount(teamSummaries).toString();
 };
-
 
 // search triggered by pressing enter
 document.addEventListener('keydown', (event) => {
