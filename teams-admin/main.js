@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License. You may obtain a copy
  * of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed by
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
@@ -190,6 +190,54 @@ const addSortingToTable = (table, teams) => {
   });
 };
 
+const updateTableInBatches = (teamSummaries, batchSize = 5) => {
+  let batchIndex = 0;
+
+  const updateBatch = () => {
+    const start = batchIndex * batchSize;
+    const end = Math.min(start + batchSize, teamSummaries.length);
+    const batch = teamSummaries.slice(start, end);
+
+    batch.forEach((summary) => {
+      const row = document.querySelector(`tr[data-team-id="${summary.teamId}"]`);
+      if (!row) return;
+
+      const nameCell = row.querySelector('.name');
+      if (nameCell && summary.webUrl) {
+        const link = document.createElement('a');
+        link.textContent = nameCell.textContent;
+        link.href = summary.webUrl;
+        link.target = '_blank';
+        link.title = 'Open in Microsoft Teams';
+        nameCell.innerHTML = ''; // Clear existing content
+        nameCell.appendChild(link);
+      }
+
+      const createdCell = row.querySelector('.created');
+      const totalMessagesCell = row.querySelector('.total-messages');
+      const lastMessageCell = row.querySelector('.last-message');
+      const membersCountCell = row.querySelector('.members-count');
+
+      if (createdCell) createdCell.textContent = summary.created?.split('T')[0] || 'N/A';
+      if (totalMessagesCell) totalMessagesCell.textContent = summary.messageCount ?? '';
+      if (lastMessageCell) lastMessageCell.textContent = summary.lastMessage ?? '';
+      if (membersCountCell) membersCountCell.textContent = summary.memberCount ?? '';
+    });
+
+    batchIndex++;
+
+    // Continue processing next batch if there are more summaries
+    if (start + batchSize < teamSummaries.length) {
+      setTimeout(updateBatch, 0); // Process next batch after current event loop
+    } else {
+      // After all batches are processed, update active team count
+      document.getElementById('active-teams-count').textContent = getActiveTeamsCount(teamSummaries).toString();
+    }
+  };
+
+  updateBatch(); // Start the first batch
+};
+
 const initTable = (teams) => {
   teamsContainer.innerHTML = '';
 
@@ -274,37 +322,9 @@ const displayTeams = async () => {
   const teamIds = teams.map((team) => team.id);
   const teamSummaries = await getTeamSummaries(teamIds);
 
-  // Patch each row with its summary
-  teamSummaries.forEach((summary) => {
-    const row = document.querySelector(`tr[data-team-id="${summary.teamId}"]`);
-    if (!row) return;
-
-    const nameCell = row.querySelector('.name');
-    if (nameCell && summary.webUrl) {
-      const link = document.createElement('a');
-      link.textContent = nameCell.textContent;
-      link.href = summary.webUrl;
-      link.target = '_blank';
-      link.title = 'Open in Microsoft Teams';
-      nameCell.innerHTML = ''; // Clear existing content
-      nameCell.appendChild(link);
-    }
-
-    const createdCell = row.querySelector('.created');
-    const totalMessagesCell = row.querySelector('.total-messages');
-    const lastMessageCell = row.querySelector('.last-message');
-    const membersCountCell = row.querySelector('.members-count');
-
-    if (createdCell) createdCell.textContent = summary.created?.split('T')[0] || 'N/A';
-    if (totalMessagesCell) totalMessagesCell.textContent = summary.messageCount ?? '';
-    if (lastMessageCell) lastMessageCell.textContent = summary.lastMessage ?? '';
-    if (membersCountCell) membersCountCell.textContent = summary.memberCount ?? '';
-  });
-
-  // Update active team count
-  document.getElementById('active-teams-count').textContent = getActiveTeamsCount(teamSummaries).toString();
+  // Update table in batches of 5 summaries
+  updateTableInBatches(teamSummaries, 5);
 };
-
 
 // search triggered by pressing enter
 document.addEventListener('keydown', (event) => {
