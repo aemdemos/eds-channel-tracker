@@ -280,3 +280,8 @@ th[data-sort]::after {
     cursor: pointer;
 }
 
+.created {
+    white-space: nowrap; /* Prevent text wrapping */
+    min-width: 115px;
+}
+

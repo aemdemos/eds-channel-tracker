@@ -216,8 +216,8 @@ const initTable = (teams) => {
       <tr>
         <th data-sort="displayName">Team Name</th>
         <th class=" description sorting-disabled">Description</th>
-        <th data-sort="created">Created</th>
-        <th data-sort="totalMessages">Messages</th>
+        <th data-sort="created" class="created">Created</th>
+        <th data-sort="totalMessages">Total Messages</th>
         <th data-sort="lastMessage">Last Message</th>
         <th data-sort="memberCount">Total Members</th>
         <th data-sort="isMember" class="member">Member</th>
