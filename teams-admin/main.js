@@ -281,14 +281,12 @@ const displayTeams = async () => {
 
     const nameCell = row.querySelector('.name');
     if (nameCell && summary.webUrl) {
-      nameCell.innerHTML = ''; // Clear existing content
-
       const link = document.createElement('a');
-      link.textContent = summary.displayName || nameCell.textContent;
+      link.textContent = nameCell.textContent;
       link.href = summary.webUrl;
       link.target = '_blank';
       link.title = 'Open in Microsoft Teams';
-
+      nameCell.innerHTML = ''; // Clear existing content
       nameCell.appendChild(link);
     }
 
