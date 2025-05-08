@@ -64,14 +64,17 @@ const addSelectAllCheckbox = (table, teams) => {
 
     teams.forEach((team) => {
       const checkbox = document.querySelector(`tr[data-team-id="${team.teamId}"] .member-column input[type="checkbox"]`);
-      if (selectAllCheckbox.checked && !checkbox.checked) {
+      if (selectAllCheckbox.checked && !team.isMember) {
         body.add.push(team.teamId);
         checkbox.checked = true;
-      } else if (!selectAllCheckbox.checked && checkbox.checked) {
+        team.isMember = true;
+      } else if (!selectAllCheckbox.checked && team.isMember) {
         body.remove.push(team.teamId);
         checkbox.checked = false;
+        team.isMember = false;
       }
     });
+
     try {
       await addRemoveMemberFromTeamsWithTracking(userEmail, body);
     } catch (error) {
