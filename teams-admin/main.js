@@ -93,8 +93,8 @@ const renderTable = (teams) => {
     const descriptionCell = createCell(descriptionText);
     const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
     const createdCell = createCell(dateOnly, 'stat-column created');
-    const totalMessagesCell = createCell(team.channelMessages ?? '', 'stat-column total-messages');
-    const lastMessageCell = createCell(team.lastActivityDate || '', 'stat-column last-message');
+    const totalMessagesCell = createCell(team.totalMessages ?? '', 'stat-column total-messages');
+    const lastMessageCell = createCell(team.lastMessage || '', 'stat-column last-message');
     const membersCountCell = createCell(team.memberCount ?? '', 'stat-column members-count');
     membersCountCell.title = 'View members';
 
@@ -113,9 +113,9 @@ const renderTable = (teams) => {
       const previousState = checkbox.checked;
 
       if (checkbox.checked) {
-        body.add.push(team.teamId);
+        body.add.push(team.id);
       } else {
-        body.remove.push(team.teamId);
+        body.remove.push(team.id);
       }
 
       try {
@@ -190,8 +190,8 @@ const initTable = (teams) => {
         <th data-sort="displayName">Team Name</th>
         <th class=" description sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
-        <th data-sort="messageCount">Total Messages</th>
-        <th data-sort="lastActivityDate">Last Activity</th>
+        <th data-sort="totalMessages">Messages</th>
+        <th data-sort="lastMessage">Last Message</th>
         <th data-sort="memberCount">Total Members</th>
         <th data-sort="isMember" class="member">Member</th>
       </tr>
@@ -260,6 +260,8 @@ const displayTeams = async () => {
       ...team,
       created: summary ? summary.created : null,
       memberCount: summary ? summary.memberCount : null,
+      totalMessages: summary ? summary.messageCount : null,
+      lastMessage: summary ? summary.lastMessage : null,
       webUrl: summary ? summary.webUrl : null,
     };
   });
