@@ -285,3 +285,25 @@ th[data-sort]::after {
     min-width: 115px;
 }
 
+/* Style the Member column header */
+th.member {
+    text-align: center;
+    width: 10%; /* Adjust width as needed */
+}
+
+/* Style the Member column cells */
+td.member-column {
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Style the checkboxes in the Member column */
+td.member-column input[type="checkbox"] {
+    transform: scale(1.2); /* Make the checkbox slightly larger */
+    cursor: pointer; /* Add a pointer cursor for better UX */
+}
+
+/* Add hover effect for the Member column */
+td.member-column:hover {
+    background-color: #f9f9f9; /* Light gray background on hover */
+}

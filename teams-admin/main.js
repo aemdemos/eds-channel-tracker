@@ -78,8 +78,6 @@ const addSelectAllCheckbox = (table, teams) => {
     try {
       await addRemoveMemberFromTeamsWithTracking(userEmail, body);
     } catch (error) {
-      console.error('Error updating team memberships:', error);
-      // Revert all checkboxes to their previous state if the API call fails
       teams.forEach((team) => {
         const checkbox = document.querySelector(`tr[data-team-id="${team.teamId}"] .member-column input[type="checkbox"]`);
         checkbox.checked = team.isMember;
@@ -133,7 +131,9 @@ const renderTable = (teams) => {
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.checked = team.isMember;
-    checkbox.title = 'Check to add user to team; uncheck to remove.';
+    checkbox.title = team.isMember
+      ? 'Uncheck to remove your account from this team.'
+      : 'Check to add your account to this team';
     checkbox.addEventListener('change', async () => {
       const body = {
         add: [],
@@ -151,7 +151,6 @@ const renderTable = (teams) => {
       try {
         await addRemoveMemberFromTeamsWithTracking(userEmail, body);
       } catch (error) {
-        console.error('Error updating team membership:', error);
         checkbox.checked = previousState;
       }
     });
@@ -160,12 +159,12 @@ const renderTable = (teams) => {
 
     tr.append(
       nameCell,
+      memberCell,
       descriptionCell,
       createdCell,
       totalMessagesCell,
       lastMessageCell,
       membersCountCell,
-      memberCell,
     );
 
     tbody.appendChild(tr);
@@ -218,12 +217,12 @@ const initTable = (teams) => {
     <thead>
       <tr>
         <th data-sort="displayName">Team Name</th>
+         <th data-sort="isMember" class="member">Member</th>
         <th class=" description sorting-disabled">Description</th>
         <th data-sort="created" class="created">Created</th>
         <th data-sort="totalMessages">Total Messages</th>
         <th data-sort="lastMessage">Last Message</th>
         <th data-sort="memberCount">Total Members</th>
-        <th data-sort="isMember" class="member">Member</th>
       </tr>
     </thead>
   `;
@@ -256,13 +255,11 @@ const displayTeams = async () => {
     try {
       const userProfile = await getUserProfile();
       if (!userProfile || !userProfile.email) {
-        console.error('User profile is invalid or email is missing');
         teamsContainer.innerHTML = '<p class="error">Failed to fetch user email. Please log in again and try.</p>';
         return;
       }
       userEmail = userProfile.email;
     } catch (error) {
-      console.error('Error fetching user profile:', error);
       teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
       return;
     }
@@ -319,6 +316,7 @@ document.addEventListener('keydown', (event) => {
 const searchButton = document.getElementById('teams');
 searchButton.addEventListener('click', async () => {
   if (pendingApiCalls.size > 0) {
+    // eslint-disable-next-line no-alert
     alert('Please wait for all pending changes to complete before searching.');
     return;
   }
