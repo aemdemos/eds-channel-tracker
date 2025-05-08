@@ -112,16 +112,7 @@ const renderTable = (teams) => {
 
     const nameCell = document.createElement('td');
     nameCell.className = 'name';
-    if (team.webUrl) {
-      const link = document.createElement('a');
-      link.textContent = team.displayName;
-      link.href = team.webUrl;
-      link.target = '_blank';
-      link.title = 'Open in Microsoft Teams';
-      nameCell.appendChild(link);
-    } else {
-      nameCell.textContent = team.displayName;
-    }
+    nameCell.textContent = team.displayName;
 
     const descriptionText = decodeHTML(team.description || '');
     const descriptionCell = createCell(descriptionText);
@@ -287,6 +278,19 @@ const displayTeams = async () => {
   teamSummaries.forEach((summary) => {
     const row = document.querySelector(`tr[data-team-id="${summary.teamId}"]`);
     if (!row) return;
+
+    const nameCell = row.querySelector('.name');
+    if (nameCell && summary.webUrl) {
+      nameCell.innerHTML = ''; // Clear existing content
+
+      const link = document.createElement('a');
+      link.textContent = summary.displayName || nameCell.textContent;
+      link.href = summary.webUrl;
+      link.target = '_blank';
+      link.title = 'Open in Microsoft Teams';
+
+      nameCell.appendChild(link);
+    }
 
     const createdCell = row.querySelector('.created');
     const totalMessagesCell = row.querySelector('.total-messages');
