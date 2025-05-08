@@ -60,13 +60,13 @@ const renderTable = (teams) => {
     nameCell.className = 'name';
     if (team.webUrl) {
       const link = document.createElement('a');
-      link.textContent = team.teamName;
+      link.textContent = team.displayName;
       link.href = team.webUrl;
       link.target = '_blank';
       link.title = 'Open in Microsoft Teams';
       nameCell.appendChild(link);
     } else {
-      nameCell.textContent = team.teamName;
+      nameCell.textContent = team.displayName;
     }
 
     const descriptionText = decodeHTML(team.description || '');
@@ -167,7 +167,7 @@ const initTable = (teams) => {
   table.innerHTML = `
     <thead>
       <tr>
-        <th data-sort="teamName">Team Name</th>
+        <th data-sort="displayName">Team Name</th>
         <th class=" description sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
         <th data-sort="messageCount">Total Messages</th>
@@ -183,7 +183,7 @@ const initTable = (teams) => {
   addSortingToTable(table, teams);
   teamsContainer.appendChild(table);
 
-  const initialSortKey = 'teamName';
+  const initialSortKey = 'displayName';
   const sortedTeams = sortTable(teams, initialSortKey, sortDirection);
   document.querySelector(`th[data-sort="${initialSortKey}"]`).classList.add('sorted-asc');
   renderTable(sortedTeams);
@@ -246,8 +246,8 @@ const displayTeams = async () => {
 
   // Sort safely by teamName
   teams.sort((a, b) => {
-    const nameA = a.teamName || '';
-    const nameB = b.teamName || '';
+    const nameA = a.displayName || '';
+    const nameB = b.displayName || '';
     return nameA.localeCompare(nameB);
   });
 
