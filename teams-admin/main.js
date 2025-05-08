@@ -252,16 +252,11 @@ const initTable = (teams) => {
 const displayTeams = async () => {
   teamsContainer.innerHTML = '<span class="spinner"></span>';
 
-  const rawName = document.getElementById('team-name')
-    .value
-    .trim();
-  const rawDescription = document.getElementById('team-description')
-    .value
-    .trim();
+  const rawName = document.getElementById('team-name').value.trim();
+  const rawDescription = document.getElementById('team-description').value.trim();
 
   const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
-  const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined
-    : rawDescription;
+  const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
 
   if (!userEmail) {
     try {
@@ -280,38 +275,34 @@ const displayTeams = async () => {
   }
 
   let teams = await getTeamsActivity(nameFilter, descriptionFilter);
-
-  // Filter out null or invalid items
   teams = teams.filter((team) => team && typeof team === 'object');
 
-  // Extract teamIds from teams to fetch summaries
-  const teamIds = teams.map((team) => team.id);
+  // Immediately render the basic table
+  initTable(teams);
 
-  // Fetch summaries for teams (up to 40 per request)
+  const teamIds = teams.map((team) => team.id);
   const teamSummaries = await getTeamSummaries(teamIds);
 
-  // Merge the fetched summaries with teams data
-  teams = teams.map((team) => {
-    const summary = teamSummaries.find((s) => s.teamId === team.id);
-    return {
-      ...team,
-      created: summary ? summary.created : null,
-      memberCount: summary ? summary.memberCount : null,
-      totalMessages: summary ? summary.messageCount : null,
-      lastMessage: summary ? summary.lastMessage : null,
-      webUrl: summary ? summary.webUrl : null,
-    };
+  // Patch each row with its summary
+  teamSummaries.forEach((summary) => {
+    const row = document.querySelector(`tr[data-team-id="${summary.teamId}"]`);
+    if (!row) return;
+
+    const createdCell = row.querySelector('.created');
+    const totalMessagesCell = row.querySelector('.total-messages');
+    const lastMessageCell = row.querySelector('.last-message');
+    const membersCountCell = row.querySelector('.members-count');
+
+    if (createdCell) createdCell.textContent = summary.created?.split('T')[0] || 'N/A';
+    if (totalMessagesCell) totalMessagesCell.textContent = summary.messageCount ?? '';
+    if (lastMessageCell) lastMessageCell.textContent = summary.lastMessage ?? '';
+    if (membersCountCell) membersCountCell.textContent = summary.memberCount ?? '';
   });
 
-  // Sort safely by teamName
-  teams.sort((a, b) => {
-    const nameA = a.displayName || '';
-    const nameB = b.displayName || '';
-    return nameA.localeCompare(nameB);
-  });
-
-  initTable(teams);
+  // Update active team count
+  document.getElementById('active-teams-count').textContent = getActiveTeamsCount(teamSummaries).toString();
 };
+
 
 // search triggered by pressing enter
 document.addEventListener('keydown', (event) => {
