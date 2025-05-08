@@ -62,10 +62,10 @@ export const getTeamsActivity = async (name = '', description = '') => {
 export const getTeamSummaries = async (teamIds) => {
   const url = new URL(`${API_ENDPOINT}/teams/summary`);
 
-  // Ensure the request is limited to 40 teamIds
+  // Ensure the request is limited to 5 teamIds
   const chunkedTeamIds = [];
-  for (let i = 0; i < teamIds.length; i += 40) {
-    chunkedTeamIds.push(teamIds.slice(i, i + 40));
+  for (let i = 0; i < teamIds.length; i += 5) {
+    chunkedTeamIds.push(teamIds.slice(i, i + 5));
   }
 
   // Fetch summaries for all chunks concurrently

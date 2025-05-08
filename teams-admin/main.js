@@ -111,28 +111,21 @@ const renderTable = (teams) => {
   teams.forEach((team) => {
     const tr = document.createElement('tr');
     tr.classList.add('team-row');
-    tr.setAttribute('data-team-id', team.teamId);
+    tr.setAttribute('data-team-id', team.id);
 
     const nameCell = document.createElement('td');
     nameCell.className = 'name';
-    if (team.webUrl) {
-      const link = document.createElement('a');
-      link.textContent = team.displayName;
-      link.href = team.webUrl;
-      link.target = '_blank';
-      link.title = 'Open in Microsoft Teams';
-      nameCell.appendChild(link);
-    } else {
-      nameCell.textContent = team.displayName;
-    }
+    nameCell.textContent = team.displayName;
 
     const descriptionText = decodeHTML(team.description || '');
     const descriptionCell = createCell(descriptionText);
+
     const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
-    const createdCell = createCell(dateOnly, 'stat-column created');
-    const totalMessagesCell = createCell(team.channelMessages ?? '', 'stat-column total-messages');
-    const lastMessageCell = createCell(team.lastActivityDate || '', 'stat-column last-message');
-    const membersCountCell = createCell(team.memberCount ?? '', 'stat-column members-count');
+    const createdCell = createCell(dateOnly, 'created');
+
+    const totalMessagesCell = createCell(team.totalMessages ?? '', 'total-messages');
+    const lastMessageCell = createCell(team.lastMessage || '', 'last-message');
+    const membersCountCell = createCell(team.memberCount ?? '', 'members-count');
     membersCountCell.title = 'View members';
 
     const memberCell = document.createElement('td');
@@ -150,16 +143,15 @@ const renderTable = (teams) => {
       const previousState = checkbox.checked;
 
       if (checkbox.checked) {
-        body.add.push(team.teamId);
+        body.add.push(team.id);
       } else {
-        body.remove.push(team.teamId);
+        body.remove.push(team.id);
       }
 
       try {
         await addRemoveMemberFromTeamsWithTracking(userEmail, body);
       } catch (error) {
         console.error('Error updating team membership:', error);
-        // Revert checkbox state if the API call fails
         checkbox.checked = previousState;
       }
     });
@@ -173,8 +165,9 @@ const renderTable = (teams) => {
       totalMessagesCell,
       lastMessageCell,
       membersCountCell,
-      memberCell,
+      memberCell
     );
+
     tbody.appendChild(tr);
   });
 };
@@ -226,9 +219,9 @@ const initTable = (teams) => {
       <tr>
         <th data-sort="displayName">Team Name</th>
         <th class=" description sorting-disabled">Description</th>
-        <th data-sort="created">Created</th>
-        <th data-sort="messageCount">Total Messages</th>
-        <th data-sort="lastActivityDate">Last Activity</th>
+        <th data-sort="created" class="created">Created</th>
+        <th data-sort="totalMessages">Total Messages</th>
+        <th data-sort="lastMessage">Last Message</th>
         <th data-sort="memberCount">Total Members</th>
         <th data-sort="isMember" class="member">Member</th>
       </tr>
@@ -248,23 +241,16 @@ const initTable = (teams) => {
   document.querySelector(`th[data-sort="${initialSortKey}"]`).classList.add('sorted-asc');
   renderTable(sortedTeams);
   toggleSortDirection();
-
-  renderTable(teams);
 };
 
 const displayTeams = async () => {
   teamsContainer.innerHTML = '<span class="spinner"></span>';
 
-  const rawName = document.getElementById('team-name')
-    .value
-    .trim();
-  const rawDescription = document.getElementById('team-description')
-    .value
-    .trim();
+  const rawName = document.getElementById('team-name').value.trim();
+  const rawDescription = document.getElementById('team-description').value.trim();
 
   const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
-  const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined
-    : rawDescription;
+  const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
 
   if (!userEmail) {
     try {
@@ -283,36 +269,45 @@ const displayTeams = async () => {
   }
 
   let teams = await getTeamsActivity(nameFilter, descriptionFilter);
-
-  // Filter out null or invalid items
   teams = teams.filter((team) => team && typeof team === 'object');
 
-  // Extract teamIds from teams to fetch summaries
-  const teamIds = teams.map((team) => team.id);
+  // Immediately render the basic table
+  initTable(teams);
 
-  // Fetch summaries for teams (up to 40 per request)
+  const teamIds = teams.map((team) => team.id);
   const teamSummaries = await getTeamSummaries(teamIds);
 
-  // Merge the fetched summaries with teams data
-  teams = teams.map((team) => {
-    const summary = teamSummaries.find((s) => s.teamId === team.id);
-    return {
-      ...team,
-      created: summary ? summary.created : null,
-      memberCount: summary ? summary.memberCount : null,
-      webUrl: summary ? summary.webUrl : null,
-    };
+  // Patch each row with its summary
+  teamSummaries.forEach((summary) => {
+    const row = document.querySelector(`tr[data-team-id="${summary.teamId}"]`);
+    if (!row) return;
+
+    const nameCell = row.querySelector('.name');
+    if (nameCell && summary.webUrl) {
+      const link = document.createElement('a');
+      link.textContent = nameCell.textContent;
+      link.href = summary.webUrl;
+      link.target = '_blank';
+      link.title = 'Open in Microsoft Teams';
+      nameCell.innerHTML = ''; // Clear existing content
+      nameCell.appendChild(link);
+    }
+
+    const createdCell = row.querySelector('.created');
+    const totalMessagesCell = row.querySelector('.total-messages');
+    const lastMessageCell = row.querySelector('.last-message');
+    const membersCountCell = row.querySelector('.members-count');
+
+    if (createdCell) createdCell.textContent = summary.created?.split('T')[0] || 'N/A';
+    if (totalMessagesCell) totalMessagesCell.textContent = summary.messageCount ?? '';
+    if (lastMessageCell) lastMessageCell.textContent = summary.lastMessage ?? '';
+    if (membersCountCell) membersCountCell.textContent = summary.memberCount ?? '';
   });
 
-  // Sort safely by teamName
-  teams.sort((a, b) => {
-    const nameA = a.displayName || '';
-    const nameB = b.displayName || '';
-    return nameA.localeCompare(nameB);
-  });
-
-  initTable(teams);
+  // Update active team count
+  document.getElementById('active-teams-count').textContent = getActiveTeamsCount(teamSummaries).toString();
 };
+
 
 // search triggered by pressing enter
 document.addEventListener('keydown', (event) => {

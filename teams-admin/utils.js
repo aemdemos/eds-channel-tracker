@@ -43,9 +43,9 @@ export const getActiveTeamsCount = (teams) => {
   const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
   return teams.filter((team) => {
-    if (!team.lastActivityDate) return false;
-    const lastActivity = new Date(team.lastActivityDate);
-    return now - lastActivity <= THIRTY_DAYS_MS;
+    if (!team.lastMessage) return false;
+    const lastMessage = new Date(team.lastMessage);
+    return now - lastMessage <= THIRTY_DAYS_MS;
   }).length;
 };
 
