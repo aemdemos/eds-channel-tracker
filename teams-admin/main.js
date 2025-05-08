@@ -93,7 +93,6 @@ const renderTable = (teams) => {
     const descriptionCell = createCell(descriptionText);
     const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
     const createdCell = createCell(dateOnly, 'stat-column created');
-    const channelCountCell = createCell(team.activeChannels || '', 'stat-column channels-count');
     const totalMessagesCell = createCell(team.channelMessages ?? '', 'stat-column total-messages');
     const lastMessageCell = createCell(team.lastActivityDate || '', 'stat-column last-message');
     const membersCountCell = createCell(team.memberCount ?? '', 'stat-column members-count');
@@ -134,7 +133,6 @@ const renderTable = (teams) => {
       nameCell,
       descriptionCell,
       createdCell,
-      channelCountCell,
       totalMessagesCell,
       lastMessageCell,
       membersCountCell,
@@ -189,14 +187,13 @@ const initTable = (teams) => {
   table.innerHTML = `
     <thead>
       <tr>
-        <th data-sort="teamName">Name</th>
+        <th data-sort="teamName">Team Name</th>
         <th class=" description sorting-disabled">Description</th>
         <th data-sort="created">Created</th>
-        <th data-sort="activeChannels">Total Channels</th>
         <th data-sort="messageCount">Total Messages</th>
         <th data-sort="lastActivityDate">Last Activity</th>
         <th data-sort="memberCount">Total Members</th>
-        <th class="member sorting-disabled">Member</th>
+        <th data-sort="isMember" class="member">Member</th>
       </tr>
     </thead>
   `;
