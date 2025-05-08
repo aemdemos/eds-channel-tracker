@@ -111,9 +111,16 @@ const renderTable = (teams) => {
     tr.classList.add('team-row');
     tr.setAttribute('data-team-id', team.id);
 
+    // Name column with optional webUrl link
     const nameCell = document.createElement('td');
     nameCell.className = 'name';
-    nameCell.textContent = team.displayName;
+
+    if (team.webUrl) {
+      nameCell.innerHTML = `<a href="${escapeHTML(team.webUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(team.displayName)}</a>`;
+    } else {
+      nameCell.textContent = team.displayName;
+    }
+    tr.appendChild(nameCell);
 
     const descriptionText = decodeHTML(team.description || '');
     const descriptionCell = createCell(descriptionText);
