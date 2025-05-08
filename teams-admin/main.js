@@ -121,7 +121,7 @@ const renderTable = (teams) => {
     const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
     const createdCell = createCell(dateOnly, 'created');
 
-    const totalMessagesCell = createCell(team.totalMessages ?? '', 'total-messages');
+    const totalMessagesCell = createCell(team.messageCount ?? '', 'total-messages');
     const lastMessageCell = createCell(team.lastMessage || '', 'last-message');
     const membersCountCell = createCell(team.memberCount ?? '', 'members-count');
     membersCountCell.title = 'View members';
@@ -192,8 +192,9 @@ const addSortingToTable = (table, teams) => {
   });
 };
 
+// Modify initTable to accept the combinedTeams array
 const initTable = (teams) => {
-  teamsContainer.innerHTML = '';
+  teamsContainer.innerHTML = ''; // Clear any existing spinner or content
 
   const summaryWrapper = document.createElement('div');
   summaryWrapper.classList.add('table-summary-wrapper');
@@ -201,14 +202,12 @@ const initTable = (teams) => {
   const summary = document.createElement('div');
   summary.classList.add('table-summary');
   summary.innerHTML = `
-  <span>Total Teams: ${escapeHTML(teams.length.toString())}</span> |
-  <span>Active Teams (Last 30 days): <span id="active-teams-count">0</span></span>
-`;
+    <span>Total Teams: ${escapeHTML(teams.length.toString())}</span> |
+    <span>Active Teams (Last 30 days): <span id="active-teams-count">0</span></span>
+  `;
 
   summaryWrapper.appendChild(summary);
   teamsContainer.appendChild(summaryWrapper);
-
-  document.getElementById('active-teams-count').textContent = getActiveTeamsCount(teams).toString();
 
   const table = document.createElement('table');
   table.classList.add('styled-table');
@@ -217,7 +216,7 @@ const initTable = (teams) => {
     <thead>
       <tr>
         <th data-sort="displayName">Team Name</th>
-         <th data-sort="isMember" class="member">Member</th>
+        <th data-sort="isMember" class="member">Member</th>
         <th class=" description sorting-disabled">Description</th>
         <th data-sort="created" class="created">Created</th>
         <th data-sort="totalMessages">Total Messages</th>
@@ -229,7 +228,6 @@ const initTable = (teams) => {
 
   const tbody = document.createElement('tbody');
   table.appendChild(tbody);
-  addSortingToTable(table, teams);
   teamsContainer.appendChild(table);
 
   // Add "Select All" checkbox
@@ -243,6 +241,7 @@ const initTable = (teams) => {
 };
 
 const displayTeams = async () => {
+  // Show spinner initially
   teamsContainer.innerHTML = '<span class="spinner"></span>';
 
   const rawName = document.getElementById('team-name').value.trim();
@@ -268,41 +267,30 @@ const displayTeams = async () => {
   let teams = await getTeamsActivity(nameFilter, descriptionFilter);
   teams = teams.filter((team) => team && typeof team === 'object');
 
-  // Immediately render the basic table
-  initTable(teams);
-
   const teamIds = teams.map((team) => team.id);
+
+  // Fetch team summaries (wait for all summaries)
   const teamSummaries = await getTeamSummaries(teamIds);
 
-  // Patch each row with its summary
-  teamSummaries.forEach((summary) => {
-    const row = document.querySelector(`tr[data-team-id="${summary.teamId}"]`);
-    if (!row) return;
-
-    const nameCell = row.querySelector('.name');
-    if (nameCell && summary.webUrl) {
-      const link = document.createElement('a');
-      link.textContent = nameCell.textContent;
-      link.href = summary.webUrl;
-      link.target = '_blank';
-      link.title = 'Open in Microsoft Teams';
-      nameCell.innerHTML = ''; // Clear existing content
-      nameCell.appendChild(link);
-    }
-
-    const createdCell = row.querySelector('.created');
-    const totalMessagesCell = row.querySelector('.total-messages');
-    const lastMessageCell = row.querySelector('.last-message');
-    const membersCountCell = row.querySelector('.members-count');
-
-    if (createdCell) createdCell.textContent = summary.created?.split('T')[0] || 'N/A';
-    if (totalMessagesCell) totalMessagesCell.textContent = summary.messageCount ?? '';
-    if (lastMessageCell) lastMessageCell.textContent = summary.lastMessage ?? '';
-    if (membersCountCell) membersCountCell.textContent = summary.memberCount ?? '';
+  // Combine the teams and summaries into one object
+  const combinedTeams = teams.map((team) => {
+    const summary = teamSummaries.find((summary) => summary.teamId === team.id);
+    return {
+      ...team,  // Spread the original team data
+      webUrl: summary?.webUrl || '',  // Add summary data like webUrl
+      created: summary?.created || '',  // Add summary data like created date
+      messageCount: summary?.messageCount || 0,  // Add summary data like messageCount
+      lastMessage: summary?.lastMessage || '',  // Add summary data like lastMessage
+      memberCount: summary?.memberCount || 0,  // Add summary data like memberCount
+    };
   });
 
+  // Hide the spinner and show the fully populated table
+  teamsContainer.innerHTML = '';  // Clear spinner
+  initTable(combinedTeams);  // Pass combined teams to initTable
+
   // Update active team count
-  document.getElementById('active-teams-count').textContent = getActiveTeamsCount(teamSummaries).toString();
+  document.getElementById('active-teams-count').textContent = getActiveTeamsCount(combinedTeams).toString();
 };
 
 // search triggered by pressing enter
