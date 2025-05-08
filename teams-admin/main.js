@@ -26,6 +26,7 @@ import {
 
 let userEmail = null;
 let sortDirection = 'asc';
+const pendingApiCalls = new Set();
 
 const teamsContainer = document.getElementById('teams-container');
 
@@ -39,6 +40,25 @@ if (sk) {
     document.querySelector('aem-sidekick').addEventListener('logged-out', doLogout);
   }, { once: true });
 }
+
+const addRemoveMemberFromTeamsWithTracking = async (email, body) => {
+  const call = addRemoveMemberFromTeams(email, body);
+  pendingApiCalls.add(call);
+  try {
+    await addRemoveMemberFromTeams(email, body);
+  } finally {
+    pendingApiCalls.delete(call);
+    console.log('addRemoveMemberFromTeamsWithTracking  pendingApiCalls:', pendingApiCalls);
+  }
+};
+
+window.addEventListener('beforeunload', (event) => {
+  console.log('beforeunload pendingApiCalls:', pendingApiCalls.size);
+  if (pendingApiCalls.size > 0) {
+    event.preventDefault();
+    event.returnValue = 'There are pending changes. Are you sure you want to leave?';
+  }
+});
 
 const createCell = (content, className = '') => {
   const td = document.createElement('td');
@@ -99,7 +119,7 @@ const renderTable = (teams) => {
       }
 
       try {
-        await addRemoveMemberFromTeams(userEmail, body);
+        await addRemoveMemberFromTeamsWithTracking(userEmail, body);
       } catch (error) {
         console.error('Error updating team membership:', error);
         // Revert checkbox state if the API call fails
@@ -260,4 +280,14 @@ document.addEventListener('keydown', (event) => {
     displayTeams().then(() => {});
   }
 });
-document.getElementById('teams').addEventListener('click', displayTeams);
+
+// Disable Search button if there are pending API calls
+const searchButton = document.getElementById('teams');
+searchButton.addEventListener('click', async () => {
+  console.log('search pendingApiCalls:', pendingApiCalls.size);
+  if (pendingApiCalls.size > 0) {
+    alert('Please wait for all pending changes to complete before searching.');
+    return;
+  }
+  await displayTeams();
+});
