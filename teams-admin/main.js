@@ -108,7 +108,7 @@ const renderTable = (teams) => {
   teams.forEach((team) => {
     const tr = document.createElement('tr');
     tr.classList.add('team-row');
-    tr.setAttribute('data-team-id', team.teamId);
+    tr.setAttribute('data-team-id', team.id);
 
     const nameCell = document.createElement('td');
     nameCell.className = 'name';
@@ -125,11 +125,13 @@ const renderTable = (teams) => {
 
     const descriptionText = decodeHTML(team.description || '');
     const descriptionCell = createCell(descriptionText);
+
     const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
-    const createdCell = createCell(dateOnly, 'stat-column created');
-    const totalMessagesCell = createCell(team.totalMessages ?? '', 'stat-column total-messages');
-    const lastMessageCell = createCell(team.lastMessage || '', 'stat-column last-message');
-    const membersCountCell = createCell(team.memberCount ?? '', 'stat-column members-count');
+    const createdCell = createCell(dateOnly, 'created');
+
+    const totalMessagesCell = createCell(team.totalMessages ?? '', 'total-messages');
+    const lastMessageCell = createCell(team.lastMessage || '', 'last-message');
+    const membersCountCell = createCell(team.memberCount ?? '', 'members-count');
     membersCountCell.title = 'View members';
 
     const memberCell = document.createElement('td');
@@ -156,7 +158,6 @@ const renderTable = (teams) => {
         await addRemoveMemberFromTeamsWithTracking(userEmail, body);
       } catch (error) {
         console.error('Error updating team membership:', error);
-        // Revert checkbox state if the API call fails
         checkbox.checked = previousState;
       }
     });
@@ -170,8 +171,9 @@ const renderTable = (teams) => {
       totalMessagesCell,
       lastMessageCell,
       membersCountCell,
-      memberCell,
+      memberCell
     );
+
     tbody.appendChild(tr);
   });
 };
@@ -245,8 +247,6 @@ const initTable = (teams) => {
   document.querySelector(`th[data-sort="${initialSortKey}"]`).classList.add('sorted-asc');
   renderTable(sortedTeams);
   toggleSortDirection();
-
-  renderTable(teams);
 };
 
 const displayTeams = async () => {
