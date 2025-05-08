@@ -64,8 +64,8 @@ export const getTeamSummaries = async (teamIds) => {
 
   // Ensure the request is limited to 20 teamIds
   const chunkedTeamIds = [];
-  for (let i = 0; i < teamIds.length; i += 10) {
-    chunkedTeamIds.push(teamIds.slice(i, i + 10));
+  for (let i = 0; i < teamIds.length; i += 1) {
+    chunkedTeamIds.push(teamIds.slice(i, i + 1));
   }
 
   // Fetch summaries for all chunks concurrently
