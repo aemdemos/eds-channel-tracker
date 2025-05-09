@@ -246,8 +246,16 @@ const initTable = (teams) => {
 };
 
 const displayTeams = async () => {
-  // Show spinner initially
-  teamsContainer.innerHTML = '<span class="spinner"></span>';
+
+  const spinner = document.getElementsByClassName('spinner')[0];
+  const progressContainer = document.getElementById('progress-container');
+  const progressBar = document.getElementById('progress-bar');
+  const progressFill = document.getElementById('progress-fill');
+  const progressLabel = document.getElementById('progress-label');
+
+  progressContainer.style.display = 'block';
+  spinner.style.display = 'block';
+  progressBar.style.display = 'none';
 
   const rawName = document.getElementById('team-name').value.trim();
   const rawDescription = document.getElementById('team-description').value.trim();
@@ -274,8 +282,36 @@ const displayTeams = async () => {
 
   const teamIds = teams.map((team) => team.id);
 
-  // Fetch team summaries (wait for all summaries)
-  const teamSummaries = await getTeamSummaries(teamIds);
+  const totalTeams = teamIds.length;
+  const chunkedTeamIds = [];
+  for (let i = 0; i < totalTeams; i += 5) {
+    chunkedTeamIds.push(teamIds.slice(i, i + 5));
+  }
+
+  const teamSummaries = [];
+  let loaded = 0;
+
+  await Promise.all(
+    chunkedTeamIds.map(async (chunk) => {
+      try {
+        const summaries = await getTeamSummaries(chunk);
+        teamSummaries.push(...summaries);
+      } catch (err) {
+        console.error('Failed to load summary chunk:', err);
+      }
+      loaded += chunk.length;
+      const percent = Math.round((loaded / totalTeams) * 100);
+      progressFill.style.width = `${percent}%`;
+      // Once loading begins, show progress bar, hide spinner
+      spinner.style.display = 'none';
+      progressBar.style.display = 'block';
+      progressLabel.textContent = `Analyzing ${loaded} of ${totalTeams} teams...`;
+    })
+  );
+
+  // Hide the progress bar after loading
+  progressContainer.style.display = 'none';
+
 
   // Combine the teams and summaries into one object
   const combinedTeams = teams.map((team) => {
