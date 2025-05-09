@@ -250,7 +250,6 @@ const initTable = (teams) => {
 };
 
 const displayTeams = async () => {
-
   const spinner = document.getElementsByClassName('spinner')[0];
   const progressContainer = document.getElementById('progress-container');
   const progressBar = document.getElementById('progress-bar');
@@ -310,12 +309,11 @@ const displayTeams = async () => {
       spinner.style.display = 'none';
       progressBar.style.display = 'block';
       progressLabel.textContent = `Analyzing ${loaded} of ${totalTeams} teams...`;
-    })
+    }),
   );
 
   // Hide the progress bar after loading
   progressContainer.style.display = 'none';
-
 
   // Combine the teams and summaries into one object
   const combinedTeams = teams.map((team) => {
