@@ -318,7 +318,3 @@ th[data-sort]::after {
     padding: 0 !important;
 }
 
-.created {
-    white-space: nowrap;
-    min-width: 115px;
-}

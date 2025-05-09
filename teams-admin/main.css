@@ -275,3 +275,31 @@ td.member-column input[type="checkbox"] {
 td.member-column:hover {
     background-color: #f9f9f9; /* Light gray background on hover */
 }
+
+#progress-container {
+    margin-bottom: 1rem;
+}
+
+#progress-bar {
+    height: 8px;
+    background-color: #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+#progress-fill {
+    height: 100%;
+    background-color: #007bff;
+    width: 0;
+    transition: width 0.3s ease;
+}
+
+#progress-label {
+    font-size: 14px;
+    color: #333;
+}
+
+.created {
+    min-width: 115px;
+}
