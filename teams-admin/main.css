@@ -260,6 +260,11 @@ th[data-sort]::after {
     opacity: 0.5;
 }
 
+/* Hide the Select All checkbox in the Member header */
+th.member input[type="checkbox"] {
+    display: none;
+}
+
 /* Style the checkboxes in the Member column */
 td.member-column input[type="checkbox"] {
     transform: scale(1.2); /* Make the checkbox slightly larger */

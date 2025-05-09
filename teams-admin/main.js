@@ -142,6 +142,11 @@ const renderTable = (teams) => {
 
       try {
         await addRemoveMemberFromTeamsWithTracking(userEmail, body);
+        // Update the `isMember` state in `currentTeams`
+        const teamToUpdate = currentTeams.find((t) => t.id === team.id);
+        if (teamToUpdate) {
+          teamToUpdate.isMember = checkbox.checked;
+        }
       } catch (error) {
         checkbox.checked = previousState;
       }
@@ -186,7 +191,6 @@ const addSortingToTable = (table) => {
       headers.forEach((h) => h.classList.remove('sorted-asc', 'sorted-desc'));
 
       // Sort and toggle direction
-      console.log('columnKey:', columnKey);
       const sorted = sortTable(currentTeams, columnKey, sortDirection);
       header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
       renderTable(sorted);
