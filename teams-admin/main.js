@@ -11,17 +11,10 @@
  */
 import getUserProfile from './userProfile.js';
 
-import {
-  getTeamsActivity,
-  getTeamSummaries,
-  addRemoveMemberFromTeams,
-} from './api.js';
+import { addRemoveMemberFromTeams, getTeamsActivity, getTeamSummaries } from './api.js';
 
 import {
-  sortTable,
-  decodeHTML,
-  getActiveTeamsCount,
-  escapeHTML,
+  decodeHTML, escapeHTML, getActiveTeamsCount, sortTable,
 } from './utils.js';
 
 let userEmail = null;
@@ -97,10 +90,12 @@ window.addEventListener('beforeunload', (event) => {
   }
 });
 
-const createCell = (content, className = '') => {
+const createCell = (content, nobreak = false) => {
   const td = document.createElement('td');
-  if (className) td.className = className;
   td.textContent = content;
+  if (nobreak) {
+    td.classList.add('nobreak');
+  }
   return td;
 };
 
@@ -115,7 +110,6 @@ const renderTable = (teams) => {
 
     // Name column with optional webUrl link
     const nameCell = document.createElement('td');
-    nameCell.className = 'name';
 
     if (team.webUrl) {
       nameCell.innerHTML = `<a href="${escapeHTML(team.webUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(team.displayName)}</a>`;
@@ -123,17 +117,6 @@ const renderTable = (teams) => {
       nameCell.textContent = team.displayName;
     }
     tr.appendChild(nameCell);
-
-    const descriptionText = decodeHTML(team.description || '');
-    const descriptionCell = createCell(descriptionText);
-
-    const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
-    const createdCell = createCell(dateOnly, 'created');
-
-    const totalMessagesCell = createCell(team.messageCount ?? '', 'total-messages');
-    const lastMessageCell = createCell(team.lastMessage || '', 'last-message');
-    const membersCountCell = createCell(team.memberCount ?? '', 'members-count');
-    membersCountCell.title = 'View members';
 
     const memberCell = document.createElement('td');
     memberCell.className = 'member-column';
@@ -166,6 +149,15 @@ const renderTable = (teams) => {
 
     memberCell.appendChild(checkbox);
 
+    const descriptionText = decodeHTML(team.description || '');
+    const descriptionCell = createCell(descriptionText);
+
+    const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
+    const createdCell = createCell(dateOnly, true);
+    const totalMessagesCell = createCell(team.messageCount ?? '');
+    const lastMessageCell = createCell(team.lastMessage || '');
+    const membersCountCell = createCell(team.memberCount ?? '');
+
     tr.append(
       nameCell,
       memberCell,
@@ -194,15 +186,14 @@ const addSortingToTable = (table) => {
       headers.forEach((h) => h.classList.remove('sorted-asc', 'sorted-desc'));
 
       // Sort and toggle direction
+      console.log('columnKey:', columnKey);
       const sorted = sortTable(currentTeams, columnKey, sortDirection);
-      currentTeams = sorted; // Update reference
       header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
-      renderTable(currentTeams);
+      renderTable(sorted);
       toggleSortDirection();
     });
   });
 };
-
 
 // Modify initTable to accept the combinedTeams array
 const initTable = (teams) => {
@@ -233,7 +224,7 @@ const initTable = (teams) => {
         <th data-sort="isMember" class="member">Member</th>
         <th class=" description sorting-disabled">Description</th>
         <th data-sort="created" class="created">Created</th>
-        <th data-sort="totalMessages">Total Messages</th>
+        <th data-sort="messageCount">Total Messages</th>
         <th data-sort="lastMessage">Last Message</th>
         <th data-sort="memberCount">Total Members</th>
       </tr>
@@ -250,8 +241,8 @@ const initTable = (teams) => {
   const initialSortKey = 'displayName';
   const sortedTeams = sortTable(teams, initialSortKey, sortDirection);
   document.querySelector(`th[data-sort="${initialSortKey}"]`).classList.add('sorted-asc');
-  renderTable(currentTeams);
-  addSortingToTable()
+  renderTable(sortedTeams);
+  addSortingToTable(table);
 };
 
 const displayTeams = async () => {
@@ -290,18 +281,18 @@ const displayTeams = async () => {
   const combinedTeams = teams.map((team) => {
     const summary = teamSummaries.find((summary) => summary.teamId === team.id);
     return {
-      ...team,  // Spread the original team data
-      webUrl: summary?.webUrl || '',  // Add summary data like webUrl
-      created: summary?.created || '',  // Add summary data like created date
-      messageCount: summary?.messageCount || 0,  // Add summary data like messageCount
-      lastMessage: summary?.lastMessage || '',  // Add summary data like lastMessage
-      memberCount: summary?.memberCount || 0,  // Add summary data like memberCount
+      ...team, // Spread the original team data
+      webUrl: summary?.webUrl || '', // Add summary data like webUrl
+      created: summary?.created || '', // Add summary data like created date
+      messageCount: summary?.messageCount || 0, // Add summary data like messageCount
+      lastMessage: summary?.lastMessage || '', // Add summary data like lastMessage
+      memberCount: summary?.memberCount || 0, // Add summary data like memberCount
     };
   });
 
   // Hide the spinner and show the fully populated table
-  teamsContainer.innerHTML = '';  // Clear spinner
-  initTable(combinedTeams);  // Pass combined teams to initTable
+  teamsContainer.innerHTML = ''; // Clear spinner
+  initTable(combinedTeams); // Pass combined teams to initTable
 
   // Update active team count
   document.getElementById('active-teams-count').textContent = getActiveTeamsCount(combinedTeams).toString();

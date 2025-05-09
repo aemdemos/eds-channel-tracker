@@ -18,14 +18,8 @@
   flex-direction: column;
 }
 
-th.sorted-asc::after {
-    content: '↑';
-    opacity: 1;
-}
-
-th.sorted-desc::after {
-    content: '↓';
-    opacity: 1;
+.teams-admin #teams-container table .nobreak {
+    white-space: nowrap;
 }
 
 .styled-table {
@@ -58,6 +52,7 @@ th.sorted-desc::after {
     font-weight: bold;
 }
 
+
 .styled-table th.sorted-asc::after {
     content: '▲';
     margin-left: 5px;
@@ -75,10 +70,6 @@ th.sorted-desc::after {
 .styled-table .spinner {
     width: 20px;
     height: 20px;
-}
-
-.stat-column {
-    width: 150px; /* Adjust the width as needed */
 }
 
 .search-filters {
@@ -267,34 +258,6 @@ th[data-sort]::after {
     content: '⇅'; /* Default arrows when not sorted */
     margin-left: 5px;
     opacity: 0.5;
-}
-
-.join-column {
-    width: 10%;
-    text-align: center;
-}
-
-/* Checkbox styling */
-.join-column input[type="checkbox"] {
-    transform: scale(1.2);
-    cursor: pointer;
-}
-
-.created {
-    white-space: nowrap; /* Prevent text wrapping */
-    min-width: 115px;
-}
-
-/* Style the Member column header */
-th.member {
-    text-align: center;
-    width: 10%; /* Adjust width as needed */
-}
-
-/* Style the Member column cells */
-td.member-column {
-    text-align: center;
-    vertical-align: middle;
 }
 
 /* Style the checkboxes in the Member column */
