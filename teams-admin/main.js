@@ -11,10 +11,15 @@
  */
 import getUserProfile from './userProfile.js';
 
-import { addRemoveMemberFromTeams, getTeamsActivity, getTeamSummaries } from './api.js';
+import { addRemoveMemberFromTeams, getTeamsActivity, getTeamSummaries, getTeamMembers } from './api.js';
 
 import {
-  decodeHTML, escapeHTML, getActiveTeamsCount, sortTable,
+  decodeHTML,
+  escapeHTML,
+  getActiveTeamsCount,
+  sortTable,
+  renderMemberList,
+  handleModalInteraction
 } from './utils.js';
 
 let userEmail = null;
@@ -162,6 +167,25 @@ const renderTable = (teams) => {
     const totalMessagesCell = createCell(team.messageCount ?? '');
     const lastMessageCell = createCell(team.lastMessage || '');
     const membersCountCell = createCell(team.memberCount ?? '');
+
+    membersCountCell.classList.add('members-count-cell');
+
+    // Modify the membersCountCell to make it look like a hyperlink
+    const membersLink = document.createElement('a');
+    membersLink.textContent = `${team.memberCount ?? 0}`; // You can append "Members" text or leave it as just the count
+
+    membersCountCell.innerHTML = ''; // Clear current content
+    membersCountCell.appendChild(membersLink); // Add the hyperlink
+
+    const modal = document.getElementById('modal');
+
+    membersCountCell.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await handleModalInteraction(membersCountCell, team.id, modal, async (id) => {
+        const members = await getTeamMembers(team.id);
+        return { modalContent: renderMemberList(members, team.displayName) };
+      });
+    });
 
     tr.append(
       nameCell,
@@ -353,3 +377,4 @@ searchButton.addEventListener('click', async () => {
   }
   await displayTeams();
 });
+

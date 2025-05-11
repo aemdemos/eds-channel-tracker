@@ -59,6 +59,17 @@ export const getTeamsActivity = async (name = '', description = '') => {
   return [];
 };
 
+export async function getTeamMembers(teamId) {
+  const url = new URL(`${API_ENDPOINT}/teams/members`);
+
+  url.searchParams.append('teamId', teamId);
+
+  const response = await fetch(url.toString());
+  if (!response.ok) throw new Error('Failed to fetch team members');
+  return await response.json(); // should return an array of members
+}
+
+
 export const getTeamSummaries = async (teamIds) => {
   const url = new URL(`${API_ENDPOINT}/teams/summary`);
 
