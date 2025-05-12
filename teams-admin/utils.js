@@ -55,72 +55,92 @@ export const escapeHTML = (str) => {
   return div.innerHTML;
 };
 
-export function renderMemberList(members, teamName) {
+export function renderMemberList(members) {
+  // Sort the members array by displayName (alphabetically)
+  const sortedMembers = [...members].sort((a, b) => {
+    const valA = a.displayName.toLowerCase();
+    const valB = b.displayName.toLowerCase();
+
+    if (valA < valB) return -1;
+    if (valA > valB) return 1;
+    return 0;
+  });
+
+  // Render the sorted list
   return `
-    <div style="padding: 1em;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <strong>${teamName} – ${members.length} member${members.length !== 1 ? 's' : ''}</strong>
-      </div>
-      <ul style="list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto;">
-        ${members.map(m => `
-          <li style="padding: 6px 0; border-bottom: 1px solid #eee;">
-            <strong>${m.displayName}</strong><br>
-            <span style="color: #555;">${m.email}</span>
-          </li>
-        `).join('')}
-      </ul>
-    </div>
+    <ul style="list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto;">
+      ${sortedMembers.map(m => `
+        <li style="padding: 6px 0; border-bottom: 1px solid #eee;">
+          <strong>${m.displayName}</strong><br>
+          <span style="color: #555;">${m.email}</span>
+        </li>
+      `).join('')}
+    </ul>
   `;
 }
 
+
 export const handleModalInteraction = async (cell, teamId, modal, fetchDataCallback) => {
+  // Always position the modal first
   positionModal(modal, cell);
+
+  // Set the spinner immediately so it's visible before fetching data
+  modal.innerHTML = '<span class="spinner"></span>';
   modal.style.display = 'block';
+
   requestAnimationFrame(() => modal.classList.add('show'));
 
-  if (cell._fetched) {
-    modal.innerHTML = cell._modalData;
-    return;
-  }
-
   try {
+    // Fetch the modal content
     const data = await fetchDataCallback(teamId);
-    const wrapped = wrapWithCloseButton(data.modalContent, () => hideModal(modal));
-    modal.innerHTML = '';
-    modal.appendChild(wrapped);
-    cell._modalData = wrapped.outerHTML;
+
+    const title = `${data.teamName}`;
+    const wrapped = wrapWithCloseButton(data.modalContent, () => hideModal(modal), title);
+
+    modal.innerHTML = ''; // Clear any existing content
+    modal.appendChild(wrapped); // Append the new content
   } catch {
     modal.innerHTML = '<p style="color: red;">Error loading data</p>';
   }
 };
 
+// Updated hideModal to trigger closure even if modal content is already displayed
 const hideModal = (modal) => {
+  // Remove the 'show' class to trigger the closing animation
   modal.classList.remove('show');
+
+  // Ensure the modal properly resets its content once the closing transition completes
   modal.addEventListener(
     'transitionend',
     () => {
-      modal.innerHTML = '<span class="spinner"></span>';
-      modal.style.display = 'none';
+      modal.style.display = 'none'; // Hide the modal
+      modal.innerHTML = '<span class="spinner"></span>'; // Reset content to spinner
     },
     { once: true },
   );
 };
 
-const wrapWithCloseButton = (content, onClose) => {
+const wrapWithCloseButton = (content, onClose, title = '') => {
   const wrapper = document.createElement('div');
   wrapper.classList.add('modal-content');
 
   wrapper.innerHTML = `
-    <div class="modal-header">
       <button class="modal-close-button" aria-label="Close modal"
         style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">
         &times;
       </button>
+    <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <strong>${title}</strong>
     </div>
     <div class="modal-body">${content}</div>
   `;
 
   const closeBtn = wrapper.querySelector('.modal-close-button');
+
+  // Remove any previous listeners to avoid stacking
+  closeBtn?.removeEventListener('click', onClose);
+
+  // Add the close button listener
   closeBtn?.addEventListener('click', (e) => {
     e.stopPropagation();
     onClose();
@@ -130,8 +150,19 @@ const wrapWithCloseButton = (content, onClose) => {
 };
 
 const positionModal = (modal, cell) => {
-  const { top, left } = cell.getBoundingClientRect();
-  modal.style.top = `${window.scrollY + top - 15}px`;
-  modal.style.left = `${window.scrollX + left + 35}px`;
+  const rect = cell.getBoundingClientRect();
+
+  // Offset from cell
+  const offsetTop = rect.top - 20 ;
+  const offsetLeft = rect.left + 40;
+
+  // Prevent off-screen right
+  const modalWidth = modal.offsetWidth || 300;
+  const maxLeft = window.innerWidth - modalWidth + 10;
+  const clampedLeft = Math.min(offsetLeft, maxLeft);
+
+  modal.style.position = 'fixed';
+  modal.style.top = `${offsetTop}px`;
+  modal.style.left = `${clampedLeft}px`;
 };
 

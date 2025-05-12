@@ -183,7 +183,11 @@ const renderTable = (teams) => {
       e.stopPropagation();
       await handleModalInteraction(membersCountCell, team.id, modal, async (id) => {
         const members = await getTeamMembers(team.id);
-        return { modalContent: renderMemberList(members, team.displayName) };
+        return {
+          modalContent: renderMemberList(members),
+          teamName: team.displayName,
+          members: members
+        };
       });
     });
 
