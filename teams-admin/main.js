@@ -345,14 +345,14 @@ const displayTeams = async () => {
 
   // Combine the teams and summaries into one object
   const combinedTeams = teams.map((team) => {
-    const summary = teamSummaries.find((s) => s.teamId === team.id);
+    const teamSummary = teamSummaries.find((summary) => summary.teamId === team.id);
     return {
       ...team, // Spread the original team data
-      webUrl: summary?.webUrl || '', // Add summary data like webUrl
-      created: summary?.created || '', // Add summary data like created date
-      messageCount: summary?.messageCount || 0, // Add summary data like messageCount
-      lastMessage: summary?.lastMessage || '', // Add summary data like lastMessage
-      memberCount: summary?.memberCount || 0, // Add summary data like memberCount
+      webUrl: teamSummary?.webUrl || '', // Add summary data like webUrl
+      created: teamSummary?.created || '', // Add summary data like created date
+      messageCount: teamSummary?.messageCount || 0, // Add summary data like messageCount
+      lastMessage: teamSummary?.lastMessage || '', // Add summary data like lastMessage
+      memberCount: teamSummary?.memberCount || 0, // Add summary data like memberCount
     };
   });
 
