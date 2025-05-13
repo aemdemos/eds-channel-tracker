@@ -193,6 +193,17 @@ const renderTable = (teams) => {
       });
     });
 
+    // Actions cell
+    const actionsCell = document.createElement('td');
+    const addButton = document.createElement('button');
+    addButton.textContent = '+';
+    addButton.title = 'Add Users';
+    addButton.classList.add('add-users-button');
+    addButton.addEventListener('click', () => {
+      document.getElementById('add-users-modal').style.display = 'block';
+    });
+    actionsCell.appendChild(addButton);
+
     tr.append(
       nameCell,
       memberCell,
@@ -201,6 +212,7 @@ const renderTable = (teams) => {
       totalMessagesCell,
       lastMessageCell,
       membersCountCell,
+      actionsCell,
     );
 
     tbody.appendChild(tr);
@@ -261,6 +273,7 @@ const initTable = (teams) => {
         <th data-sort="messageCount">Total Threads</th>
         <th data-sort="lastMessage">Last Message</th>
         <th data-sort="memberCount">Total Members</th>
+        <th data-sort="actions">Actions</th>
       </tr>
     </thead>
   `;
@@ -309,13 +322,14 @@ const displayTeams = async () => {
         return;
       }
       userEmail = userProfile.email;
-      progressContainer.style.display = 'block';
-      spinner.style.display = 'block';
     } catch (error) {
       teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
       return;
     }
   }
+
+  progressContainer.style.display = 'block';
+  spinner.style.display = 'block';
 
   let teams = await getTeamsActivity(userEmail, nameFilter, descriptionFilter);
   teams = teams.filter((team) => team && typeof team === 'object');
