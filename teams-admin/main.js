@@ -258,7 +258,7 @@ const initTable = (teams) => {
         <th data-sort="isMember" class="member">Member?</th>
         <th class=" description sorting-disabled">Description</th>
         <th data-sort="created" class="created">Created</th>
-        <th data-sort="messageCount">Total Messages</th>
+        <th data-sort="messageCount">Total Threads</th>
         <th data-sort="lastMessage">Last Message</th>
         <th data-sort="memberCount">Total Members</th>
       </tr>
