@@ -53,44 +53,6 @@ const addRemoveMemberFromTeamsWithTracking = async (email, body) => {
   }
 };
 
-const addSelectAllCheckbox = (table, teams) => {
-  const selectAllHeader = document.querySelector('th.member');
-  const selectAllCheckbox = document.createElement('input');
-  selectAllCheckbox.type = 'checkbox';
-  selectAllCheckbox.title = 'Select/Unselect all to join/leave teams';
-  selectAllCheckbox.addEventListener('change', async () => {
-    const body = {
-      add: [],
-      remove: [],
-    };
-
-    teams.forEach((team) => {
-      const checkbox = document.querySelector(`tr[data-team-id="${team.teamId}"] .member-column input[type="checkbox"]`);
-      if (selectAllCheckbox.checked && !team.isMember) {
-        body.add.push(team.teamId);
-        checkbox.checked = true;
-        team.isMember = true;
-      } else if (!selectAllCheckbox.checked && team.isMember) {
-        body.remove.push(team.teamId);
-        checkbox.checked = false;
-        team.isMember = false;
-      }
-    });
-
-    try {
-      await addRemoveMemberFromTeamsWithTracking(userEmail, body);
-    } catch (error) {
-      teams.forEach((team) => {
-        const checkbox = document.querySelector(`tr[data-team-id="${team.teamId}"] .member-column input[type="checkbox"]`);
-        checkbox.checked = team.isMember;
-      });
-      selectAllCheckbox.checked = false;
-    }
-  });
-
-  selectAllHeader.appendChild(selectAllCheckbox);
-};
-
 window.addEventListener('beforeunload', (event) => {
   if (pendingApiCalls.size > 0) {
     event.preventDefault();
@@ -281,9 +243,6 @@ const initTable = (teams) => {
   const tbody = document.createElement('tbody');
   table.appendChild(tbody);
   teamsContainer.appendChild(table);
-
-  // Add "Select All" checkbox
-  addSelectAllCheckbox(table, teams);
 
   const initialSortKey = 'displayName';
   const sortedTeams = sortTable(teams, initialSortKey, sortDirection);
