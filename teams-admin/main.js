@@ -278,11 +278,14 @@ const initTable = (teams) => {
 };
 
 const displayTeams = async () => {
+  teamsContainer.innerHTML = ''; // Clear any existing content
   const spinner = document.getElementsByClassName('spinner')[0];
   const progressContainer = document.getElementById('progress-container');
   const progressBar = document.getElementById('progress-bar');
   const progressFill = document.getElementById('progress-fill');
   const progressLabel = document.getElementById('progress-label');
+
+  progressLabel.innerHTML = '';
 
   progressContainer.style.display = 'block';
   spinner.style.display = 'block';

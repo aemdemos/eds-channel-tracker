@@ -276,6 +276,12 @@ td.member-column:hover {
     background-color: #f9f9f9; /* Light gray background on hover */
 }
 
+#progress {
+    justify-content: center;
+    flex-direction: column;
+    display: flex;
+}
+
 #progress-container {
     margin-bottom: 1rem;
 }
@@ -380,4 +386,8 @@ td.member-column:hover {
     color: blue;
     text-decoration: underline;
     cursor: pointer;
+}
+
+.member {
+    width: 110px;
 }
