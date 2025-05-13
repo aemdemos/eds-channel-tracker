@@ -11,21 +11,18 @@
  */
 import API_ENDPOINT from './config.js';
 
-import getUserProfile from './userProfile.js';
-
 export const getMyTeams = async (email) => {
   try {
-    const url = new URL(`${API_ENDPOINT}/teams/userTeams?emailId=${email}`);
+    const url = new URL(`${API_ENDPOINT}/users/${email}/teams`);
     const response = await fetch(url.toString());
     return response.ok ? await response.json() : [];
   } catch (e) { /* empty */ }
   return [];
 };
 
-export const getTeamsActivity = async (name = '', description = '') => {
+export const getTeamsActivity = async (userEmail, name = '', description = '') => {
   try {
-    const url = new URL(`${API_ENDPOINT}/teams/allTeams`);
-
+    const url = new URL(`${API_ENDPOINT}/teams`);
     const cleanedName = name.trim();
     const cleanedDescription = description.trim();
 
@@ -41,13 +38,7 @@ export const getTeamsActivity = async (name = '', description = '') => {
     const allTeams = response.ok ? await response.json() : [];
 
     // Fetch user's teams
-    const userProfile = await getUserProfile();
-    const email = userProfile?.email;
-    if (!email) {
-      console.error('User profile not found or email is missing');
-      return [];
-    }
-    const myTeams = await getMyTeams(email);
+    const myTeams = await getMyTeams(userEmail);
     const myTeamIds = new Set(myTeams.map((team) => team.id));
 
     // Add `isMember` property to each team
@@ -60,41 +51,32 @@ export const getTeamsActivity = async (name = '', description = '') => {
 };
 
 export async function getTeamMembers(teamId) {
-  const url = new URL(`${API_ENDPOINT}/teams/members`);
-
-  url.searchParams.append('teamId', teamId);
-
-  const response = await fetch(url.toString());
-  if (!response.ok) throw new Error('Failed to fetch team members');
-  return await response.json(); // should return an array of members
+  try {
+    const url = new URL(`${API_ENDPOINT}/teams/${teamId}/members`);
+    const response = await fetch(url.toString());
+    return response.ok ? response.json() : [];
+  } catch (e) { /* empty */ }
+  return [];
 }
 
-
 export const getTeamSummaries = async (teamIds) => {
-  const url = new URL(`${API_ENDPOINT}/teams/summary`);
-
-  const response = await fetch(url.toString(), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ teamIds }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Error fetching team summaries: ${response.statusText}`);
-  }
-
-  return response.json();
+  try {
+    const url = new URL(`${API_ENDPOINT}/teams/summary`);
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ teamIds }),
+    });
+    return response.ok ? response.json() : [];
+  } catch (e) { /* empty */ }
+  return [];
 };
 
 export const addRemoveMemberFromTeams = async (email, body) => {
-  if (!email || email.trim() === '') {
-    console.error('Invalid userEmail: Cannot proceed with addRemoveMemberFromTeams');
-    return [];
-  }
   try {
-    const url = new URL(`${API_ENDPOINT}/teams/addRemoveTeamMember?emailId=${email}`);
+    const url = new URL(`${API_ENDPOINT}/users/${email}/teams`);
     const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {

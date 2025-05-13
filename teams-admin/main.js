@@ -11,7 +11,9 @@
  */
 import getUserProfile from './userProfile.js';
 
-import { addRemoveMemberFromTeams, getTeamsActivity, getTeamSummaries, getTeamMembers } from './api.js';
+import {
+  addRemoveMemberFromTeams, getTeamsActivity, getTeamSummaries, getTeamMembers,
+} from './api.js';
 
 import {
   decodeHTML,
@@ -19,7 +21,7 @@ import {
   getActiveTeamsCount,
   sortTable,
   renderMemberList,
-  handleModalInteraction
+  handleModalInteraction,
 } from './utils.js';
 
 let userEmail = null;
@@ -181,12 +183,12 @@ const renderTable = (teams) => {
 
     membersCountCell.addEventListener('click', async (e) => {
       e.stopPropagation();
-      await handleModalInteraction(membersCountCell, team.id, modal, async (id) => {
+      await handleModalInteraction(membersCountCell, team.id, modal, async () => {
         const members = await getTeamMembers(team.id);
         return {
           modalContent: renderMemberList(members),
           teamName: team.displayName,
-          members: members
+          members,
         };
       });
     });
@@ -308,7 +310,7 @@ const displayTeams = async () => {
     }
   }
 
-  let teams = await getTeamsActivity(nameFilter, descriptionFilter);
+  let teams = await getTeamsActivity(userEmail, nameFilter, descriptionFilter);
   teams = teams.filter((team) => team && typeof team === 'object');
 
   const teamIds = teams.map((team) => team.id);
@@ -327,9 +329,7 @@ const displayTeams = async () => {
       try {
         const summaries = await getTeamSummaries(chunk);
         teamSummaries.push(...summaries);
-      } catch (err) {
-        console.error('Failed to load summary chunk:', err);
-      }
+      } catch (err) { /* empty */ }
       loaded += chunk.length;
       const percent = Math.round((loaded / totalTeams) * 100);
       progressFill.style.width = `${percent}%`;
@@ -345,7 +345,7 @@ const displayTeams = async () => {
 
   // Combine the teams and summaries into one object
   const combinedTeams = teams.map((team) => {
-    const summary = teamSummaries.find((summary) => summary.teamId === team.id);
+    const summary = teamSummaries.find((s) => s.teamId === team.id);
     return {
       ...team, // Spread the original team data
       webUrl: summary?.webUrl || '', // Add summary data like webUrl
@@ -381,4 +381,3 @@ searchButton.addEventListener('click', async () => {
   }
   await displayTeams();
 });
-
