@@ -288,9 +288,6 @@ const displayTeams = async () => {
   const progressLabel = document.getElementById('progress-label');
 
   progressLabel.innerHTML = '';
-
-  progressContainer.style.display = 'block';
-  spinner.style.display = 'block';
   progressBar.style.display = 'none';
 
   const rawName = document.getElementById('team-name').value.trim();
@@ -303,10 +300,17 @@ const displayTeams = async () => {
     try {
       const userProfile = await getUserProfile();
       if (!userProfile || !userProfile.email) {
-        teamsContainer.innerHTML = '<p class="error">Failed to fetch user email. Please log in again and try.</p>';
+        teamsContainer.innerHTML = '<p class="error">\n'
+          + '  Please login via the \n'
+          + '  <a href="https://www.aem.live/docs/sidekick" target="_blank" rel="noopener noreferrer">\n'
+          + '    AEM Sidekick Plugin\n'
+          + '  </a>\n'
+          + '</p>\n';
         return;
       }
       userEmail = userProfile.email;
+      progressContainer.style.display = 'block';
+      spinner.style.display = 'block';
     } catch (error) {
       teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
       return;
