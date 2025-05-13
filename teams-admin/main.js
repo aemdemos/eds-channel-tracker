@@ -157,6 +157,7 @@ const renderTable = (teams) => {
 
     // Actions cell
     const actionsCell = document.createElement('td');
+    actionsCell.style.textAlign = 'center';
     const addButton = document.createElement('button');
     addButton.textContent = '+';
     addButton.title = 'Add Users';
@@ -230,12 +231,12 @@ const initTable = (teams) => {
       <tr>
         <th data-sort="displayName">Team Name</th>
         <th data-sort="isMember" class="member">Member?</th>
-        <th class=" description sorting-disabled">Description</th>
+        <th class="description sorting-disabled">Description</th>
         <th data-sort="created" class="created">Created</th>
         <th data-sort="messageCount">Total Threads</th>
         <th data-sort="lastMessage">Last Message</th>
         <th data-sort="memberCount">Total Members</th>
-        <th data-sort="actions">Actions</th>
+        <th class="sorting-disabled">Actions</th>
       </tr>
     </thead>
   `;
