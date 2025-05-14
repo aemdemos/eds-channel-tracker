@@ -268,16 +268,16 @@ async function startFetching() {
 
   const activeOnly = document.getElementById('active-only-checkbox').checked;
 
-// Immediately show empty loading UI
+  // Immediately show empty loading UI
   initTable([]);
 
-// Now fetch channels asynchronously
+  // Now fetch channels asynchronously
   let channels = await getAllSlackChannels(channelNameFilter, descriptionFilter);
 
-// Sort early for predictable loading
+  // Sort early for predictable loading
   channels.sort((a, b) => a.name.localeCompare(b.name));
 
-// Re-initialize the table now that we have real channels
+  // Re-initialize the table now that we have real channels
   initTable(channels);
 
   const progressLabel = document.querySelector('.progress-label');
@@ -323,11 +323,15 @@ async function startFetching() {
     const messageResults = await Promise.all(messagePromises);
     const memberResults = await Promise.all(memberPromises);
 
-    messageResults.forEach(({ channelId, messages, engagement, lstMsgDt }) => {
+    // eslint-disable-next-line no-loop-func
+    messageResults.forEach(({
+      channelId, messages, engagement, lstMsgDt,
+    }) => {
       const channel = channels.find((c) => c.id === channelId);
       updateMessageCells(channel, messages, engagement, lstMsgDt);
     });
 
+    // eslint-disable-next-line no-loop-func
     memberResults.forEach(({ channelId, membersCount }) => {
       const channel = channels.find((c) => c.id === channelId);
       updateMembersCountCell(channel, membersCount);
@@ -355,14 +359,14 @@ async function startFetching() {
     initTable(channels);
 
     // Update the active channels count
-    const activeChannelsCount = channels.length;
+    activeChannelsCount = channels.length;
     document.getElementById('active-channels-count').textContent = activeChannelsCount;
   }
 
   isSortingEnabled = true;
   document.querySelector('.progress-container').style.display = 'none';
   document.querySelector('.table-summary').style.display = 'block';
-};
+}
 
 // search triggered by pressing enter
 document.addEventListener('keydown', (event) => {
