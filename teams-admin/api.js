@@ -20,7 +20,7 @@ export const getMyTeams = async (email) => {
   return [];
 };
 
-export const getTeamsActivity = async (userEmail, name = '', description = '') => {
+export const getFilteredTeams = async (name = '', description = '') => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams`);
     const cleanedName = name.trim();
@@ -35,17 +35,8 @@ export const getTeamsActivity = async (userEmail, name = '', description = '') =
     }
 
     const response = await fetch(url.toString());
-    const allTeams = response.ok ? await response.json() : [];
 
-    // Fetch user's teams
-    const myTeams = await getMyTeams(userEmail);
-    const myTeamIds = new Set(myTeams.map((team) => team.id));
-
-    // Add `isMember` property to each team
-    return allTeams.map((team) => ({
-      ...team,
-      isMember: myTeamIds.has(team.id),
-    }));
+    return response.ok ? await response.json() : [];
   } catch (e) { /* empty */ }
   return [];
 };

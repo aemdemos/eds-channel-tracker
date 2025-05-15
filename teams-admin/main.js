@@ -10,9 +10,9 @@
  * governing permissions and limitations under the License.
  */
 import getUserProfile from './userProfile.js';
-
+import API_ENDPOINT from './config.js';
 import {
-  addRemoveMemberFromTeams, getTeamsActivity, getTeamSummaries, getTeamMembers,
+  getMyTeams, getFilteredTeams, addRemoveMemberFromTeams, getTeamSummaries, getTeamMembers,
 } from './api.js';
 
 import {
@@ -24,8 +24,8 @@ import {
   handleModalInteraction,
 } from './utils.js';
 
-let userEmail = null;
-let sortDirection = 'asc';
+let userProfile = null;
+let sortDirection = 'asc'; // Default sort direction
 let currentTeams = [];
 
 const pendingApiCalls = new Set();
@@ -47,7 +47,7 @@ const addRemoveMemberFromTeamsWithTracking = async (email, body) => {
   const call = addRemoveMemberFromTeams(email, body);
   pendingApiCalls.add(call);
   try {
-    await addRemoveMemberFromTeams(email, body);
+    await call;
   } finally {
     pendingApiCalls.delete(call);
   }
@@ -93,8 +93,8 @@ const renderTable = (teams) => {
     checkbox.type = 'checkbox';
     checkbox.checked = team.isMember;
     checkbox.title = team.isMember
-      ? 'Uncheck to remove your account from this team.'
-      : 'Check to add your account to this team';
+      ? 'Uncheck to remove yourself from this team.'
+      : 'Check to add yourself to this team';
     checkbox.addEventListener('change', async () => {
       const body = {
         add: [],
@@ -110,7 +110,8 @@ const renderTable = (teams) => {
       }
 
       try {
-        await addRemoveMemberFromTeamsWithTracking(userEmail, body);
+        await addRemoveMemberFromTeamsWithTracking(userProfile.email, body);
+
         // Update the `isMember` state in `currentTeams`
         const teamToUpdate = currentTeams.find((t) => t.id === team.id);
         if (teamToUpdate) {
@@ -253,6 +254,70 @@ const initTable = (teams) => {
 };
 
 const displayTeams = async () => {
+  sortDirection = 'asc'; // Reset sort direction to default
+  const rawName = document.getElementById('team-name').value.trim();
+  const rawDescription = document.getElementById('team-description').value.trim();
+
+  const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
+  const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
+
+  if (!userProfile) {
+    try {
+      userProfile = await getUserProfile();
+      if (!userProfile || !userProfile.email) {
+        teamsContainer.innerHTML = '<p class="error">\n'
+          + '  Please login via the \n'
+          + '  <a href="https://www.aem.live/docs/sidekick" target="_blank" rel="noopener noreferrer">\n'
+          + '    AEM Sidekick Plugin\n'
+          + '  </a>\n'
+          + '</p>\n';
+        return;
+      }
+    } catch (error) {
+      teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
+      return;
+    }
+  }
+
+  // Wait for all pending API calls to complete
+  await Promise.all(pendingApiCalls);
+
+  const myTeams = await getMyTeams(userProfile.email);
+  if (myTeams.length === 0) {
+    teamsContainer.innerHTML = `
+    <p>No teams found. Click <a href="#" id="send-invitation-link">here</a> to send an invitation.</p>
+   `;
+    document.getElementById('send-invitation-link').addEventListener('click', async (event) => {
+      event.preventDefault();
+
+      try {
+        const url = new URL(`${API_ENDPOINT}/teams/invitation`);
+        const response = await fetch(url.toString(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: userProfile?.email || '',
+            name: userProfile?.name || '',
+          }),
+        });
+
+        if (response.ok) {
+          // eslint-disable-next-line no-alert
+          alert('Invitation sent successfully!  Please check your email.');
+        } else {
+          // eslint-disable-next-line no-alert
+          alert('Failed to send the invitation. Please try again.');
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-alert
+        alert('An error occurred while sending the invitation.');
+      }
+    });
+    return;
+  }
+
   teamsContainer.innerHTML = ''; // Clear any existing content
   const spinner = document.getElementsByClassName('spinner')[0];
   const progressContainer = document.getElementById('progress-container');
@@ -263,37 +328,17 @@ const displayTeams = async () => {
   progressLabel.innerHTML = '';
   progressBar.style.display = 'none';
 
-  const rawName = document.getElementById('team-name').value.trim();
-  const rawDescription = document.getElementById('team-description').value.trim();
-
-  const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
-  const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
-
-  if (!userEmail) {
-    try {
-      const userProfile = await getUserProfile();
-      if (!userProfile || !userProfile.email) {
-        teamsContainer.innerHTML = '<p class="error">\n'
-          + '  Please login via the \n'
-          + '  <a href="https://www.aem.live/docs/sidekick" target="_blank" rel="noopener noreferrer">\n'
-          + '    AEM Sidekick Plugin\n'
-          + '  </a>\n'
-          + '</p>\n';
-        return;
-      }
-      userEmail = userProfile.email;
-    } catch (error) {
-      teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
-      return;
-    }
-  }
-
   progressContainer.style.display = 'block';
   spinner.style.display = 'block';
 
-  let teams = await getTeamsActivity(userEmail, nameFilter, descriptionFilter);
+  let teams = await getFilteredTeams(nameFilter, descriptionFilter);
   teams = teams.filter((team) => team && typeof team === 'object');
 
+  const myTeamIds = myTeams.map((myTeam) => myTeam.id);
+  teams.forEach((team) => {
+    // Ensure `isMember` is updated based on `myTeams`
+    team.isMember = myTeamIds.includes(team.id);
+  });
   const teamIds = teams.map((team) => team.id);
 
   const totalTeams = teamIds.length;
@@ -334,6 +379,7 @@ const displayTeams = async () => {
       messageCount: teamSummary?.messageCount || 0, // Add summary data like messageCount
       lastMessage: teamSummary?.lastMessage || '', // Add summary data like lastMessage
       memberCount: teamSummary?.memberCount || 0, // Add summary data like memberCount
+      isMember: team.isMember || false, // Include isMember property
     };
   });
 
@@ -355,10 +401,5 @@ document.addEventListener('keydown', (event) => {
 // Disable Search button if there are pending API calls
 const searchButton = document.getElementById('teams');
 searchButton.addEventListener('click', async () => {
-  if (pendingApiCalls.size > 0) {
-    // eslint-disable-next-line no-alert
-    alert('Please wait for all pending changes to complete before searching.');
-    return;
-  }
   await displayTeams();
 });
