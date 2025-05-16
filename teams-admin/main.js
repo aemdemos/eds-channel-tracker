@@ -254,12 +254,20 @@ const initTable = (teams) => {
 };
 
 const displayTeams = async () => {
+  searchButton.disabled = true;
   sortDirection = 'asc'; // Reset sort direction to default
   const rawName = document.getElementById('team-name').value.trim();
   const rawDescription = document.getElementById('team-description').value.trim();
 
   const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
+
+
+  const spinner = document.getElementsByClassName('spinner')[0];
+  spinner.style.display = 'block';
+
+  const progressContainer = document.getElementById('progress-container');
+  progressContainer.style.display = 'block';
 
   if (!userProfile) {
     try {
@@ -319,17 +327,13 @@ const displayTeams = async () => {
   }
 
   teamsContainer.innerHTML = ''; // Clear any existing content
-  const spinner = document.getElementsByClassName('spinner')[0];
-  const progressContainer = document.getElementById('progress-container');
+
   const progressBar = document.getElementById('progress-bar');
   const progressFill = document.getElementById('progress-fill');
   const progressLabel = document.getElementById('progress-label');
 
   progressLabel.innerHTML = '';
   progressBar.style.display = 'none';
-
-  progressContainer.style.display = 'block';
-  spinner.style.display = 'block';
 
   let teams = await getFilteredTeams(nameFilter, descriptionFilter);
   teams = teams.filter((team) => team && typeof team === 'object');
@@ -389,6 +393,8 @@ const displayTeams = async () => {
 
   // Update active team count
   document.getElementById('active-teams-count').textContent = getActiveTeamsCount(combinedTeams).toString();
+
+  searchButton.disabled = false;
 };
 
 // search triggered by pressing enter
