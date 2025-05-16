@@ -165,12 +165,13 @@ const renderTable = (teams) => {
     addButton.classList.add('add-users-button');
 
     addButton.addEventListener('click', (e) => {
+      document.getElementById('modal-team-name').textContent = `Invite users to ${team.displayName}`;
       const modal = document.getElementById('add-users-modal');
       const rect = e.target.getBoundingClientRect();
 
       // Position modal next to the button
       modal.style.position = 'absolute';
-      modal.style.top = `${rect.top + window.scrollY}px`;
+      modal.style.top = `${rect.top + window.scrollY - 50}px`;
       modal.style.left = `${rect.right + 10 + window.scrollX}px`; // 10px gap from the button
 
       modal.style.display = 'block';
