@@ -163,9 +163,19 @@ const renderTable = (teams) => {
     addButton.textContent = '+';
     addButton.title = 'Add Users';
     addButton.classList.add('add-users-button');
-    addButton.addEventListener('click', () => {
-      document.getElementById('add-users-modal').style.display = 'block';
+
+    addButton.addEventListener('click', (e) => {
+      const modal = document.getElementById('add-users-modal');
+      const rect = e.target.getBoundingClientRect();
+
+      // Position modal next to the button
+      modal.style.position = 'absolute';
+      modal.style.top = `${rect.top + window.scrollY}px`;
+      modal.style.left = `${rect.right + 10 + window.scrollX}px`; // 10px gap from the button
+
+      modal.style.display = 'block';
     });
+
     actionsCell.appendChild(addButton);
 
     tr.append(
@@ -408,4 +418,8 @@ document.addEventListener('keydown', (event) => {
 const searchButton = document.getElementById('teams');
 searchButton.addEventListener('click', async () => {
   await displayTeams();
+});
+
+document.getElementById('close-add-users').addEventListener('click', () => {
+  document.getElementById('add-users-modal').style.display = 'none';
 });

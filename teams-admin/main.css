@@ -401,7 +401,14 @@ td.member-column:hover {
 
 #add-users-modal {
     display: none;
+    position: absolute; /* important for JS positioning */
+    z-index: 1000;
+    background: white;
+    border: 1px solid #ccc;
+    padding: 1em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
+
 
 .close {
     float: right;
