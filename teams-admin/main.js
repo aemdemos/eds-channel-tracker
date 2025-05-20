@@ -35,6 +35,7 @@ const teamsContainer = document.getElementById('teams-container');
 const doReload = () => window.location.reload();
 
 const sk = document.querySelector('aem-sidekick');
+
 if (sk) {
   sk.addEventListener('logged-out', doReload);
   sk.addEventListener('logged-in', doReload);
@@ -43,6 +44,24 @@ if (sk) {
     document.querySelector('aem-sidekick').addEventListener('logged-out', doReload);
     document.querySelector('aem-sidekick').addEventListener('logged-in', doReload);
   }, { once: true });
+}
+
+if (!userProfile) {
+  try {
+    userProfile = await getUserProfile();
+    if (!userProfile || !userProfile.email) {
+      teamsContainer.innerHTML = '<p class="error">\n'
+        + '  Please login via the \n'
+        + '  <a href="https://www.aem.live/docs/sidekick" target="_blank" rel="noopener noreferrer">\n'
+        + '    AEM Sidekick Plugin\n'
+        + '  </a>\n'
+        + '</p>\n';
+      return;
+    }
+  } catch (error) {
+    teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
+    return;
+  }
 }
 
 const addRemoveMemberFromTeamsWithTracking = async (email, body) => {
@@ -274,25 +293,6 @@ const displayTeams = async () => {
 
   const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
-
-
-  if (!userProfile) {
-    try {
-      userProfile = await getUserProfile();
-      if (!userProfile || !userProfile.email) {
-        teamsContainer.innerHTML = '<p class="error">\n'
-          + '  Please login via the \n'
-          + '  <a href="https://www.aem.live/docs/sidekick" target="_blank" rel="noopener noreferrer">\n'
-          + '    AEM Sidekick Plugin\n'
-          + '  </a>\n'
-          + '</p>\n';
-        return;
-      }
-    } catch (error) {
-      teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
-      return;
-    }
-  }
 
   const spinner = document.getElementsByClassName('spinner')[0];
   spinner.style.display = 'block';
