@@ -46,10 +46,13 @@ if (sk) {
   }, { once: true });
 }
 
+const searchButton = document.getElementById('teams');
+
 if (!userProfile) {
   try {
     userProfile = await getUserProfile();
     if (!userProfile || !userProfile.email) {
+      searchButton.disabled = true;
       teamsContainer.innerHTML = '<p class="error">\n'
         + '  Please login via the \n'
         + '  <a href="https://www.aem.live/docs/sidekick" target="_blank" rel="noopener noreferrer">\n'
@@ -416,7 +419,7 @@ document.addEventListener('keydown', (event) => {
 });
 
 // Disable Search button if there are pending API calls
-const searchButton = document.getElementById('teams');
+
 searchButton.addEventListener('click', async () => {
   await displayTeams();
 });
