@@ -161,7 +161,7 @@ const renderTable = (teams) => {
     actionsCell.style.textAlign = 'center';
     const addButton = document.createElement('button');
     addButton.textContent = '+';
-    addButton.title = 'Add Users';
+    addButton.title = 'Invite Users';
     addButton.classList.add('add-users-button');
 
     addButton.addEventListener('click', (e) => {
