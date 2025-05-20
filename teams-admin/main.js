@@ -12,7 +12,12 @@
 import getUserProfile from './userProfile.js';
 import API_ENDPOINT from './config.js';
 import {
-  getMyTeams, getFilteredTeams, addRemoveMemberFromTeams, getTeamSummaries, getTeamMembers,
+  getMyTeams,
+  getFilteredTeams,
+  addRemoveMemberFromTeams,
+  getTeamSummaries,
+  getTeamMembers,
+  inviteUsersToTeam,
 } from './api.js';
 
 import {
@@ -27,6 +32,7 @@ import {
 let userProfile = null;
 let sortDirection = 'asc'; // Default sort direction
 let currentTeams = [];
+let currentInviteTeamId = null;
 
 const pendingApiCalls = new Set();
 
@@ -188,6 +194,7 @@ const renderTable = (teams) => {
 
     addButton.addEventListener('click', (e) => {
       document.getElementById('modal-team-name').textContent = `Invite users to ${team.displayName}`;
+      currentInviteTeamId = team.id; // Store the team ID for later use
       const modal = document.getElementById('add-users-modal');
       const rect = e.target.getBoundingClientRect();
 
@@ -426,4 +433,28 @@ searchButton.addEventListener('click', async () => {
 
 document.getElementById('close-add-users').addEventListener('click', () => {
   document.getElementById('add-users-modal').style.display = 'none';
+});
+
+document.getElementById('submit-add-users').addEventListener('click', async () => {
+  const textarea = document.getElementById('user-emails');
+  const rawInput = textarea.value;
+
+  // Split by comma or newline, trim, and filter out empty strings
+  const emails = rawInput.split(/[\n,]+/).map((e) => e.trim()).filter((e) => e);
+
+  const payload = {
+    guests: emails,
+  };
+
+  if (currentInviteTeamId && emails.length > 0) {
+    try {
+      await inviteUsersToTeam(currentInviteTeamId, payload);
+      alert('Invitations sent!');
+      document.getElementById('add-users-modal').style.display = 'none';
+    } catch (err) {
+      alert('Failed to send invitations.');
+    }
+  }
+  // Example: log or send payload
+  // console.log(JSON.stringify(payload, null, 2));
 });

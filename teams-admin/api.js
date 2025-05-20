@@ -79,3 +79,18 @@ export const addRemoveMemberFromTeams = async (email, body) => {
   } catch (e) { /* empty */ }
   return [];
 };
+
+export const inviteUsersToTeam = async (teamId, body) => {
+  try {
+    const url = new URL(`${API_ENDPOINT}/teams/${teamId}/guests`);
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    return response.ok ? await response.json() : [];
+  } catch (e) { /* empty */ }
+  return [];
+};
