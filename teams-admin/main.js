@@ -53,12 +53,12 @@ if (!userProfile) {
     userProfile = await getUserProfile();
     if (!userProfile || !userProfile.email) {
       searchButton.disabled = true;
-      teamsContainer.innerHTML = '<p class="error">\n'
+      teamsContainer.innerHTML = '<h3 class="error">\n'
         + '  Please login via the \n'
         + '  <a href="https://www.aem.live/docs/sidekick" target="_blank" rel="noopener noreferrer">\n'
         + '    AEM Sidekick Plugin\n'
         + '  </a>\n'
-        + '</p>\n';
+        + '</h3>\n';
     }
   } catch (error) {
     teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
