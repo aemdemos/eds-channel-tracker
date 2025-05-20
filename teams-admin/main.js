@@ -32,14 +32,16 @@ const pendingApiCalls = new Set();
 
 const teamsContainer = document.getElementById('teams-container');
 
-const doLogout = () => window.location.reload();
+const doReload = () => window.location.reload();
 
 const sk = document.querySelector('aem-sidekick');
 if (sk) {
-  sk.addEventListener('logged-out', doLogout);
+  sk.addEventListener('logged-out', doReload);
+  sk.addEventListener('logged-in', doReload);
 } else {
   document.addEventListener('sidekick-ready', () => {
-    document.querySelector('aem-sidekick').addEventListener('logged-out', doLogout);
+    document.querySelector('aem-sidekick').addEventListener('logged-out', doReload);
+    document.querySelector('aem-sidekick').addEventListener('logged-in', doReload);
   }, { once: true });
 }
 
