@@ -56,11 +56,9 @@ if (!userProfile) {
         + '    AEM Sidekick Plugin\n'
         + '  </a>\n'
         + '</p>\n';
-      return;
     }
   } catch (error) {
     teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
-    return;
   }
 }
 
