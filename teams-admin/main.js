@@ -17,7 +17,7 @@ import {
   addRemoveMemberFromTeams,
   getTeamSummaries,
   getTeamMembers,
-  inviteUsersToTeam,
+  addMembersToTeam,
 } from './api.js';
 
 import {
@@ -446,7 +446,7 @@ document.getElementById('submit-add-users').addEventListener('click', async () =
       textarea.style.display = 'none';
       submitButton.disabled = true;
 
-      await inviteUsersToTeam(currentInviteTeamId, payload);
+      await addMembersToTeam(currentInviteTeamId, payload);
 
       // Hide spinner, enable submit button
       spinner.style.display = 'none';
@@ -479,4 +479,3 @@ document.getElementById('submit-add-users').addEventListener('click', async () =
     }
   }
 });
-

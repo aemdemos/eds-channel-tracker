@@ -80,9 +80,9 @@ export const addRemoveMemberFromTeams = async (email, body) => {
   return [];
 };
 
-export const inviteUsersToTeam = async (teamId, body) => {
+export const addMembersToTeam = async (teamId, body) => {
   try {
-    const url = new URL(`${API_ENDPOINT}/teams/${teamId}/guests`);
+    const url = new URL(`${API_ENDPOINT}/teams/${teamId}/members`);
     const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {
