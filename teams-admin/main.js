@@ -65,13 +65,13 @@ if (!userProfile) {
         + '    AEM Sidekick Plugin\n'
         + '  </a>\n'
         + '</h3>\n';
-    } else {
-      const searchBox = document.getElementById('search-box');
-      searchBox.style.visibility = 'show';
     }
   } catch (error) {
     teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
   }
+} else {
+  const searchBox = document.getElementById('search-box');
+  searchBox.style.visibility = 'show';
 }
 
 const addRemoveMemberFromTeamsWithTracking = async (email, body) => {
