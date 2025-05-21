@@ -73,7 +73,6 @@
 }
 
 .search-filters {
-    display: flex;
     flex-wrap: wrap;
     gap: 15px;
     background-color: #f4f4f4 !important;
