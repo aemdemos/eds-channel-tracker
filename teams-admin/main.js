@@ -174,13 +174,13 @@ const renderTable = (teams) => {
     actionsCell.style.textAlign = 'center';
     const addButton = document.createElement('button');
     addButton.textContent = '+';
-    addButton.title = 'Invite Users';
+    addButton.title = 'Add Users';
     addButton.classList.add('add-users-button');
 
     addButton.textContent = '👤 +';
 
     addButton.addEventListener('click', (e) => {
-      document.getElementById('modal-team-name').textContent = `Invite users to ${team.displayName}`;
+      document.getElementById('modal-team-name').textContent = `Add users to ${team.displayName}`;
       currentInviteTeamId = team.id; // Store the team ID for later use
       const modal = document.getElementById('add-users-modal');
       const rect = e.target.getBoundingClientRect();
@@ -295,6 +295,15 @@ const displayTeams = async () => {
   const progressContainer = document.getElementById('progress-container');
   progressContainer.style.display = 'block';
 
+  const progressBar = document.getElementById('progress-bar');
+  const progressFill = document.getElementById('progress-fill');
+  const progressLabel = document.getElementById('progress-label');
+
+  progressLabel.innerHTML = '';
+  progressBar.style.display = 'none';
+
+  teamsContainer.innerHTML = ''; // Clear any existing content
+
   // Wait for all pending API calls to complete
   await Promise.all(pendingApiCalls);
 
@@ -336,12 +345,6 @@ const displayTeams = async () => {
 
   teamsContainer.innerHTML = ''; // Clear any existing content
 
-  const progressBar = document.getElementById('progress-bar');
-  const progressFill = document.getElementById('progress-fill');
-  const progressLabel = document.getElementById('progress-label');
-
-  progressLabel.innerHTML = '';
-  progressBar.style.display = 'none';
 
   let teams = await getFilteredTeams(nameFilter, descriptionFilter);
   teams = teams.filter((team) => team && typeof team === 'object');
@@ -426,22 +429,54 @@ document.getElementById('submit-add-users').addEventListener('click', async () =
   const textarea = document.getElementById('user-emails');
   const rawInput = textarea.value;
 
-  // Split by comma or newline, trim, and filter out empty strings
   const emails = rawInput.split(/[\n,]+/).map((e) => e.trim()).filter((e) => e);
+  const payload = { guests: emails };
 
-  const payload = {
-    guests: emails,
-  };
+  const modal = document.getElementById('add-users-modal');
+  const submitButton = document.getElementById('submit-add-users');
+
+  // Create or select a spinner inside the modal
+  let spinner = modal.querySelector('.spinner');
+  let modalUsersAdded = document.getElementById('modal-users-added');
 
   if (currentInviteTeamId && emails.length > 0) {
     try {
+      // Show spinner and disable submit button
+      spinner.style.display = 'block';
+      textarea.style.display = 'none';
+      submitButton.disabled = true;
+
       await inviteUsersToTeam(currentInviteTeamId, payload);
-      alert('Invitations sent!');
-      document.getElementById('add-users-modal').style.display = 'none';
+
+      // Hide spinner, enable submit button
+      spinner.style.display = 'none';
+
+      document.getElementById('modal-team-name').style.display = 'none';
+      document.getElementById('close-add-users').style.display = 'none';
+      modalUsersAdded.style.display = 'block';
+      modalUsersAdded.innerHTML = emails.length +  ` user(s) added.  They may have to accept the email invitation first.`;
+
+      // Reload the teams table after short delay so user can see message
+      setTimeout(() => {
+        modal.style.display = 'none';
+        submitButton.disabled = false;
+        textarea.style.display = 'block';
+        document.getElementById('close-add-users').style.display = 'block';
+        document.getElementById('modal-team-name').style.display = 'block';
+        textarea.value = ''; // Clear the textarea
+        modalUsersAdded.style.display = 'none';
+        displayTeams();
+      }, 5000);
+
     } catch (err) {
+      modal.style.display = 'none';
+      submitButton.disabled = false;
+      textarea.style.display = 'block';
+      modalUsersAdded.style.display = 'none';
+      document.getElementById('close-add-users').style.display = 'block';
+      document.getElementById('modal-team-name').style.display = 'block';
       alert('Failed to send invitations.');
     }
   }
-  // Example: log or send payload
-  // console.log(JSON.stringify(payload, null, 2));
 });
+
