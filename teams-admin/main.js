@@ -67,7 +67,7 @@ if (!userProfile) {
         + '</h3>\n';
     } else {
       const searchBox = document.getElementById('search-box');
-      searchBox.style.visibility = 'visible';
+      searchBox.style.display = 'flex';
     }
   } catch (error) {
     teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
