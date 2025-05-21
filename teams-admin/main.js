@@ -118,42 +118,23 @@ const renderTable = (teams) => {
     }
     tr.appendChild(nameCell);
 
+    // Read-only Member column
     const memberCell = document.createElement('td');
     memberCell.className = 'member-column';
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = team.isMember;
-    checkbox.title = team.isMember
-      ? 'Uncheck to remove yourself from this team.'
-      : 'Check to add yourself to this team';
-    checkbox.addEventListener('change', async () => {
-      const body = {
-        add: [],
-        remove: [],
-      };
 
-      const previousState = checkbox.checked;
+    const checkmark = document.createElement('span');
+    checkmark.className = 'checkmark';
+    if (team.isMember) {
+      memberCell.innerHTML = `
+        <svg viewBox="0 0 20 20" width="18" height="18" xmlns="http://www.w3.org/2000/svg" class="checkmark-badge">
+          <rect width="20" height="20" rx="4" fill="#22c55e"/>
+          <path d="M6 10.5l2.5 2.5L14 8" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        `;
+    }
+    memberCell.appendChild(checkmark);
 
-      if (checkbox.checked) {
-        body.add.push(team.id);
-      } else {
-        body.remove.push(team.id);
-      }
-
-      try {
-        await addRemoveMemberFromTeamsWithTracking(userProfile.email, body);
-
-        // Update the `isMember` state in `currentTeams`
-        const teamToUpdate = currentTeams.find((t) => t.id === team.id);
-        if (teamToUpdate) {
-          teamToUpdate.isMember = checkbox.checked;
-        }
-      } catch (error) {
-        checkbox.checked = previousState;
-      }
-    });
-
-    memberCell.appendChild(checkbox);
+    tr.appendChild(memberCell);
 
     const descriptionText = decodeHTML(team.description || '');
     const descriptionCell = createCell(descriptionText);

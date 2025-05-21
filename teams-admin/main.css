@@ -478,3 +478,13 @@ textarea {
     height: 100px;
     margin: 10px 0;
 }
+
+.checkmark {
+    color: green;
+    font-size: 0.85em;
+    font-weight: bold;
+    display: inline-block;
+    width: 1em;
+    text-align: center;
+}
+
