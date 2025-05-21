@@ -110,6 +110,7 @@ const renderTable = (teams) => {
 
     // Name column with optional webUrl link
     const nameCell = document.createElement('td');
+    nameCell.className = 'name-column';
 
     if (team.webUrl) {
       nameCell.innerHTML = `<a href="${escapeHTML(team.webUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(team.displayName)}</a>`;
@@ -175,6 +176,8 @@ const renderTable = (teams) => {
     addButton.textContent = '+';
     addButton.title = 'Invite Users';
     addButton.classList.add('add-users-button');
+
+    addButton.textContent = '👤 +';
 
     addButton.addEventListener('click', (e) => {
       document.getElementById('modal-team-name').textContent = `Invite users to ${team.displayName}`;
@@ -255,7 +258,7 @@ const initTable = (teams) => {
     <thead>
       <tr>
         <th data-sort="displayName">Team Name</th>
-        <th data-sort="isMember" class="member">Member?</th>
+        <th data-sort="isMember" class="member">Your Membership</th>
         <th class="description sorting-disabled">Description</th>
         <th data-sort="created" class="created">Created</th>
         <th data-sort="messageCount">Total Threads</th>

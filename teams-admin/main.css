@@ -389,14 +389,15 @@ td.member-column:hover {
 }
 
 .add-users-button {
-    font-size: 14px;
-    padding: 0 8px;
-    border: solid;
-    border-radius: 3px;
+    background: transparent;
+    border: none;
     cursor: pointer;
-    border-style: solid;
-    border-color: black;
-    border-width: 1px;
+    padding: 4px;
+    color: #6264A7; /* Microsoft Teams purple-ish accent */
+}
+
+.add-users-button:hover {
+    color: #201F3B; /* Darker accent on hover */
 }
 
 #add-users-modal {
@@ -486,5 +487,9 @@ textarea {
     display: inline-block;
     width: 1em;
     text-align: center;
+}
+
+.name-column {
+    width: 16%;
 }
 
