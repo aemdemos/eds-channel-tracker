@@ -39,10 +39,10 @@ if (isLocalhost) {
   const email = params.get('email');
   const displayName = params.get('displayName');
 
-  if (email && name) {
+  if (email && displayName) {
     userProfile = { email, displayName };
   } else {
-    alert("missing email and name query params for local debug");
+    alert("missing email and displayName query params for local debug");
   }
 }
 
