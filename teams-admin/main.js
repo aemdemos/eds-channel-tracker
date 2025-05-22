@@ -418,14 +418,6 @@ async function updateTeamRowAfterDelay() {
   await sleep(5000); // Wait 5 seconds
 
   try {
-    modal.style.display = 'none';
-    submitButton.disabled = false;
-    textarea.style.display = 'block';
-    document.getElementById('close-add-users').style.display = 'block';
-    document.getElementById('modal-team-name').style.display = 'block';
-    textarea.value = '';
-    modalUsersAdded.style.display = 'none';
-
     if (currentInviteTeamRow) {
       const summary = await getTeamSummaries([currentInviteTeamId]);
       const updated = summary[0];
@@ -495,7 +487,6 @@ document.getElementById('submit-add-users').addEventListener('click', async () =
 
       await addMembersToTeam(currentInviteTeamId, payload);
 
-      // Hide spinner, enable submit button
       spinner.style.display = 'none';
 
       document.getElementById('modal-team-name').style.display = 'none';
@@ -504,6 +495,14 @@ document.getElementById('submit-add-users').addEventListener('click', async () =
       modalUsersAdded.innerHTML = emails.length +  ` user(s) added.  They may have to accept the email invitation first.`;
 
       updateTeamRowAfterDelay();
+
+      modal.style.display = 'none';
+      submitButton.disabled = false;
+      textarea.style.display = 'block';
+      document.getElementById('close-add-users').style.display = 'block';
+      document.getElementById('modal-team-name').style.display = 'block';
+      textarea.value = '';
+      modalUsersAdded.style.display = 'none';
 
     } catch (err) {
       modal.style.display = 'none';
