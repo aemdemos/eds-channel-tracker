@@ -80,7 +80,7 @@ export const addRemoveMemberFromTeams = async (email, body) => {
   return [];
 };
 
-export const addMembersToTeam = async (teamId, body) => {
+export const addMembersToTeam = async (teamId, users) => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams/${teamId}/members`);
     const response = await fetch(url.toString(), {
@@ -88,7 +88,7 @@ export const addMembersToTeam = async (teamId, body) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(users),
     });
     return response.ok ? await response.json() : [];
   } catch (e) { /* empty */ }

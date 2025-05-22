@@ -173,6 +173,73 @@ function renderSingleTeamRow(team) {
     modal.style.top = `${rect.top + window.scrollY - 50}px`;
     modal.style.left = `${rect.right + 10 + window.scrollX}px`;
     modal.style.display = 'block';
+
+    const form = document.getElementById('add-users-form');
+    const container = document.getElementById('user-rows-container');
+    const addRowBtn = document.getElementById('add-row-button');
+
+// Add a new user row
+    addRowBtn.addEventListener('click', () => {
+      const row = document.createElement('div');
+      row.classList.add('user-row');
+      row.innerHTML = `
+    <input type="text" name="displayName" placeholder="Display Name" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <button type="button" class="remove-row" title="Remove">−</button>
+  `;
+      container.appendChild(row);
+    });
+
+// Remove a user row
+    container.addEventListener('click', (e) => {
+      if (e.target.classList.contains('remove-row')) {
+        e.target.closest('.user-row').remove();
+      }
+    });
+
+// Handle form submission
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const rows = container.querySelectorAll('.user-row');
+      const users = Array.from(rows).map((row) => {
+        return {
+          displayName: row.querySelector('input[name="displayName"]').value.trim(),
+          email: row.querySelector('input[name="email"]').value.trim(),
+        };
+      });
+
+      try {
+
+        const modal = document.getElementById('add-users-modal');
+        const submitButton = document.getElementById('submit-users-btn');
+        const form = document.getElementById('add-users-form');
+        form.style.display = 'none';
+
+        // Create or select a spinner inside the modal
+        let spinner = modal.querySelector('.spinner');
+        // Show spinner and disable submit button
+        spinner.style.display = 'block';
+        submitButton.disabled = true;
+
+        await addMembersToTeam(currentInviteTeamId, users);
+
+        spinner.style.display = 'none';
+        form.style.display = 'block';
+
+        updateTeamRowAfterDelay();
+
+        modal.style.display = 'none';
+        submitButton.disabled = false;
+
+        showSuccessModal(`Added ${users.length} user${users.length !== 1 ? 's' : ''}.  Some users may need to accept an email invitation first.  Please allow a few minutes for the changes to take effect.`);
+        document.getElementById('add-users-modal').style.display = 'none';
+      } catch (err) {
+        alert('Failed to add users.');
+      }
+    });
+
+
   });
 
   actionsCell.appendChild(addButton);
@@ -480,49 +547,4 @@ searchButton.addEventListener('click', async () => {
 
 document.getElementById('close-add-users').addEventListener('click', () => {
   document.getElementById('add-users-modal').style.display = 'none';
-});
-
-document.getElementById('submit-add-users').addEventListener('click', async () => {
-  const textarea = document.getElementById('user-emails');
-  const rawInput = textarea.value;
-
-  const emails = rawInput.split(/[\n,]+/).map((e) => e.trim()).filter((e) => e);
-  const payload = { guests: emails };
-
-  const modal = document.getElementById('add-users-modal');
-  const submitButton = document.getElementById('submit-add-users');
-
-  // Create or select a spinner inside the modal
-  let spinner = modal.querySelector('.spinner');
-  let modalUsersAdded = document.getElementById('modal-users-added');
-
-  if (currentInviteTeamId && emails.length > 0) {
-    try {
-      // Show spinner and disable submit button
-      spinner.style.display = 'block';
-      textarea.style.display = 'none';
-      submitButton.disabled = true;
-
-      await addMembersToTeam(currentInviteTeamId, payload);
-
-      spinner.style.display = 'none';
-
-      updateTeamRowAfterDelay();
-
-      modal.style.display = 'none';
-      submitButton.disabled = false;
-      textarea.style.display = 'block';
-
-      showSuccessModal(`Added ${emails.length} user${emails.length !== 1 ? 's' : ''}.  Some users may need to accept an email invitation first.  Please allow a few minutes for the changes to take effect.`);
-
-    } catch (err) {
-      modal.style.display = 'none';
-      submitButton.disabled = false;
-      textarea.style.display = 'block';
-      modalUsersAdded.style.display = 'none';
-      document.getElementById('close-add-users').style.display = 'block';
-      document.getElementById('modal-team-name').style.display = 'block';
-      alert('Failed to send invitations.');
-    }
-  }
 });
