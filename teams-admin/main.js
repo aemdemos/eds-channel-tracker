@@ -499,7 +499,7 @@ document.getElementById('submit-add-users').addEventListener('click', async () =
           }
         }
 
-      }, 3000);
+      }, 5000);
 
     } catch (err) {
       modal.style.display = 'none';
