@@ -166,5 +166,8 @@ const positionModal = (modal, cell) => {
   modal.style.left = `${clampedLeft}px`;
 };
 
+export function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 

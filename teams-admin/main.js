@@ -27,6 +27,7 @@ import {
   sortTable,
   renderMemberList,
   handleModalInteraction,
+  sleep,
 } from './utils.js';
 
 let userProfile = null;
@@ -413,6 +414,47 @@ const displayTeams = async () => {
   searchButton.disabled = false;
 };
 
+async function updateTeamRowAfterDelay() {
+  await sleep(5000); // Wait 5 seconds
+
+  try {
+    modal.style.display = 'none';
+    submitButton.disabled = false;
+    textarea.style.display = 'block';
+    document.getElementById('close-add-users').style.display = 'block';
+    document.getElementById('modal-team-name').style.display = 'block';
+    textarea.value = '';
+    modalUsersAdded.style.display = 'none';
+
+    if (currentInviteTeamRow) {
+      const summary = await getTeamSummaries([currentInviteTeamId]);
+      const updated = summary[0];
+      const team = currentTeams.find(t => t.id === currentInviteTeamId);
+
+      const myTeams = await getMyTeams(userProfile.email);
+      const myTeamIds = myTeams.map(t => t.id);
+      const isMember = myTeamIds.includes(currentInviteTeamId);
+
+      if (team && updated) {
+        Object.assign(team, {
+          webUrl: updated.webUrl || '',
+          created: updated.created || '',
+          messageCount: updated.messageCount || 0,
+          lastMessage: updated.lastMessage || '',
+          memberCount: updated.memberCount || 0,
+          isMember: isMember,
+        });
+
+        const newRow = renderSingleTeamRow(team);
+        currentInviteTeamRow.replaceWith(newRow);
+      }
+    }
+  } catch (err) {
+    console.error("Failed to update team row after delay:", err);
+  }
+}
+
+
 // search triggered by pressing enter
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
@@ -461,45 +503,7 @@ document.getElementById('submit-add-users').addEventListener('click', async () =
       modalUsersAdded.style.display = 'block';
       modalUsersAdded.innerHTML = emails.length +  ` user(s) added.  They may have to accept the email invitation first.`;
 
-      // Reload the table row after short delay so user can see message
-      setTimeout(async () => {
-        modal.style.display = 'none';
-        submitButton.disabled = false;
-        textarea.style.display = 'block';
-        document.getElementById('close-add-users').style.display = 'block';
-        document.getElementById('modal-team-name').style.display = 'block';
-        textarea.value = ''; // Clear the textarea
-        modalUsersAdded.style.display = 'none';
-
-        if (currentInviteTeamRow) {
-          const summary =  await getTeamSummaries([currentInviteTeamId]);
-          const updated = summary[0];
-          const team = currentTeams.find(t => t.id === currentInviteTeamId);
-
-          const myTeams =  await getMyTeams(userProfile.email);
-
-          const myTeamIds = myTeams.map((myTeam) => myTeam.id);
-          const isMember = myTeamIds.includes(currentInviteTeamId);
-
-
-          if (team && updated) {
-            // Update team data
-            Object.assign(team, {
-              webUrl: updated.webUrl || '',
-              created: updated.created || '',
-              messageCount: updated.messageCount || 0,
-              lastMessage: updated.lastMessage || '',
-              memberCount: updated.memberCount || 0,
-              isMember: isMember,
-            });
-
-            // Replace that row in the DOM
-            const newRow = renderSingleTeamRow(team);
-            currentInviteTeamRow.replaceWith(newRow);
-          }
-        }
-
-      }, 5000);
+      updateTeamRowAfterDelay();
 
     } catch (err) {
       modal.style.display = 'none';
