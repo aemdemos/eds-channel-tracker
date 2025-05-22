@@ -73,7 +73,7 @@
 }
 
 .search-filters {
-    display: none;
+    display: flex;
     flex-wrap: wrap;
     gap: 15px;
     background-color: #f4f4f4 !important;
@@ -405,6 +405,56 @@ td.member-column:hover {
     color: #201F3B; /* Darker accent on hover */
 }
 
+#add-users-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+}
+
+.user-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.user-row input[type="text"],
+.user-row input[type="email"] {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.user-row button.add-row {
+    padding: 6px 10px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.user-row button.add-row:hover {
+    background-color: #45a049;
+}
+
+#add-users-submit {
+    margin-top: 8px;
+    padding: 8px 16px;
+    background-color: #007BFF;
+    color: white;
+    font-size: 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#add-users-submit:hover {
+    background-color: #0069d9;
+}
+
 #add-users-modal {
     display: none;
     position: absolute; /* important for JS positioning */
@@ -413,6 +463,13 @@ td.member-column:hover {
     justify-content: center;
     margin: 0px;
 }
+
+#add-users-modal h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 18px;
+}
+
 
 .modal-content {
     background: #fff;
@@ -425,14 +482,11 @@ td.member-column:hover {
 }
 
 .modal-content-add-users {
-    background: #fff;
     border-radius: 10px;
     padding: 24px;
-    width: 400px;
     max-width: 90%;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     position: relative;
-    font-family: system-ui, sans-serif;
 }
 
 .modal-content h3 {
@@ -495,11 +549,6 @@ td.member-column:hover {
     float: right;
     font-size: 24px;
     cursor: pointer;
-}
-textarea {
-    width: 100%;
-    height: 100px;
-    margin: 10px 0;
 }
 
 .checkmark {

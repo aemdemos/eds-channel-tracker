@@ -56,36 +56,6 @@ if (sk) {
 
 const searchButton = document.getElementById('teams');
 
-if (!userProfile) {
-  try {
-    userProfile = await getUserProfile();
-    if (!userProfile || !userProfile.email) {
-      searchButton.disabled = true;
-      teamsContainer.innerHTML = '<h3 class="error">\n'
-        + '  Please login via the \n'
-        + '  <a href="https://www.aem.live/docs/sidekick" target="_blank" rel="noopener noreferrer">\n'
-        + '    AEM Sidekick Plugin\n'
-        + '  </a>\n'
-        + '</h3>\n';
-    } else {
-      const searchBox = document.getElementById('search-box');
-      searchBox.style.display = 'flex';
-    }
-  } catch (error) {
-    teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
-  }
-}
-
-const addRemoveMemberFromTeamsWithTracking = async (email, body) => {
-  const call = addRemoveMemberFromTeams(email, body);
-  pendingApiCalls.add(call);
-  try {
-    await call;
-  } finally {
-    pendingApiCalls.delete(call);
-  }
-};
-
 window.addEventListener('beforeunload', (event) => {
   if (pendingApiCalls.size > 0) {
     event.preventDefault();
@@ -312,6 +282,14 @@ const displayTeams = async () => {
 
   // Wait for all pending API calls to complete
   await Promise.all(pendingApiCalls);
+
+  if (!userProfile) {
+    try {
+      userProfile = await getUserProfile();
+    } catch (error) {
+      teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
+    }
+  }
 
   const myTeams = await getMyTeams(userProfile.email);
   if (myTeams.length === 0) {
