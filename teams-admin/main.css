@@ -266,6 +266,10 @@ td.member-column input[type="checkbox"] {
     cursor: pointer; /* Add a pointer cursor for better UX */
 }
 
+td.member-column {
+    text-align: center;
+}
+
 /* Add hover effect for the Member column */
 td.member-column:hover {
     background-color: #f9f9f9; /* Light gray background on hover */
@@ -385,7 +389,7 @@ td.member-column:hover {
 }
 
 .member {
-    width: 110px;
+    width: 10%;
 }
 
 .add-users-button {
