@@ -414,6 +414,30 @@ const displayTeams = async () => {
   searchButton.disabled = false;
 };
 
+function showSuccessModal(message) {
+  const overlay = document.getElementById('success-modal-overlay');
+  const modal = document.getElementById('success-modal');
+  const closeBtn = document.getElementById('success-modal-close');
+  const messageEl = document.getElementById('success-modal-message');
+
+  messageEl.textContent = message;
+  overlay.classList.remove('hidden');
+
+  const close = () => {
+    overlay.classList.add('hidden');
+    closeBtn.removeEventListener('click', close);
+    overlay.removeEventListener('click', onOverlayClick);
+  };
+
+  const onOverlayClick = (e) => {
+    if (e.target === overlay) close();
+  };
+
+  closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', onOverlayClick);
+}
+
+
 async function updateTeamRowAfterDelay() {
   await sleep(10000); // Wait 10 seconds
 
@@ -494,6 +518,8 @@ document.getElementById('submit-add-users').addEventListener('click', async () =
       modal.style.display = 'none';
       submitButton.disabled = false;
       textarea.style.display = 'block';
+
+      showSuccessModal(`Added ${emails.length} user${emails.length !== 1 ? 's' : ''}.  Some users may need to accept an email invitation first.  Please allow a few minutes for the changes to take effect.`);
 
     } catch (err) {
       modal.style.display = 'none';
