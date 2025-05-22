@@ -415,7 +415,7 @@ const displayTeams = async () => {
 };
 
 async function updateTeamRowAfterDelay() {
-  await sleep(8000); // Wait 8 seconds
+  await sleep(10000); // Wait 10 seconds
 
   try {
     if (currentInviteTeamRow) {
