@@ -415,7 +415,7 @@ const displayTeams = async () => {
 };
 
 async function updateTeamRowAfterDelay() {
-  await sleep(10000); // Wait 10 seconds
+  await sleep(8000); // Wait 8 seconds
 
   try {
     if (currentInviteTeamRow) {
@@ -489,20 +489,11 @@ document.getElementById('submit-add-users').addEventListener('click', async () =
 
       spinner.style.display = 'none';
 
-      document.getElementById('modal-team-name').style.display = 'none';
-      document.getElementById('close-add-users').style.display = 'none';
-      modalUsersAdded.style.display = 'block';
-      modalUsersAdded.innerHTML = emails.length +  ` user(s) added.  They may have to accept the email invitation first.`;
-
       updateTeamRowAfterDelay();
 
       modal.style.display = 'none';
       submitButton.disabled = false;
       textarea.style.display = 'block';
-      document.getElementById('close-add-users').style.display = 'block';
-      document.getElementById('modal-team-name').style.display = 'block';
-      textarea.value = '';
-      modalUsersAdded.style.display = 'none';
 
     } catch (err) {
       modal.style.display = 'none';
