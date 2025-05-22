@@ -415,12 +415,29 @@ td.member-column:hover {
     padding: 24px;
     width: 400px;
     max-width: 90%;
+    position: relative;
+    font-family: system-ui, sans-serif;
+}
+
+.modal-content-add-users {
+    background: #fff;
+    border-radius: 10px;
+    padding: 24px;
+    width: 400px;
+    max-width: 90%;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     position: relative;
     font-family: system-ui, sans-serif;
 }
 
 .modal-content h3 {
+    margin-top: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.modal-content-add-users h3 {
     margin-top: 0;
     font-size: 20px;
     font-weight: 600;

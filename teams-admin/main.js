@@ -33,6 +33,7 @@ let userProfile = null;
 let sortDirection = 'asc'; // Default sort direction
 let currentTeams = [];
 let currentInviteTeamId = null;
+let currentInviteTeamRow = null;
 
 const pendingApiCalls = new Set();
 
@@ -99,113 +100,117 @@ const createCell = (content, nobreak = false) => {
   return td;
 };
 
-const renderTable = (teams) => {
-  const tbody = document.querySelector('tbody');
-  tbody.innerHTML = '';
+function renderSingleTeamRow(team) {
+  const tr = document.createElement('tr');
+  tr.classList.add('team-row');
+  tr.setAttribute('data-team-id', team.id);
 
-  teams.forEach((team) => {
-    const tr = document.createElement('tr');
-    tr.classList.add('team-row');
-    tr.setAttribute('data-team-id', team.id);
+  // Name column with optional webUrl link
+  const nameCell = document.createElement('td');
+  nameCell.className = 'name-column';
 
-    // Name column with optional webUrl link
-    const nameCell = document.createElement('td');
-    nameCell.className = 'name-column';
+  if (team.webUrl) {
+    nameCell.innerHTML = `<a href="${escapeHTML(team.webUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(team.displayName)}</a>`;
+  } else {
+    nameCell.textContent = team.displayName;
+  }
+  tr.appendChild(nameCell);
 
-    if (team.webUrl) {
-      nameCell.innerHTML = `<a href="${escapeHTML(team.webUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(team.displayName)}</a>`;
-    } else {
-      nameCell.textContent = team.displayName;
-    }
-    tr.appendChild(nameCell);
+  // Read-only Member column
+  const memberCell = document.createElement('td');
+  memberCell.className = 'member-column';
 
-    // Read-only Member column
-    const memberCell = document.createElement('td');
-    memberCell.className = 'member-column';
-
-    const checkmark = document.createElement('span');
-    checkmark.className = 'checkmark';
-    if (team.isMember) {
-      memberCell.innerHTML = `
+  const checkmark = document.createElement('span');
+  checkmark.className = 'checkmark';
+  if (team.isMember) {
+    memberCell.innerHTML = `
         <svg viewBox="0 0 20 20" width="18" height="18" xmlns="http://www.w3.org/2000/svg" class="checkmark-badge">
           <rect width="20" height="20" rx="4" fill="#22c55e"/>
           <path d="M6 10.5l2.5 2.5L14 8" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         `;
-    }
-    memberCell.appendChild(checkmark);
+  }
+  memberCell.appendChild(checkmark);
 
-    tr.appendChild(memberCell);
+  tr.appendChild(memberCell);
 
-    const descriptionText = decodeHTML(team.description || '');
-    const descriptionCell = createCell(descriptionText);
+  const descriptionText = decodeHTML(team.description || '');
+  const descriptionCell = createCell(descriptionText);
 
-    const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
-    const createdCell = createCell(dateOnly, true);
-    const totalMessagesCell = createCell(team.messageCount ?? '');
-    const lastMessageCell = createCell(team.lastMessage || '');
-    const membersCountCell = createCell(team.memberCount ?? '');
+  const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
+  const createdCell = createCell(dateOnly, true);
+  const totalMessagesCell = createCell(team.messageCount ?? '');
+  const lastMessageCell = createCell(team.lastMessage || '');
+  const membersCountCell = createCell(team.memberCount ?? '');
 
-    membersCountCell.classList.add('members-count-cell');
+  membersCountCell.classList.add('members-count-cell');
 
-    // Modify the membersCountCell to make it look like a hyperlink
-    const membersLink = document.createElement('a');
-    membersLink.textContent = `${team.memberCount ?? 0}`; // You can append "Members" text or leave it as just the count
+  // Modify the membersCountCell to make it look like a hyperlink
+  const membersLink = document.createElement('a');
+  membersLink.textContent = `${team.memberCount ?? 0}`; // You can append "Members" text or leave it as just the count
 
-    membersCountCell.innerHTML = ''; // Clear current content
-    membersCountCell.appendChild(membersLink); // Add the hyperlink
+  membersCountCell.innerHTML = ''; // Clear current content
+  membersCountCell.appendChild(membersLink); // Add the hyperlink
 
-    const modal = document.getElementById('modal');
+  const modal = document.getElementById('modal');
 
-    membersCountCell.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      await handleModalInteraction(membersCountCell, team.id, modal, async () => {
-        const members = await getTeamMembers(team.id);
-        return {
-          modalContent: renderMemberList(members),
-          teamName: team.displayName,
-          members,
-        };
-      });
+  membersCountCell.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    await handleModalInteraction(membersCountCell, team.id, modal, async () => {
+      const members = await getTeamMembers(team.id);
+      return {
+        modalContent: renderMemberList(members),
+        teamName: team.displayName,
+        members,
+      };
     });
+  });
 
-    // Actions cell
-    const actionsCell = document.createElement('td');
-    actionsCell.style.textAlign = 'center';
-    const addButton = document.createElement('button');
-    addButton.textContent = '+';
-    addButton.title = 'Add Users';
-    addButton.classList.add('add-users-button');
+  // Actions cell
+  const actionsCell = document.createElement('td');
+  actionsCell.style.textAlign = 'center';
+  const addButton = document.createElement('button');
+  addButton.textContent = '+';
+  addButton.title = 'Add Users';
+  addButton.classList.add('add-users-button');
 
-    addButton.textContent = '👤 +';
+  addButton.textContent = '👤 +';
 
-    addButton.addEventListener('click', (e) => {
-      document.getElementById('modal-team-name').textContent = `Add users to ${team.displayName}`;
-      currentInviteTeamId = team.id; // Store the team ID for later use
-      const modal = document.getElementById('add-users-modal');
-      const rect = e.target.getBoundingClientRect();
+  addButton.addEventListener('click', (e) => {
+    document.getElementById('modal-team-name').textContent = `Add users to ${team.displayName}`;
+    currentInviteTeamId = team.id;
+    currentInviteTeamRow = tr; // store row reference
 
-      // Position modal next to the button
-      modal.style.position = 'absolute';
-      modal.style.top = `${rect.top + window.scrollY - 50}px`;
-      modal.style.left = `${rect.right + 10 + window.scrollX}px`; // 10px gap from the button
+    const modal = document.getElementById('add-users-modal');
+    const rect = e.target.getBoundingClientRect();
+    modal.style.position = 'absolute';
+    modal.style.top = `${rect.top + window.scrollY - 50}px`;
+    modal.style.left = `${rect.right + 10 + window.scrollX}px`;
+    modal.style.display = 'block';
+  });
 
-      modal.style.display = 'block';
-    });
+  actionsCell.appendChild(addButton);
 
-    actionsCell.appendChild(addButton);
+  tr.append(
+    nameCell,
+    memberCell,
+    descriptionCell,
+    createdCell,
+    totalMessagesCell,
+    lastMessageCell,
+    membersCountCell,
+    actionsCell,
+  );
 
-    tr.append(
-      nameCell,
-      memberCell,
-      descriptionCell,
-      createdCell,
-      totalMessagesCell,
-      lastMessageCell,
-      membersCountCell,
-      actionsCell,
-    );
+  return tr;
+}
 
+const renderTable = (teams) => {
+  const tbody = document.querySelector('tbody');
+  tbody.innerHTML = '';
+
+  teams.forEach((team) => {
+    const tr = renderSingleTeamRow(team);
     tbody.appendChild(tr);
   });
 };
@@ -448,6 +453,28 @@ document.getElementById('submit-add-users').addEventListener('click', async () =
 
       await addMembersToTeam(currentInviteTeamId, payload);
 
+      if (currentInviteTeamRow) {
+        const summary = await getTeamSummaries([currentInviteTeamId]);
+        const updated = summary[0];
+        const team = currentTeams.find(t => t.id === currentInviteTeamId);
+
+        if (team && updated) {
+          // Update team data
+          Object.assign(team, {
+            webUrl: updated.webUrl || '',
+            created: updated.created || '',
+            messageCount: updated.messageCount || 0,
+            lastMessage: updated.lastMessage || '',
+            memberCount: updated.memberCount || 0,
+            isMember: updated.isMember || false,
+          });
+
+          // Replace that row in the DOM
+          const newRow = renderSingleTeamRow(team);
+          currentInviteTeamRow.replaceWith(newRow);
+        }
+      }
+
       // Hide spinner, enable submit button
       spinner.style.display = 'none';
 
@@ -465,7 +492,6 @@ document.getElementById('submit-add-users').addEventListener('click', async () =
         document.getElementById('modal-team-name').style.display = 'block';
         textarea.value = ''; // Clear the textarea
         modalUsersAdded.style.display = 'none';
-        displayTeams();
       }, 5000);
 
     } catch (err) {
