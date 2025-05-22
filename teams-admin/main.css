@@ -390,6 +390,7 @@ td.member-column:hover {
 
 .member {
     width: 10%;
+    padding-left: 20px !important;
 }
 
 .add-users-button {
