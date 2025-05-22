@@ -444,7 +444,7 @@ td.member-column:hover {
     color: #333;
 }
 
-.modal-content textarea {
+.modal-content-add-users textarea {
     width: 100%;
     height: 100px;
     padding: 10px;
