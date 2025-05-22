@@ -451,6 +451,12 @@ td.member-column:hover {
     cursor: pointer;
 }
 
+#submit-users-btn {
+    width: 30%;
+}
+
+
+
 #add-users-submit:hover {
     background-color: #0069d9;
 }
