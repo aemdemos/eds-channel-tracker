@@ -30,7 +30,22 @@ import {
   sleep,
 } from './utils.js';
 
-let userProfile = null;
+let userProfile;
+
+const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+if (isLocalhost) {
+  const params = new URLSearchParams(window.location.search);
+  const email = params.get('email');
+  const displayName = params.get('displayName');
+
+  if (email && name) {
+    userProfile = { email, displayName };
+  } else {
+    alert("missing email and name query params for local debug");
+  }
+}
+
 let sortDirection = 'asc'; // Default sort direction
 let currentTeams = [];
 let currentInviteTeamId = null;
@@ -282,6 +297,7 @@ const displayTeams = async () => {
 
   // Wait for all pending API calls to complete
   await Promise.all(pendingApiCalls);
+
 
   if (!userProfile) {
     try {
