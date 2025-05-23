@@ -222,14 +222,15 @@ function renderSingleTeamRow(team) {
         await addMembersToTeam(currentInviteTeamId, users);
 
         spinner.style.display = 'none';
-        form.style.display = 'block';
-
-        await updateTeamRowAfterDelay();
+        form.style.display = 'flex';
 
         modal.style.display = 'none';
         submitButton.disabled = false;
 
         showSuccessModal(`Added ${users.length} user${users.length !== 1 ? 's' : ''}.  Some users may need to accept an email invitation first.  Please allow a few minutes for the changes to take effect.`);
+
+        await updateTeamRowAfterDelay(team);
+
         document.getElementById('add-users-modal').style.display = 'none';
       } catch (err) {
         alert('Failed to add users.');
@@ -468,16 +469,19 @@ const displayTeams = async () => {
 
 function showSuccessModal(message) {
   const overlay = document.getElementById('success-modal-overlay');
-  const modal = document.getElementById('success-modal');
-  const closeBtn = document.getElementById('success-modal-close');
   const messageEl = document.getElementById('success-modal-message');
 
   messageEl.textContent = message;
+
   overlay.classList.remove('hidden');
+  requestAnimationFrame(() => overlay.classList.add('visible'));
 
   const close = () => {
-    overlay.classList.add('hidden');
-    closeBtn.removeEventListener('click', close);
+    overlay.classList.remove('visible');
+    overlay.addEventListener('transitionend', () => {
+      overlay.classList.add('hidden');
+    }, { once: true });
+
     overlay.removeEventListener('click', onOverlayClick);
   };
 
@@ -485,30 +489,25 @@ function showSuccessModal(message) {
     if (e.target === overlay) close();
   };
 
-  closeBtn.addEventListener('click', close);
   overlay.addEventListener('click', onOverlayClick);
 }
 
-async function updateTeamRowAfterDelay() {
-  await sleep(10000); // Wait 10 seconds
+async function updateTeamRowAfterDelay(team) {
+  await sleep(5000); // Wait 4 seconds
 
   try {
     if (currentInviteTeamRow) {
-      const summary = await getTeamSummaries([currentInviteTeamId]);
-      const updated = summary[0];
-      const team = currentTeams.find((t) => t.id === currentInviteTeamId);
+      const currentTeamMembers = await getTeamMembers(currentInviteTeamId);
+      const memberEmails = currentTeamMembers.map((t) => t.email);
+      const isMember = memberEmails.includes(userProfile.email);
 
-      const myTeams = await getMyTeams(userProfile.email);
-      const myTeamIds = myTeams.map((t) => t.id);
-      const isMember = myTeamIds.includes(currentInviteTeamId);
-
-      if (team && updated) {
+      if (team) {
         Object.assign(team, {
-          webUrl: updated.webUrl || '',
-          created: updated.created || '',
-          messageCount: updated.messageCount || 0,
-          lastMessage: updated.lastMessage || '',
-          memberCount: updated.memberCount || 0,
+          webUrl: team.webUrl || '',
+          created: team.created || '',
+          messageCount: team.messageCount || 0,
+          lastMessage: team.lastMessage || '',
+          memberCount: memberEmails.length || 0,
           isMember,
         });
 

@@ -468,6 +468,7 @@ td.member-column:hover {
     align-items: center;
     justify-content: center;
     margin: 0px;
+    width: 520px;
 }
 
 #add-users-modal h3 {
@@ -606,8 +607,39 @@ td.member-column:hover {
     display: none;
 }
 
+/* Overlay with fade animation */
 #success-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0; /* OR use inset: 0; */
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999; /* Ensure it's above other content */
+    background-color: rgba(0, 0, 0, 0.5);
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
     max-width: unset;
-    width: 100%;
 }
+
+
+/* Shown */
+#success-modal-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Centered modal box */
+#success-modal-content {
+    background: white;
+    padding: 1rem 2rem;
+    border-radius: 0.5rem;
+    margin: 15% auto;
+    max-width: 400px;
+    text-align: center;
+}
+
 
