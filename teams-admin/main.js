@@ -14,7 +14,6 @@ import API_ENDPOINT from './config.js';
 import {
   getMyTeams,
   getFilteredTeams,
-  addRemoveMemberFromTeams,
   getTeamSummaries,
   getTeamMembers,
   addMembersToTeam,
@@ -42,7 +41,8 @@ if (isLocalhost) {
   if (email && displayName) {
     userProfile = { email, displayName };
   } else {
-    alert("missing email and displayName query params for local debug");
+    // eslint-disable-next-line no-alert
+    alert('missing email and displayName query params for local debug');
   }
 }
 
@@ -178,7 +178,7 @@ function renderSingleTeamRow(team) {
     const container = document.getElementById('user-rows-container');
     const addRowBtn = document.getElementById('add-row-button');
 
-// Add a new user row
+    // Add a new user row
     addRowBtn.addEventListener('click', () => {
       const row = document.createElement('div');
       row.classList.add('user-row');
@@ -190,34 +190,31 @@ function renderSingleTeamRow(team) {
       container.appendChild(row);
     });
 
-// Remove a user row
+    // Remove a user row
     container.addEventListener('click', (e) => {
       if (e.target.classList.contains('remove-row')) {
         e.target.closest('.user-row').remove();
       }
     });
 
-// Handle form submission
+    // Handle form submission
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const rows = container.querySelectorAll('.user-row');
-      const users = Array.from(rows).map((row) => {
-        return {
-          displayName: row.querySelector('input[name="displayName"]').value.trim(),
-          email: row.querySelector('input[name="email"]').value.trim(),
-        };
-      });
+      const users = Array.from(rows).map((row) => ({
+        displayName: row.querySelector('input[name="displayName"]').value.trim(),
+        email: row.querySelector('input[name="email"]').value.trim(),
+      }));
 
       try {
-
         const modal = document.getElementById('add-users-modal');
         const submitButton = document.getElementById('submit-users-btn');
         const form = document.getElementById('add-users-form');
         form.style.display = 'none';
 
         // Create or select a spinner inside the modal
-        let spinner = modal.querySelector('.spinner');
+        const spinner = modal.querySelector('.spinner');
         // Show spinner and disable submit button
         spinner.style.display = 'block';
         submitButton.disabled = true;
@@ -227,7 +224,7 @@ function renderSingleTeamRow(team) {
         spinner.style.display = 'none';
         form.style.display = 'block';
 
-        updateTeamRowAfterDelay();
+        await updateTeamRowAfterDelay();
 
         modal.style.display = 'none';
         submitButton.disabled = false;
@@ -238,8 +235,6 @@ function renderSingleTeamRow(team) {
         alert('Failed to add users.');
       }
     });
-
-
   });
 
   actionsCell.appendChild(addButton);
@@ -365,7 +360,6 @@ const displayTeams = async () => {
   // Wait for all pending API calls to complete
   await Promise.all(pendingApiCalls);
 
-
   if (!userProfile) {
     try {
       userProfile = await getUserProfile();
@@ -383,7 +377,7 @@ const displayTeams = async () => {
       event.preventDefault();
 
       try {
-        const url = new URL(`${API_ENDPOINT}/teams/invitation`);
+        const url = new URL(`${API_ENDPOINT}/users/invitation`);
         const response = await fetch(url.toString(), {
           method: 'POST',
           headers: {
@@ -409,9 +403,6 @@ const displayTeams = async () => {
     });
     return;
   }
-
-  teamsContainer.innerHTML = ''; // Clear any existing content
-
 
   let teams = await getFilteredTeams(nameFilter, descriptionFilter);
   teams = teams.filter((team) => team && typeof team === 'object');
@@ -498,7 +489,6 @@ function showSuccessModal(message) {
   overlay.addEventListener('click', onOverlayClick);
 }
 
-
 async function updateTeamRowAfterDelay() {
   await sleep(10000); // Wait 10 seconds
 
@@ -506,10 +496,10 @@ async function updateTeamRowAfterDelay() {
     if (currentInviteTeamRow) {
       const summary = await getTeamSummaries([currentInviteTeamId]);
       const updated = summary[0];
-      const team = currentTeams.find(t => t.id === currentInviteTeamId);
+      const team = currentTeams.find((t) => t.id === currentInviteTeamId);
 
       const myTeams = await getMyTeams(userProfile.email);
-      const myTeamIds = myTeams.map(t => t.id);
+      const myTeamIds = myTeams.map((t) => t.id);
       const isMember = myTeamIds.includes(currentInviteTeamId);
 
       if (team && updated) {
@@ -519,7 +509,7 @@ async function updateTeamRowAfterDelay() {
           messageCount: updated.messageCount || 0,
           lastMessage: updated.lastMessage || '',
           memberCount: updated.memberCount || 0,
-          isMember: isMember,
+          isMember,
         });
 
         const newRow = renderSingleTeamRow(team);
@@ -527,10 +517,9 @@ async function updateTeamRowAfterDelay() {
       }
     }
   } catch (err) {
-    console.error("Failed to update team row after delay:", err);
+    console.error('Failed to update team row after delay:', err);
   }
 }
-
 
 // search triggered by pressing enter
 document.addEventListener('keydown', (event) => {
