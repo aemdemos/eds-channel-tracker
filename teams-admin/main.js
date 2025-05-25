@@ -219,7 +219,9 @@ function renderSingleTeamRow(team) {
         spinner.style.display = 'block';
         submitButton.disabled = true;
 
-        await addMembersToTeam(currentInviteTeamId, users);
+        const result = await addMembersToTeam(currentInviteTeamId, users);
+        const addedCount = result.filter(user => user.added).length;
+        const notAddedCount = result.filter(user => !user.added).length;
 
         spinner.style.display = 'none';
         form.style.display = 'flex';
@@ -227,8 +229,12 @@ function renderSingleTeamRow(team) {
         modal.style.display = 'none';
         submitButton.disabled = false;
 
-        showSuccessModal(`Added ${users.length} user${users.length !== 1 ? 's' : ''}.  Some users may need to accept an email invitation first.  Please allow a few minutes for the changes to take effect.`);
-
+        showSuccessModal(
+          `Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}.` +
+          ` Failed: ${notAddedCount} user${notAddedCount !== 1 ? 's' : ''}.  ` +
+          'Successfully added users may need to accept an email invitation before they can access the system. ' +
+          'Please allow a few minutes for the changes to take effect.'
+        );
         await updateTeamRowAfterDelay(team);
 
         document.getElementById('add-users-modal').style.display = 'none';
