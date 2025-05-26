@@ -162,6 +162,17 @@ function renderSingleTeamRow(team) {
 
   addButton.textContent = '👤 +';
 
+  function handleAddRow(container) {
+    const row = document.createElement('div');
+    row.classList.add('user-row');
+    row.innerHTML = `
+    <input type="text" name="displayName" placeholder="Display Name" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <button type="button" class="remove-row" title="Remove">−</button>
+  `;
+    container.appendChild(row);
+  }
+
   addButton.addEventListener('click', (e) => {
     document.getElementById('modal-team-name').textContent = `Add users to ${team.displayName}`;
     currentInviteTeamId = team.id;
@@ -178,18 +189,10 @@ function renderSingleTeamRow(team) {
     const container = document.getElementById('user-rows-container');
     const addRowBtn = document.getElementById('add-row-button');
 
-    // Add a new user row
-    addRowBtn.addEventListener('click', () => {
-      const row = document.createElement('div');
-      row.classList.add('user-row');
-      row.innerHTML = `
-    <input type="text" name="displayName" placeholder="Display Name" required>
-    <input type="email" name="email" placeholder="Email" required>
-    <button type="button" class="remove-row" title="Remove">−</button>
-  `;
-      container.appendChild(row);
-    });
-
+    // Remove previous listener, then add
+    addRowBtn.removeEventListener('click', addRowBtn._handler);
+    addRowBtn._handler = () => handleAddRow(container);
+    addRowBtn.addEventListener('click', addRowBtn._handler);
     // Remove a user row
     container.addEventListener('click', (e) => {
       if (e.target.classList.contains('remove-row')) {
