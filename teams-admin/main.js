@@ -221,9 +221,8 @@ function renderSingleTeamRow(team) {
         // Show spinner and disable submit button
         spinner.style.display = 'block';
         submitButton.disabled = true;
-        const result = await addMembersToTeam(currentInviteTeamId, users);
-        const addedCount = result.filter((user) => user.added).length;
-        const notAddedCount = result.filter((user) => !user.added).length;
+
+        await addMembersToTeam(currentInviteTeamId, users);
 
         spinner.style.display = 'none';
         form.style.display = 'flex';
@@ -243,10 +242,11 @@ function renderSingleTeamRow(team) {
         container.appendChild(row);
 
         showSuccessModal(
-          `Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}. \n`
-          + `Failed: ${notAddedCount} user${notAddedCount !== 1 ? 's' : ''}. \n\n`
-          + 'Successfully added users may need to accept an email invitation before they can access the system. \n'
-          + 'Please allow a few minutes for the changes to take effect. A refresh of the page may be required.',
+          `<div class="centered-title">Users Added</div>
+           <div>
+             Successfully added users may need to accept an email invitation before they can access the system.<br>
+             Please allow a few minutes for the changes to take effect. A refresh of the page may be required.
+           </div>`,
         );
         await updateTeamRowAfterDelay(team);
 
@@ -490,7 +490,7 @@ function showSuccessModal(message) {
   const overlay = document.getElementById('success-modal-overlay');
   const messageEl = document.getElementById('success-modal-message');
 
-  messageEl.textContent = message;
+  messageEl.innerHTML = message; // Use innerHTML for HTML content
 
   overlay.classList.remove('hidden');
   requestAnimationFrame(() => overlay.classList.add('visible'));
