@@ -218,10 +218,9 @@ function renderSingleTeamRow(team) {
         // Show spinner and disable submit button
         spinner.style.display = 'block';
         submitButton.disabled = true;
-
         const result = await addMembersToTeam(currentInviteTeamId, users);
-        const addedCount = result.filter(user => user.added).length;
-        const notAddedCount = result.filter(user => !user.added).length;
+        const addedCount = result.filter((user) => user.added).length;
+        const notAddedCount = result.filter((user) => !user.added).length;
 
         spinner.style.display = 'none';
         form.style.display = 'flex';
@@ -230,10 +229,10 @@ function renderSingleTeamRow(team) {
         submitButton.disabled = false;
 
         showSuccessModal(
-          `Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}.` +
-          ` Failed: ${notAddedCount} user${notAddedCount !== 1 ? 's' : ''}.  ` +
-          'Successfully added users may need to accept an email invitation before they can access the system. ' +
-          'Please allow a few minutes for the changes to take effect.'
+          `Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}. \n`
+          + `Failed: ${notAddedCount} user${notAddedCount !== 1 ? 's' : ''}. \n\n`
+          + 'Successfully added users may need to accept an email invitation before they can access the system. \n'
+          + 'Please allow a few minutes for the changes to take effect.',
         );
         await updateTeamRowAfterDelay(team);
 
