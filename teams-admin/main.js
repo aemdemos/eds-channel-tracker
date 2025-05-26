@@ -228,11 +228,22 @@ function renderSingleTeamRow(team) {
         modal.style.display = 'none';
         submitButton.disabled = false;
 
+        // Clear out user rows
+        container.innerHTML = '';
+        const row = document.createElement('div');
+        row.classList.add('user-row');
+        row.innerHTML = `
+  <input type="text" name="displayName" placeholder="Display Name" required>
+  <input type="email" name="email" placeholder="Email" required>
+  <button type="button" class="remove-row" title="Remove">−</button>
+`;
+        container.appendChild(row);
+
         showSuccessModal(
           `Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}. \n`
           + `Failed: ${notAddedCount} user${notAddedCount !== 1 ? 's' : ''}. \n\n`
           + 'Successfully added users may need to accept an email invitation before they can access the system. \n'
-          + 'Please allow a few minutes for the changes to take effect.',
+          + 'Please allow a few minutes for the changes to take effect. A refresh of the page may be required.',
         );
         await updateTeamRowAfterDelay(team);
 
