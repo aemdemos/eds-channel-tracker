@@ -331,7 +331,7 @@ const initTable = (teams) => {
   summary.classList.add('table-summary');
   summary.innerHTML = `
     <span>Total Teams: ${escapeHTML(teams.length.toString())}</span> |
-    <span>Messages (Last 30 days): <span id="active-teams-count">0</span></span>
+    <span>Active Teams (Last 30 days): <span id="active-teams-count">0</span></span>
   `;
 
   summaryWrapper.appendChild(summary);
@@ -349,7 +349,7 @@ const initTable = (teams) => {
         <th data-sort="created" class="created">Created</th>
         <th data-sort="messageCount">Total Messages</th>
         <th data-sort="lastMessage">Last Message</th>
-        <th data-sort="recentCount">Latest Activity (30 days)</th>
+        <th data-sort="recentCount">Messages (Last 30 days)</th>
         <th data-sort="memberCount">Total Members</th>
         <th class="sorting-disabled">Actions</th>
       </tr>
