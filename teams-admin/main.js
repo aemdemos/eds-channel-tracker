@@ -506,7 +506,7 @@ async function lazyLoadMessageStats() {
   const rows = document.querySelectorAll('.team-row');
   const teamIds = Array.from(rows).map(row => row.dataset.teamId);
 
-  const MAX_CONCURRENT = 5;
+  const MAX_CONCURRENT = 10;
 
   const updateRow = (teamId, stats) => {
     const row = Array.from(rows).find(row => row.dataset.teamId === teamId);
