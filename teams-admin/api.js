@@ -67,7 +67,6 @@ export const getTeamMessageStats = async (teamId) => {
     }
 
     const data = await response.json(); // ✅ await
-    console.log('Fetched raw data for team', teamId, data);
     return data;
   } catch (e) {
     console.error('Error in getTeamMessageStats', e);
