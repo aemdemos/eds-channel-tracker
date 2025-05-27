@@ -230,7 +230,8 @@ function renderSingleTeamRow(team) {
         spinner.style.display = 'block';
         submitButton.disabled = true;
 
-        await addMembersToTeam(currentInviteTeamId, users);
+        const result = await addMembersToTeam(currentInviteTeamId, users);
+        const addedCount = result.filter((user) => user.added).length;
 
         spinner.style.display = 'none';
         form.style.display = 'flex';
@@ -249,13 +250,9 @@ function renderSingleTeamRow(team) {
 `;
         container.appendChild(row);
 
-        showSuccessModal(
-          `<div class="centered-title">Users Added</div>
-           <div>
-             Successfully added users may need to accept an email invitation before they can access the system.<br>
-             Please allow a few minutes for the changes to take effect. A refresh of the page may be required.
-           </div>`,
-        );
+        // eslint-disable-next-line no-use-before-define
+        showSuccessModal(`Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}. Some users may need to accept an email invitation before they can access the system. Please allow a few minutes for the changes to take effect. A refresh of the page may be required.`);
+
         await updateTeamRowAfterDelay(team);
 
         document.getElementById('add-users-modal').style.display = 'none';
@@ -519,7 +516,8 @@ async function lazyLoadMessageStats() {
   let index = 0;
   let active = 0;
 
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
+
     function next() {
       if (index >= teamIds.length && active === 0) {
         return resolve();
@@ -548,31 +546,6 @@ async function lazyLoadMessageStats() {
   });
 }
 
-function showSuccessModal(message) {
-  const overlay = document.getElementById('success-modal-overlay');
-  const messageEl = document.getElementById('success-modal-message');
-
-  messageEl.innerHTML = message; // Use innerHTML for HTML content
-
-  overlay.classList.remove('hidden');
-  requestAnimationFrame(() => overlay.classList.add('visible'));
-
-  const close = () => {
-    overlay.classList.remove('visible');
-    overlay.addEventListener('transitionend', () => {
-      overlay.classList.add('hidden');
-    }, { once: true });
-
-    overlay.removeEventListener('click', onOverlayClick);
-  };
-
-  const onOverlayClick = (e) => {
-    if (e.target === overlay) close();
-  };
-
-  overlay.addEventListener('click', onOverlayClick);
-}
-
 async function updateTeamRowAfterDelay(team) {
   await sleep(5000); // Wait 4 seconds
 
@@ -599,6 +572,32 @@ async function updateTeamRowAfterDelay(team) {
   } catch (err) {
     console.error('Failed to update team row after delay:', err);
   }
+}
+
+function showSuccessModal(message) {
+  const overlay = document.getElementById('success-modal-overlay');
+  const messageEl = document.getElementById('success-modal-message');
+
+  messageEl.innerHTML = message; // Use innerHTML for HTML content
+
+  overlay.classList.remove('hidden');
+  requestAnimationFrame(() => overlay.classList.add('visible'));
+
+  const close = () => {
+    overlay.classList.remove('visible');
+    overlay.addEventListener('transitionend', () => {
+      overlay.classList.add('hidden');
+    }, { once: true });
+
+    // eslint-disable-next-line no-use-before-define
+    overlay.removeEventListener('click', onOverlayClick);
+  };
+
+  const onOverlayClick = (e) => {
+    if (e.target === overlay) close();
+  };
+
+  overlay.addEventListener('click', onOverlayClick);
 }
 
 // search triggered by pressing enter

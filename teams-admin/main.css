@@ -455,13 +455,6 @@ td.member-column:hover {
     width: 30%;
 }
 
-.centered-title {
-    text-align: center;
-    font-weight: bold;
-    font-size: 1.2em;
-    margin-bottom: 0.5em;
-}
-
 #add-users-submit:hover {
     background-color: #0069d9;
 }
