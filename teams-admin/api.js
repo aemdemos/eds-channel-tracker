@@ -50,6 +50,21 @@ export async function getTeamMembers(teamId) {
   return [];
 }
 
+export const getTeamMessageStats = async (teamIds) => {
+  try {
+    const url = new URL(`${API_ENDPOINT}/teams/messages`);
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ teamIds }),
+    });
+    return response.ok ? response.json() : [];
+  } catch (e) { /* empty */ }
+  return [];
+};
+
 export const getTeamSummaries = async (teamIds) => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams/summary`);

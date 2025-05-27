@@ -17,6 +17,7 @@ import {
   getTeamSummaries,
   getTeamMembers,
   addMembersToTeam,
+  getTeamMessageStats
 } from './api.js';
 
 import {
@@ -125,10 +126,17 @@ function renderSingleTeamRow(team) {
 
   const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
   const createdCell = createCell(dateOnly, true);
-  const totalMessagesCell = createCell(team.messageCount ?? '');
-  const lastMessageCell = createCell(team.lastMessage || '');
-  const membersCountCell = createCell(team.memberCount ?? '');
 
+
+  let totalMessagesCell = document.createElement('td');
+  totalMessagesCell.classList.add('msg-count');
+  totalMessagesCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
+
+  let lastMessageCell = document.createElement('td');
+  lastMessageCell.classList.add('latest-msg');
+  lastMessageCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
+
+  const membersCountCell = createCell(team.memberCount ?? '');
   membersCountCell.classList.add('members-count-cell');
 
   // Modify the membersCountCell to make it look like a hyperlink
@@ -267,6 +275,9 @@ const renderTable = (teams) => {
     const tr = renderSingleTeamRow(team);
     tbody.appendChild(tr);
   });
+
+  // After initial render, lazy load the message stats
+  lazyLoadMessageStats();
 };
 
 const toggleSortDirection = () => {
@@ -320,7 +331,7 @@ const initTable = (teams) => {
         <th data-sort="isMember" class="member">Are You a Member?</th>
         <th class="description sorting-disabled">Description</th>
         <th data-sort="created" class="created">Created</th>
-        <th data-sort="messageCount">Total Threads</th>
+        <th data-sort="messageCount">Total Messages</th>
         <th data-sort="lastMessage">Last Message</th>
         <th data-sort="memberCount">Total Members</th>
         <th class="sorting-disabled">Actions</th>
@@ -471,6 +482,61 @@ const displayTeams = async () => {
 
   searchButton.disabled = false;
 };
+async function lazyLoadMessageStats() {
+  const rows = document.querySelectorAll('.team-row');
+  const teamIds = Array.from(rows).map(row => row.dataset.teamId);
+
+  const BATCH_SIZE = 5;
+  const MAX_CONCURRENT = 5;
+
+  const updateRows = (batch, batchStats) => {
+    for (const row of rows) {
+      const teamId = row.dataset.teamId;
+      if (!batch.includes(teamId)) continue;
+
+      const stats = batchStats[teamId];
+
+      const msgCountCell = row.querySelector('.msg-count');
+      const latestMsgCell = row.querySelector('.latest-msg');
+
+      msgCountCell.textContent = stats?.messageCount ?? '-';
+      latestMsgCell.textContent = stats?.latestMessage
+        ? new Date(stats.latestMessage).toLocaleString()
+        : '-';
+    }
+  };
+
+  const batches = [];
+  for (let i = 0; i < teamIds.length; i += BATCH_SIZE) {
+    batches.push(teamIds.slice(i, i + BATCH_SIZE));
+  }
+
+  // Controlled concurrency
+  let active = 0;
+  let index = 0;
+
+  return new Promise(resolve => {
+    function next() {
+      if (index >= batches.length && active === 0) {
+        return resolve();
+      }
+
+      while (active < MAX_CONCURRENT && index < batches.length) {
+        const batch = batches[index++];
+        active++;
+        getTeamMessageStats(batch)
+        .then(stats => updateRows(batch, stats))
+        .catch(err => console.error('Error loading batch:', err))
+        .finally(() => {
+          active--;
+          next();
+        });
+      }
+    }
+
+    next();
+  });
+}
 
 function showSuccessModal(message) {
   const overlay = document.getElementById('success-modal-overlay');
