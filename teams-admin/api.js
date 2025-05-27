@@ -50,7 +50,7 @@ export async function getTeamMembers(teamId) {
   return [];
 }
 
-export const getTeamMessageStats = async (teamIds) => {
+export const getTeamMessageStats = async (teamId) => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams/messages`);
     const response = await fetch(url.toString(), {
@@ -58,11 +58,21 @@ export const getTeamMessageStats = async (teamIds) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ teamIds }),
+      body: JSON.stringify({ teamId }),
     });
-    return response.ok ? response.json() : [];
-  } catch (e) { /* empty */ }
-  return [];
+
+    if (!response.ok) {
+      console.warn(`Non-OK response for team ${teamId}`, response.status);
+      return { messageCount: '-', latestMessage: '-' };
+    }
+
+    const data = await response.json(); // ✅ await
+    console.log('Fetched raw data for team', teamId, data);
+    return data;
+  } catch (e) {
+    console.error('Error in getTeamMessageStats', e);
+    return { messageCount: '-', latestMessage: '-' };
+  }
 };
 
 export const getTeamSummaries = async (teamIds) => {

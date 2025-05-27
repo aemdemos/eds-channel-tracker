@@ -496,51 +496,47 @@ const displayTeams = async () => {
 
   searchButton.disabled = false;
 };
+
 async function lazyLoadMessageStats() {
   const rows = document.querySelectorAll('.team-row');
   const teamIds = Array.from(rows).map(row => row.dataset.teamId);
 
-  const BATCH_SIZE = 5;
   const MAX_CONCURRENT = 5;
 
-  const updateRows = (batch, batchStats) => {
-    for (const row of rows) {
-      const teamId = row.dataset.teamId;
-      if (!batch.includes(teamId)) continue;
+  const updateRow = (teamId, stats) => {
+    const row = Array.from(rows).find(row => row.dataset.teamId === teamId);
+    if (!row) return;
 
-      const stats = batchStats[teamId];
+    const msgCountCell = row.querySelector('.msg-count');
+    const latestMsgCell = row.querySelector('.latest-msg');
 
-      const msgCountCell = row.querySelector('.msg-count');
-      const latestMsgCell = row.querySelector('.latest-msg');
-
-      msgCountCell.textContent = stats?.messageCount ?? '-';
-      latestMsgCell.textContent = stats?.latestMessage
-        ? new Date(stats.latestMessage).toLocaleString()
-        : '-';
-    }
+    msgCountCell.textContent = stats?.messageCount ?? '-';
+    latestMsgCell.textContent = stats?.latestMessage
+      ? new Date(stats.latestMessage).toLocaleString()
+      : '-';
   };
 
-  const batches = [];
-  for (let i = 0; i < teamIds.length; i += BATCH_SIZE) {
-    batches.push(teamIds.slice(i, i + BATCH_SIZE));
-  }
-
-  // Controlled concurrency
-  let active = 0;
   let index = 0;
+  let active = 0;
 
   return new Promise(resolve => {
     function next() {
-      if (index >= batches.length && active === 0) {
+      if (index >= teamIds.length && active === 0) {
         return resolve();
       }
 
-      while (active < MAX_CONCURRENT && index < batches.length) {
-        const batch = batches[index++];
+      while (active < MAX_CONCURRENT && index < teamIds.length) {
+        const teamId = teamIds[index++];
         active++;
-        getTeamMessageStats(batch)
-        .then(stats => updateRows(batch, stats))
-        .catch(err => console.error('Error loading batch:', err))
+        getTeamMessageStats(teamId)
+        .then(stats => updateRow(teamId, stats))
+        .catch(err => {
+          console.error(`Error loading team ${teamId}:`, err);
+          updateRow(teamId, {
+            messageCount: '-',
+            latestMessage: '-'
+          });
+        })
         .finally(() => {
           active--;
           next();
@@ -548,7 +544,7 @@ async function lazyLoadMessageStats() {
       }
     }
 
-    next();
+      next();
   });
 }
 
