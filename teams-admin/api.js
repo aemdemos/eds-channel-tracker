@@ -121,22 +121,7 @@ export const getTeamSummaries = async (teamIds) => {
   return [];
 };
 
-export const addRemoveMemberFromTeams = async (email, body) => {
-  try {
-    const url = new URL(`${API_ENDPOINT}/users/${email}/teams`);
-    const response = await fetch(url.toString(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body), // Send body as JSON payload
-    });
-    return response.ok ? await response.json() : [];
-  } catch (e) { /* empty */ }
-  return [];
-};
-
-export const addMembersToTeam = async (teamId, users) => {
+export const addMembersToTeam = async (teamId, users, addedBy) => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams/${teamId}/members`);
     const response = await fetch(url.toString(), {
@@ -144,7 +129,7 @@ export const addMembersToTeam = async (teamId, users) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(users),
+      body: JSON.stringify({ users, addedBy }),
     });
     return response.ok ? await response.json() : [];
   } catch (e) { /* empty */ }
