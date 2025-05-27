@@ -57,9 +57,10 @@ export const getTeamMessageStats = async (teamId) => {
   let continuationToken = null;
   let partial = true;
 
+  let url = new URL(`${API_ENDPOINT}/teams/messages`);
+
   try {
     while (partial) {
-      const url = new URL(`${API_ENDPOINT}/teams/messages`);
 
       const response = await fetch(url.toString(), {
         method: 'POST',
@@ -92,6 +93,8 @@ export const getTeamMessageStats = async (teamId) => {
           latestMessage = current.toISOString().split('T')[0];
         }
       }
+
+      url = continuationToken;
     }
 
     return {
