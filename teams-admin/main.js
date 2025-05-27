@@ -230,7 +230,8 @@ function renderSingleTeamRow(team) {
         spinner.style.display = 'block';
         submitButton.disabled = true;
 
-        const result = await addMembersToTeam(currentInviteTeamId, users);
+        const addedBy = userProfile.displayName || userProfile.email;
+        const result = await addMembersToTeam(currentInviteTeamId, users, addedBy);
         const addedCount = result.filter((user) => user.added).length;
 
         spinner.style.display = 'none';
@@ -251,7 +252,7 @@ function renderSingleTeamRow(team) {
         container.appendChild(row);
 
         // eslint-disable-next-line no-use-before-define
-        showSuccessModal(`Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}. Some users may need to accept an email invitation before they can access the system. Please allow a few minutes for the changes to take effect. A refresh of the page may be required.`);
+        showSuccessModal(`Added user${addedCount !== 1 ? 's' : ''}. Some users may need to accept an email invitation before they can access the system. Please allow a few minutes for the changes to take effect. A refresh of the page may be required.`);
 
         await updateTeamRowAfterDelay(team);
 
