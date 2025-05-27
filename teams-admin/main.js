@@ -136,6 +136,10 @@ function renderSingleTeamRow(team) {
   lastMessageCell.classList.add('latest-msg');
   lastMessageCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
 
+  let recentCountCell = document.createElement('td');
+  recentCountCell.classList.add('recent-count');
+  recentCountCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
+
   const membersCountCell = createCell(team.memberCount ?? '');
   membersCountCell.classList.add('members-count-cell');
 
@@ -271,6 +275,7 @@ function renderSingleTeamRow(team) {
     createdCell,
     totalMessagesCell,
     lastMessageCell,
+    recentCountCell,
     membersCountCell,
     actionsCell,
   );
@@ -344,6 +349,7 @@ const initTable = (teams) => {
         <th data-sort="created" class="created">Created</th>
         <th data-sort="messageCount">Total Messages</th>
         <th data-sort="lastMessage">Last Message</th>
+        <th data-sort="recentCount">Latest Activity (30 days)</th>
         <th data-sort="memberCount">Total Members</th>
         <th class="sorting-disabled">Actions</th>
       </tr>
@@ -479,7 +485,9 @@ const displayTeams = async () => {
       created: teamSummary?.created || '', // Add summary data like created date
       messageCount: teamSummary?.messageCount || 0, // Add summary data like messageCount
       lastMessage: teamSummary?.lastMessage || '', // Add summary data like lastMessage
+      recentCount: teamSummary?.recentCount || '',
       memberCount: teamSummary?.memberCount || 0, // Add summary data like memberCount
+
       isMember: team.isMember || false, // Include isMember property
     };
   });
@@ -506,9 +514,13 @@ async function lazyLoadMessageStats() {
 
     const msgCountCell = row.querySelector('.msg-count');
     const latestMsgCell = row.querySelector('.latest-msg');
+    const recentMsgsCell = row.querySelector('.recent-count');
+
 
     msgCountCell.textContent = stats?.messageCount ?? '-';
     latestMsgCell.textContent = stats?.latestMessage ?? '-';
+    recentMsgsCell.textContent = stats?.recentCount ?? '-';
+
   };
 
   let index = 0;
@@ -530,7 +542,8 @@ async function lazyLoadMessageStats() {
           console.error(`Error loading team ${teamId}:`, err);
           updateRow(teamId, {
             messageCount: '-',
-            latestMessage: '-'
+            latestMessage: '-',
+            recentCount: '-'
           });
         })
         .finally(() => {
