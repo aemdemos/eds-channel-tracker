@@ -455,7 +455,12 @@ td.member-column:hover {
     width: 30%;
 }
 
-
+.centered-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-bottom: 0.5em;
+}
 
 #add-users-submit:hover {
     background-color: #0069d9;
@@ -467,7 +472,7 @@ td.member-column:hover {
     z-index: 1000;
     align-items: center;
     justify-content: center;
-    margin: 0px;
+    margin: 0;
     width: 520px;
 }
 
@@ -492,7 +497,7 @@ td.member-column:hover {
     border-radius: 10px;
     padding: 24px;
     max-width: 90%;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 25px rgb(0 0 0 / 20%);
     position: relative;
 }
 
@@ -577,7 +582,7 @@ td.member-column:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.4);
+    background: rgb(0 0 0 / 40%);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -591,7 +596,7 @@ td.member-column:hover {
     max-width: 400px;
     width: 90%;
     text-align: center;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 16px rgb(0 0 0 / 30%);
     position: relative;
 }
 
@@ -610,14 +615,11 @@ td.member-column:hover {
 /* Overlay with fade animation */
 #success-modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0; /* OR use inset: 0; */
+    inset: 0; /* OR use inset: 0; */
     width: 100vw;
     height: 100vh;
     z-index: 9999; /* Ensure it's above other content */
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgb(0 0 0 / 50%);
     display: block;
     opacity: 0;
     pointer-events: none;

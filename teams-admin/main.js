@@ -170,6 +170,17 @@ function renderSingleTeamRow(team) {
 
   addButton.textContent = '👤 +';
 
+  function handleAddRow(container) {
+    const row = document.createElement('div');
+    row.classList.add('user-row');
+    row.innerHTML = `
+    <input type="text" name="displayName" placeholder="Display Name" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <button type="button" class="remove-row" title="Remove">−</button>
+  `;
+    container.appendChild(row);
+  }
+
   addButton.addEventListener('click', (e) => {
     document.getElementById('modal-team-name').textContent = `Add users to ${team.displayName}`;
     currentInviteTeamId = team.id;
@@ -186,18 +197,10 @@ function renderSingleTeamRow(team) {
     const container = document.getElementById('user-rows-container');
     const addRowBtn = document.getElementById('add-row-button');
 
-    // Add a new user row
-    addRowBtn.addEventListener('click', () => {
-      const row = document.createElement('div');
-      row.classList.add('user-row');
-      row.innerHTML = `
-    <input type="text" name="displayName" placeholder="Display Name" required>
-    <input type="email" name="email" placeholder="Email" required>
-    <button type="button" class="remove-row" title="Remove">−</button>
-  `;
-      container.appendChild(row);
-    });
-
+    // Remove previous listener, then add
+    addRowBtn.removeEventListener('click', addRowBtn._handler);
+    addRowBtn._handler = () => handleAddRow(container);
+    addRowBtn.addEventListener('click', addRowBtn._handler);
     // Remove a user row
     container.addEventListener('click', (e) => {
       if (e.target.classList.contains('remove-row')) {
@@ -226,9 +229,8 @@ function renderSingleTeamRow(team) {
         // Show spinner and disable submit button
         spinner.style.display = 'block';
         submitButton.disabled = true;
-        const result = await addMembersToTeam(currentInviteTeamId, users);
-        const addedCount = result.filter((user) => user.added).length;
-        const notAddedCount = result.filter((user) => !user.added).length;
+
+        await addMembersToTeam(currentInviteTeamId, users);
 
         spinner.style.display = 'none';
         form.style.display = 'flex';
@@ -236,11 +238,23 @@ function renderSingleTeamRow(team) {
         modal.style.display = 'none';
         submitButton.disabled = false;
 
+        // Clear out user rows
+        container.innerHTML = '';
+        const row = document.createElement('div');
+        row.classList.add('user-row');
+        row.innerHTML = `
+  <input type="text" name="displayName" placeholder="Display Name" required>
+  <input type="email" name="email" placeholder="Email" required>
+  <button type="button" class="remove-row" title="Remove">−</button>
+`;
+        container.appendChild(row);
+
         showSuccessModal(
-          `Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}. \n`
-          + `Failed: ${notAddedCount} user${notAddedCount !== 1 ? 's' : ''}. \n\n`
-          + 'Successfully added users may need to accept an email invitation before they can access the system. \n'
-          + 'Please allow a few minutes for the changes to take effect.',
+          `<div class="centered-title">Users Added</div>
+           <div>
+             Successfully added users may need to accept an email invitation before they can access the system.<br>
+             Please allow a few minutes for the changes to take effect. A refresh of the page may be required.
+           </div>`,
         );
         await updateTeamRowAfterDelay(team);
 
@@ -542,7 +556,7 @@ function showSuccessModal(message) {
   const overlay = document.getElementById('success-modal-overlay');
   const messageEl = document.getElementById('success-modal-message');
 
-  messageEl.textContent = message;
+  messageEl.innerHTML = message; // Use innerHTML for HTML content
 
   overlay.classList.remove('hidden');
   requestAnimationFrame(() => overlay.classList.add('visible'));
