@@ -51,28 +51,60 @@ export async function getTeamMembers(teamId) {
 }
 
 export const getTeamMessageStats = async (teamId) => {
-  try {
-    const url = new URL(`${API_ENDPOINT}/teams/messages`);
-    const response = await fetch(url.toString(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ teamId }),
-    });
+  let messageCount = 0;
+  let recentCount = 0;
+  let latestMessage = null;
+  let continuationToken = null;
+  let partial = true;
 
-    if (!response.ok) {
-      console.warn(`Non-OK response for team ${teamId}`, response.status);
-      return { messageCount: '-', latestMessage: '-' };
+  try {
+    while (partial) {
+      const url = new URL(`${API_ENDPOINT}/teams/messages`);
+
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          teamId,
+          ...(continuationToken ? { continuationToken } : {})
+        }),
+      });
+
+      if (!response.ok) {
+        console.warn(`Non-OK response for team ${teamId}`, response.status);
+        return { messageCount: '-', latestMessage: '-' };
+      }
+
+      const data = await response.json();
+
+      // Aggregate results
+      messageCount += data.messageCount || 0;
+      recentCount += data.recentCount || 0;
+      partial = data.partial;
+      continuationToken = data.continuationToken || null;
+
+      // Keep the latest message date
+      if (data.latestMessage) {
+        const current = new Date(data.latestMessage);
+        if (!latestMessage || current > new Date(latestMessage)) {
+          latestMessage = current.toISOString().split('T')[0];
+        }
+      }
     }
 
-    const data = await response.json(); // ✅ await
-    return data;
+    return {
+      messageCount,
+      recentCount,
+      latestMessage,
+    };
   } catch (e) {
     console.error('Error in getTeamMessageStats', e);
     return { messageCount: '-', latestMessage: '-' };
   }
 };
+
 
 export const getTeamSummaries = async (teamIds) => {
   try {
