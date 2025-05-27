@@ -508,9 +508,7 @@ async function lazyLoadMessageStats() {
     const latestMsgCell = row.querySelector('.latest-msg');
 
     msgCountCell.textContent = stats?.messageCount ?? '-';
-    latestMsgCell.textContent = stats?.latestMessage
-      ? new Date(stats.latestMessage).toLocaleString()
-      : '-';
+    latestMsgCell.textContent = stats?.latestMessage ?? '-';
   };
 
   let index = 0;
