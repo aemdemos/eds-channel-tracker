@@ -398,6 +398,7 @@ const displayTeams = async () => {
     }
   }
   console.log('User Profile:', userProfile);
+  console.log('userProfile.name:', userProfile?.name);
   const myTeams = await getMyTeams(userProfile.email);
   if (myTeams.length === 0) {
     teamsContainer.innerHTML = `
