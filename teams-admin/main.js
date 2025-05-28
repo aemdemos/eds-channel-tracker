@@ -490,11 +490,8 @@ const displayTeams = async () => {
       ...team, // Spread the original team data
       webUrl: teamSummary?.webUrl || '', // Add summary data like webUrl
       created: teamSummary?.created || '', // Add summary data like created date
-      messageCount: teamSummary?.messageCount || 0, // Add summary data like messageCount
-      lastMessage: teamSummary?.lastMessage || '', // Add summary data like lastMessage
-      recentCount: teamSummary?.recentCount || '',
       memberCount: teamSummary?.memberCount || 0, // Add summary data like memberCount
-
+      description: teamSummary?.description,
       isMember: team.isMember || false, // Include isMember property
     };
   });
