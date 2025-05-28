@@ -51,60 +51,29 @@ export async function getTeamMembers(teamId) {
 }
 
 export const getTeamMessageStats = async (teamId) => {
-  let messageCount = 0;
-  let recentCount = 0;
-  let latestMessage = null;
-  let continuationToken = null;
-  let partial = true;
-
   try {
-    while (partial) {
-      let url = new URL(`${API_ENDPOINT}/teams/messages`);
+    const url = new URL(`${API_ENDPOINT}/teams/messages`);
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ teamId }),
+    });
 
-      const response = await fetch(url.toString(), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          teamId,
-          ...(continuationToken ? { continuationToken } : {})
-        }),
-      });
-
-      if (!response.ok) {
-        console.warn(`Non-OK response for team ${teamId}`, response.status);
-        return { messageCount: '-', latestMessage: '-' };
-      }
-
-      const data = await response.json();
-
-      // Aggregate results
-      messageCount += data.messageCount || 0;
-      recentCount += data.recentCount || 0;
-      partial = data.partial;
-      continuationToken = data.continuationToken || null;
-
-      // Keep the latest message date
-      if (data.latestMessage) {
-        const current = new Date(data.latestMessage);
-        if (!latestMessage || current > new Date(latestMessage)) {
-          latestMessage = current.toISOString().split('T')[0];
-        }
-      }
+    if (!response.ok) {
+      // eslint-disable-next-line no-console
+      console.warn(`Non-OK response for team ${teamId}`, response.status);
+      return { messageCount: '-', latestMessage: '-' };
     }
 
-    return {
-      messageCount,
-      recentCount,
-      latestMessage,
-    };
+    return await response.json();
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error('Error in getTeamMessageStats', e);
     return { messageCount: '-', latestMessage: '-' };
   }
 };
-
 
 export const getTeamSummaries = async (teamIds) => {
   try {

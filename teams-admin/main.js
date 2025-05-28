@@ -241,7 +241,8 @@ function renderSingleTeamRow(team) {
         spinner.style.display = 'block';
         submitButton.disabled = true;
 
-        const result = await addMembersToTeam(currentInviteTeamId, users);
+        const addedBy = userProfile.name || userProfile.email;
+        const result = await addMembersToTeam(currentInviteTeamId, users, addedBy);
         const addedCount = result.filter((user) => user.added).length;
 
         spinner.style.display = 'none';
