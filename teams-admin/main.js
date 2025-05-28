@@ -577,6 +577,7 @@ async function updateTeamRowAfterDelay(team) {
 
   try {
     if (currentInviteTeamRow) {
+      const currentTeam = currentTeams.find((t) => t.id === currentInviteTeamId);
       const currentTeamMembers = await getTeamMembers(currentInviteTeamId);
       const memberEmails = currentTeamMembers.map((t) => t.email);
       const isMember = memberEmails.includes(userProfile.email);
@@ -585,9 +586,9 @@ async function updateTeamRowAfterDelay(team) {
         Object.assign(team, {
           webUrl: team.webUrl || '',
           created: team.created || '',
-          messageCount: team.messageCount || 0,
-          latestMessage: team.latestMessage || '-',
-          recentCount: team.recentCount || '0',
+          messageCount: currentTeam.messageCount || 0,
+          latestMessage: currentTeam.latestMessage || '-',
+          recentCount: currentTeam.recentCount || '0',
           memberCount: memberEmails.length || 0,
           isMember,
         });
