@@ -231,6 +231,7 @@ function renderSingleTeamRow(team) {
         submitButton.disabled = true;
 
         const addedBy = userProfile.displayName || userProfile.email;
+        console.log('Adding users:', users, 'Added by:', addedBy);
         const result = await addMembersToTeam(currentInviteTeamId, users, addedBy);
         const addedCount = result.filter((user) => user.added).length;
 
@@ -396,7 +397,7 @@ const displayTeams = async () => {
       teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
     }
   }
-
+  console.log('User Profile:', userProfile);
   const myTeams = await getMyTeams(userProfile.email);
   if (myTeams.length === 0) {
     teamsContainer.innerHTML = `
