@@ -62,12 +62,14 @@ export const getTeamMessageStats = async (teamId) => {
     });
 
     if (!response.ok) {
+      // eslint-disable-next-line no-console
       console.warn(`Non-OK response for team ${teamId}`, response.status);
       return { messageCount: '-', latestMessage: '-' };
     }
 
     return await response.json();
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error('Error in getTeamMessageStats', e);
     return { messageCount: '-', latestMessage: '-' };
   }
