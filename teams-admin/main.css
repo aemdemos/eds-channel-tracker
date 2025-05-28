@@ -186,6 +186,7 @@
     padding: 15px;
     max-height: 400px;   /* Set your desired fixed height */
     overflow: hidden auto;    /* Enable vertical scrolling when content overflows */  /* Prevent horizontal scrolling */
+    cursor: move;
 }
 
 .modal h4 {

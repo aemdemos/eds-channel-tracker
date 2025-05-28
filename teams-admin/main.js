@@ -158,6 +158,30 @@ function renderSingleTeamRow(team) {
 
   const modal = document.getElementById('modal');
 
+  let offsetX = 0, offsetY = 0, isDragging = false;
+
+  modal.style.cursor = "move";
+  modal.onmousedown = function (e) {
+    isDragging = true;
+    offsetX = e.clientX - modal.offsetLeft;
+    offsetY = e.clientY - modal.offsetTop;
+    document.onmousemove = onMouseMove;
+    document.onmouseup = onMouseUp;
+  };
+
+  function onMouseMove(e) {
+    if (!isDragging) return;
+    modal.style.position = "absolute";
+    modal.style.left = e.clientX - offsetX + "px";
+    modal.style.top = e.clientY - offsetY + "px";
+  }
+
+  function onMouseUp() {
+    isDragging = false;
+    document.onmousemove = null;
+    document.onmouseup = null;
+  }
+
   membersCountCell.addEventListener('click', async (e) => {
     e.stopPropagation();
     await handleModalInteraction(membersCountCell, team.id, modal, async () => {
