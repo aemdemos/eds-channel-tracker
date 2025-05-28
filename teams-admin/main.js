@@ -128,17 +128,24 @@ function renderSingleTeamRow(team) {
   const createdCell = createCell(dateOnly, true);
 
 
-  let totalMessagesCell = document.createElement('td');
+  const totalMessagesCell = document.createElement('td');
   totalMessagesCell.classList.add('msg-count');
-  totalMessagesCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
 
-  let lastMessageCell = document.createElement('td');
+  const lastMessageCell = document.createElement('td');
   lastMessageCell.classList.add('latest-msg');
-  lastMessageCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
 
-  let recentCountCell = document.createElement('td');
+  const recentCountCell = document.createElement('td');
   recentCountCell.classList.add('recent-count');
-  recentCountCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
+
+  if (team.messageCount) {
+    totalMessagesCell.textContent = team.messageCount ?? '—';
+    lastMessageCell.textContent = team.latestMessage ?? '—';
+    recentCountCell.textContent = team.recentCount ?? '—';
+  } else {
+    totalMessagesCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
+    lastMessageCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
+    recentCountCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
+  }
 
   const membersCountCell = createCell(team.memberCount ?? '');
   membersCountCell.classList.add('members-count-cell');
@@ -291,9 +298,6 @@ const renderTable = (teams) => {
     const tr = renderSingleTeamRow(team);
     tbody.appendChild(tr);
   });
-
-  // After initial render, lazy load the message stats
-  lazyLoadMessageStats();
 };
 
 const toggleSortDirection = () => {
@@ -310,9 +314,9 @@ const addSortingToTable = (table) => {
       headers.forEach((h) => h.classList.remove('sorted-asc', 'sorted-desc'));
 
       // Sort and toggle direction
-      const sorted = sortTable(currentTeams, columnKey, sortDirection);
+      currentTeams = sortTable(currentTeams, columnKey, sortDirection);
       header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
-      renderTable(sorted);
+      renderTable(currentTeams);
       toggleSortDirection();
     });
   });
@@ -348,7 +352,7 @@ const initTable = (teams) => {
         <th class="description sorting-disabled">Description</th>
         <th data-sort="created" class="created">Created</th>
         <th data-sort="messageCount">Total Messages</th>
-        <th data-sort="lastMessage">Last Message</th>
+        <th data-sort="latestMessage">Last Message</th>
         <th data-sort="recentCount">Messages (last 30 days)</th>
         <th data-sort="memberCount">Total Members</th>
         <th class="sorting-disabled">Actions</th>
@@ -361,10 +365,13 @@ const initTable = (teams) => {
   teamsContainer.appendChild(table);
 
   const initialSortKey = 'displayName';
-  const sortedTeams = sortTable(teams, initialSortKey, sortDirection);
+  currentTeams = sortTable(teams, initialSortKey, sortDirection);
   document.querySelector(`th[data-sort="${initialSortKey}"]`).classList.add('sorted-asc');
-  renderTable(sortedTeams);
+  renderTable(currentTeams);
   addSortingToTable(table);
+
+  // After initial render, lazy load the message stats
+  lazyLoadMessageStats();
 };
 
 const displayTeams = async () => {
@@ -509,6 +516,10 @@ async function lazyLoadMessageStats() {
   const MAX_CONCURRENT = 10;
 
   const updateRow = (teamId, stats) => {
+
+    const team = currentTeams.find(t => t.id === teamId);
+    if (!team || team.messageCount) return; // 🧠 Already loaded
+
     const row = Array.from(rows).find(row => row.dataset.teamId === teamId);
     if (!row) return;
 
@@ -516,6 +527,10 @@ async function lazyLoadMessageStats() {
     const latestMsgCell = row.querySelector('.latest-msg');
     const recentMsgsCell = row.querySelector('.recent-count');
 
+    // 🗃️ Cache message stats
+    team.messageCount = stats?.messageCount;
+    team.latestMessage = stats?.latestMessage;
+    team.recentCount = stats?.recentCount;
 
     msgCountCell.textContent = stats?.messageCount ?? '-';
     latestMsgCell.textContent = stats?.latestMessage ?? '-';
