@@ -637,4 +637,11 @@ td.member-column:hover {
     text-align: center;
 }
 
+.modal-content::after {
+    content: '';
+    display: block;
+    height: 1rem; /* or adjust as needed */
+    box-sizing: unset;
+}
+
 
