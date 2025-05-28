@@ -586,8 +586,8 @@ async function updateTeamRowAfterDelay(team) {
           webUrl: team.webUrl || '',
           created: team.created || '',
           messageCount: team.messageCount || 0,
-          latestMessage: team.latestMessage || '',
-          recentCount: team.recentCount || '',
+          latestMessage: team.latestMessage || '-',
+          recentCount: team.recentCount || '0',
           memberCount: memberEmails.length || 0,
           isMember,
         });
