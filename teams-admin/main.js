@@ -592,7 +592,6 @@ async function updateTeamRowAfterDelay(team) {
           latestMessage: team.latestMessage || '',
           recentCount: team.recentCount || '',
           memberCount: memberEmails.length || 0,
-
           isMember,
         });
 
