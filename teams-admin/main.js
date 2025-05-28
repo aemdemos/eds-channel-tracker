@@ -37,13 +37,13 @@ const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname
 if (isLocalhost) {
   const params = new URLSearchParams(window.location.search);
   const email = params.get('email');
-  const displayName = params.get('displayName');
+  const name = params.get('name');
 
-  if (email && displayName) {
-    userProfile = { email, displayName };
+  if (email && name) {
+    userProfile = { email, name };
   } else {
     // eslint-disable-next-line no-alert
-    alert('missing email and displayName query params for local debug');
+    alert('missing email and name query params for local debug');
   }
 }
 
@@ -230,7 +230,7 @@ function renderSingleTeamRow(team) {
         spinner.style.display = 'block';
         submitButton.disabled = true;
 
-        const addedBy = userProfile.displayName || userProfile.email;
+        const addedBy = userProfile.name || userProfile.email;
         console.log('Adding users:', users, 'Added by:', addedBy);
         const result = await addMembersToTeam(currentInviteTeamId, users, addedBy);
         const addedCount = result.filter((user) => user.added).length;
