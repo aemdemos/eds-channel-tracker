@@ -17,7 +17,7 @@ import {
   getTeamSummaries,
   getTeamMembers,
   addMembersToTeam,
-  getTeamMessageStats
+  getTeamMessageStats,
 } from './api.js';
 
 import {
@@ -127,14 +127,13 @@ function renderSingleTeamRow(team) {
   const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
   const createdCell = createCell(dateOnly, true);
 
-
-  let totalMessagesCell = document.createElement('td');
+  const totalMessagesCell = document.createElement('td');
   totalMessagesCell.classList.add('msg-count');
-  totalMessagesCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
+  totalMessagesCell.innerHTML = '<span class="spinner" data-loading="true"></span>';
 
-  let lastMessageCell = document.createElement('td');
+  const lastMessageCell = document.createElement('td');
   lastMessageCell.classList.add('latest-msg');
-  lastMessageCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
+  lastMessageCell.innerHTML = '<span class="spinner" data-loading="true"></span>';
 
   const membersCountCell = createCell(team.memberCount ?? '');
   membersCountCell.classList.add('members-count-cell');
@@ -198,9 +197,9 @@ function renderSingleTeamRow(team) {
     const addRowBtn = document.getElementById('add-row-button');
 
     // Remove previous listener, then add
-    addRowBtn.removeEventListener('click', addRowBtn._handler);
-    addRowBtn._handler = () => handleAddRow(container);
-    addRowBtn.addEventListener('click', addRowBtn._handler);
+    addRowBtn.removeEventListener('click', addRowBtn.handler);
+    addRowBtn.handler = () => handleAddRow(container);
+    addRowBtn.addEventListener('click', addRowBtn.handler);
     // Remove a user row
     container.addEventListener('click', (e) => {
       if (e.target.classList.contains('remove-row')) {
@@ -231,7 +230,6 @@ function renderSingleTeamRow(team) {
         submitButton.disabled = true;
 
         const addedBy = userProfile.name || userProfile.email;
-        console.log('Adding users:', users, 'Added by:', addedBy);
         const result = await addMembersToTeam(currentInviteTeamId, users, addedBy);
         const addedCount = result.filter((user) => user.added).length;
 
@@ -397,8 +395,6 @@ const displayTeams = async () => {
       teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
     }
   }
-  console.log('User Profile:', userProfile);
-  console.log('userProfile.name:', userProfile?.name);
   const myTeams = await getMyTeams(userProfile.email);
   if (myTeams.length === 0) {
     teamsContainer.innerHTML = `
@@ -499,12 +495,12 @@ const displayTeams = async () => {
 
 async function lazyLoadMessageStats() {
   const rows = document.querySelectorAll('.team-row');
-  const teamIds = Array.from(rows).map(row => row.dataset.teamId);
+  const teamIds = Array.from(rows).map((row) => row.dataset.teamId);
 
   const MAX_CONCURRENT = 5;
 
   const updateRow = (teamId, stats) => {
-    const row = Array.from(rows).find(row => row.dataset.teamId === teamId);
+    const row = Array.from(rows).find((row) => row.dataset.teamId === teamId);
     if (!row) return;
 
     const msgCountCell = row.querySelector('.msg-count');
@@ -518,7 +514,6 @@ async function lazyLoadMessageStats() {
   let active = 0;
 
   return new Promise((resolve) => {
-
     function next() {
       if (index >= teamIds.length && active === 0) {
         return resolve();
@@ -528,22 +523,22 @@ async function lazyLoadMessageStats() {
         const teamId = teamIds[index++];
         active++;
         getTeamMessageStats(teamId)
-        .then(stats => updateRow(teamId, stats))
-        .catch(err => {
-          console.error(`Error loading team ${teamId}:`, err);
-          updateRow(teamId, {
-            messageCount: '-',
-            latestMessage: '-'
+          .then((stats) => updateRow(teamId, stats))
+          .catch((err) => {
+            console.error(`Error loading team ${teamId}:`, err);
+            updateRow(teamId, {
+              messageCount: '-',
+              latestMessage: '-',
+            });
+          })
+          .finally(() => {
+            active--;
+            next();
           });
-        })
-        .finally(() => {
-          active--;
-          next();
-        });
       }
     }
 
-      next();
+    next();
   });
 }
 

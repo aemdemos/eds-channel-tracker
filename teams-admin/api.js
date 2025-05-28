@@ -66,8 +66,7 @@ export const getTeamMessageStats = async (teamId) => {
       return { messageCount: '-', latestMessage: '-' };
     }
 
-    const data = await response.json(); // ✅ await
-    return data;
+    return await response.json();
   } catch (e) {
     console.error('Error in getTeamMessageStats', e);
     return { messageCount: '-', latestMessage: '-' };
