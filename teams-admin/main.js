@@ -23,7 +23,6 @@ import {
 import {
   decodeHTML,
   escapeHTML,
-  getActiveTeamsCount,
   sortTable,
   renderMemberList,
   handleModalInteraction,
@@ -504,9 +503,6 @@ const displayTeams = async () => {
   teamsContainer.innerHTML = ''; // Clear spinner
   initTable(combinedTeams); // Pass combined teams to initTable
 
-  // Update active team count
-  document.getElementById('active-teams-count').textContent = getActiveTeamsCount(combinedTeams).toString();
-
   searchButton.disabled = false;
 };
 
@@ -536,6 +532,12 @@ async function lazyLoadMessageStats() {
     msgCountCell.textContent = stats?.messageCount ?? '-';
     latestMsgCell.textContent = stats?.latestMessage ?? '-';
     recentMsgsCell.textContent = stats?.recentCount ?? '-';
+
+    // incrememt active teams count if there are recent messages
+    if (stats?.recentCount > 0) {
+      const el = document.getElementById('active-teams-count');
+      el.textContent = (parseInt(el.textContent, 10) || 0) + 1;
+    }
 
   };
 

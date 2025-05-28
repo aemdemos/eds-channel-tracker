@@ -38,17 +38,6 @@ export const decodeHTML = (str) => {
   return txt.value;
 };
 
-export const getActiveTeamsCount = (teams) => {
-  const now = new Date();
-  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-
-  return teams.filter((team) => {
-    if (!team.lastMessage) return false;
-    const lastMessage = new Date(team.lastMessage);
-    return now - lastMessage <= THIRTY_DAYS_MS;
-  }).length;
-};
-
 export const escapeHTML = (str) => {
   const div = document.createElement('div');
   div.textContent = str;
