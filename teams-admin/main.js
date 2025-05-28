@@ -36,13 +36,13 @@ const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname
 if (isLocalhost) {
   const params = new URLSearchParams(window.location.search);
   const email = params.get('email');
-  const displayName = params.get('displayName');
+  const name = params.get('name');
 
-  if (email && displayName) {
-    userProfile = { email, displayName };
+  if (email && name) {
+    userProfile = { email, name };
   } else {
     // eslint-disable-next-line no-alert
-    alert('missing email and displayName query params for local debug');
+    alert('missing email and name query params for local debug');
   }
 }
 
