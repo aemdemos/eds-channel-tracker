@@ -136,7 +136,7 @@ function renderSingleTeamRow(team) {
   const recentCountCell = document.createElement('td');
   recentCountCell.classList.add('recent-count');
 
-  if (team.messageCount) {
+  if (team.messageCount != null) {
     totalMessagesCell.textContent = team.messageCount ?? '—';
     lastMessageCell.textContent = team.latestMessage ?? '—';
     recentCountCell.textContent = team.recentCount ?? '—';
