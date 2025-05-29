@@ -415,7 +415,9 @@ const initTable = (teams) => {
         <th data-sort="created" class="created">Created</th>
         <th data-sort="messageCount">Total Messages</th>
         <th data-sort="latestMessage">Last Message</th>
-        <th data-sort="recentCount">Messages (last 30 days)</th>
+        <th data-sort="recentCount">
+          Messages (Last 30 days)
+        </th>
         <th data-sort="memberCount">Total Members</th>
         <th class="sorting-disabled">Actions</th>
       </tr>
@@ -430,10 +432,13 @@ const initTable = (teams) => {
   currentTeams = sortTable(teams, initialSortKey, sortDirection);
   document.querySelector(`th[data-sort="${initialSortKey}"]`).classList.add('sorted-asc');
   renderTable(currentTeams);
-  addSortingToTable(table);
 
   // After initial render, lazy load the message stats
-  lazyLoadMessageStats();
+  lazyLoadMessageStats().then(() => {
+    addSortingToTable(table);
+  }).catch((err) => {
+    console.error('Error loading message stats:', err);
+  });
 };
 
 const displayTeams = async () => {
