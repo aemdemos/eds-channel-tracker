@@ -67,6 +67,16 @@
     font-size: 20px;
 }
 
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 4px solid #ccc;
+    border-top-color: #555;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 2em auto;
+}
+
 .styled-table .spinner {
     width: 20px;
     height: 20px;
@@ -95,6 +105,18 @@
     padding: 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
+}
+
+.modal-content .button {
+    margin-top: 16px;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 16px;
+    font-size: 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
 }
 
 .button-wrapper .button {
@@ -175,7 +197,6 @@
     box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
     z-index: 1000;
     width: 400px;
-    overflow: hidden;
     font-family: Arial, sans-serif;
     display: none;
     border: 1px solid #ccc;
@@ -357,15 +378,7 @@ td.member-column:hover {
 }
 
 
-.spinner {
-    width: 24px;
-    height: 24px;
-    border: 4px solid #ccc;
-    border-top-color: #555;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 2em auto;
-}
+
 
 @keyframes spin {
     to { transform: rotate(360deg); }
@@ -458,12 +471,25 @@ td.member-column:hover {
     width: 520px;
 }
 
-#add-users-modal h3 {
+.modal-content-add-users h3 {
     margin-top: 0;
-    margin-bottom: 16px;
-    font-size: 18px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
 }
 
+.modal-content h3 {
+    margin-top: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+#add-users-modal h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 18px;
+}
 
 .modal-content {
     background: #fff;
@@ -489,20 +515,6 @@ td.member-column:hover {
     text-align: center;
 }
 
-.modal-content h3 {
-    margin-top: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
-}
-
-.modal-content-add-users h3 {
-    margin-top: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
-}
-
 .modal-content-add-users textarea {
     width: 100%;
     height: 100px;
@@ -514,17 +526,6 @@ td.member-column:hover {
     resize: vertical;
 }
 
-.modal-content .button {
-    margin-top: 16px;
-    background-color: #007bff;
-    color: white;
-    padding: 10px 16px;
-    font-size: 14px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
 
 .modal-content .button:hover {
     background-color: #0056b3;
@@ -542,13 +543,6 @@ td.member-column:hover {
 
 .close:hover {
     color: #000;
-}
-
-
-.close {
-    float: right;
-    font-size: 24px;
-    cursor: pointer;
 }
 
 .checkmark {
