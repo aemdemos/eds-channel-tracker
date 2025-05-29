@@ -663,6 +663,7 @@ async function updateTeamRowAfterDelay(team) {
 function showSuccessModal(message) {
   const overlay = document.getElementById('success-modal-overlay');
   const messageEl = document.getElementById('success-modal-message');
+  const closeButton = document.getElementById('success-modal-close');
 
   messageEl.innerHTML = message; // Use innerHTML for HTML content
 
@@ -677,6 +678,7 @@ function showSuccessModal(message) {
 
     // eslint-disable-next-line no-use-before-define
     overlay.removeEventListener('click', onOverlayClick);
+    closeButton.removeEventListener('click', close);
   };
 
   const onOverlayClick = (e) => {
@@ -684,6 +686,7 @@ function showSuccessModal(message) {
   };
 
   overlay.addEventListener('click', onOverlayClick);
+  closeButton.addEventListener('click', close);
 }
 
 // search triggered by pressing enter
