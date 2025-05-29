@@ -161,31 +161,33 @@
     height: 20px;
 }
 
-
 .hover-cell {
     position: relative;
 }
 
 .modal {
-    position: absolute;
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
+    z-index: 1000;
+    width: 400px;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
     display: none;
-    background-color: white;
     border: 1px solid #ccc;
-    box-shadow: 0 8px 16px rgb(0 0 0 / 15%);
-    z-index: 10;
     opacity: 0;
     transition: transform 0.35s ease-out, opacity 0.35s ease-out;
     pointer-events: none;
-    border-radius: 10px;
-    max-width: 700px; /* Limit max width */
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) scale(0.85);
+    max-width: 700px;
     text-align: center;
     font-size: 14px;
     padding: 15px;
-    max-height: 400px;   /* Set your desired fixed height */
-    overflow: hidden auto;    /* Enable vertical scrolling when content overflows */  /* Prevent horizontal scrolling */
+    max-height: 400px;
+    overflow: hidden auto;
     cursor: move;
 }
 
@@ -308,20 +310,6 @@ td.member-column:hover {
 
 .created {
     min-width: 115px;
-}
-
-.modal {
-    position: fixed;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    width: 400px;
-    overflow: hidden;
-    font-family: Arial, sans-serif;
 }
 
 .modal-header {
@@ -488,11 +476,17 @@ td.member-column:hover {
 }
 
 .modal-content-add-users {
-    border-radius: 10px;
-    padding: 24px;
-    max-width: 90%;
-    box-shadow: 0 10px 25px rgb(0 0 0 / 20%);
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+    padding: 32px 28px 24px;
+    max-width: 420px;
+    width: 92%;
     position: relative;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    opacity: 1; /* fully opaque */
+    margin: 0 auto;
+    text-align: center;
 }
 
 .modal-content h3 {
@@ -628,6 +622,20 @@ td.member-column:hover {
     pointer-events: auto;
 }
 
+#success-modal {
+    background: #fff;
+    padding: 32px 28px 24px;
+    border-radius: 14px;
+    max-width: 420px;
+    width: 92%;
+    box-shadow: 0 8px 32px rgb(0 0 0 / 18%);
+    position: relative;
+    margin: 0 auto;
+    text-align: center;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    animation: fadeInModal 0.3s;
+}
+
 /* Centered modal box */
 #success-modal-content {
     background: white;
@@ -645,4 +653,32 @@ td.member-column:hover {
     box-sizing: unset;
 }
 
+#success-modal-message {
+    margin-top: 18px;
+    font-size: 17px;
+    color: #222;
+    line-height: 1.6;
+    word-break: break-word;
+}
 
+#success-modal .close-button {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 26px;
+    color: #888;
+    cursor: pointer;
+    transition: color 0.2s;
+    z-index: 2;
+}
+
+#success-modal .close-button:hover {
+    color: #222;
+}
+
+@keyframes fadeInModal {
+    from { opacity: 0; transform: translateY(30px) scale(0.98);}
+    to   { opacity: 1; transform: translateY(0) scale(1);}
+}
