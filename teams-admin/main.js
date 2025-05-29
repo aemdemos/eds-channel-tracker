@@ -17,7 +17,7 @@ import {
   getTeamSummaries,
   getTeamMembers,
   addMembersToTeam,
-  getTeamMessageStats
+  getTeamMessageStats,
 } from './api.js';
 
 import {
@@ -133,7 +133,6 @@ function renderSingleTeamRow(team) {
   const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
   const createdCell = createCell(dateOnly, true);
 
-
   const totalMessagesCell = document.createElement('td');
   totalMessagesCell.classList.add('msg-count');
 
@@ -148,9 +147,9 @@ function renderSingleTeamRow(team) {
     lastMessageCell.textContent = team.latestMessage ?? '—';
     recentCountCell.textContent = team.recentCount ?? '—';
   } else {
-    totalMessagesCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
-    lastMessageCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
-    recentCountCell.innerHTML = `<span class="spinner" data-loading="true"></span>`;
+    totalMessagesCell.innerHTML = '<span class="spinner" data-loading="true"></span>';
+    lastMessageCell.innerHTML = '<span class="spinner" data-loading="true"></span>';
+    recentCountCell.innerHTML = '<span class="spinner" data-loading="true"></span>';
   }
 
   const membersCountCell = createCell(team.memberCount ?? '');
@@ -165,9 +164,10 @@ function renderSingleTeamRow(team) {
 
   const modal = document.getElementById('modal');
 
-  let offsetX = 0, offsetY = 0, isDragging = false;
+  let offsetX = 0; let offsetY = 0; let
+    isDragging = false;
 
-  modal.style.cursor = "move";
+  modal.style.cursor = 'move';
   modal.onmousedown = function (e) {
     isDragging = true;
     const rect = modal.getBoundingClientRect();
@@ -180,9 +180,9 @@ function renderSingleTeamRow(team) {
 
   function onMouseMove(e) {
     if (!isDragging) return;
-    modal.style.position = "absolute";
-    modal.style.left = window.scrollX + e.clientX - offsetX + "px";
-    modal.style.top = window.scrollY + e.clientY - offsetY + "px";
+    modal.style.position = 'absolute';
+    modal.style.left = `${window.scrollX + e.clientX - offsetX}px`;
+    modal.style.top = `${window.scrollY + e.clientY - offsetY}px`;
   }
 
   function onMouseUp() {
@@ -230,6 +230,7 @@ function renderSingleTeamRow(team) {
     currentInviteTeamRow = tr; // store row reference
 
     const modal = document.getElementById('add-users-modal');
+    setupModalDrag(modal);
     const rect = e.target.getBoundingClientRect();
     modal.style.position = 'absolute';
     modal.style.top = `${rect.top + window.scrollY - 50}px`;
@@ -323,11 +324,14 @@ function renderSingleTeamRow(team) {
   return tr;
 }
 
-function setupModalDrag(modal) {
+function setupModalDrag(modal, cursor = 'move') {
   let isDragging = false;
   let offsetX, offsetY;
 
+  modal.style.cursor = cursor;
+
   modal.onmousedown = function (e) {
+    if (e.button !== 0) return;
     isDragging = true;
     const rect = modal.getBoundingClientRect();
     offsetX = e.clientX - rect.left;
@@ -337,6 +341,7 @@ function setupModalDrag(modal) {
       if (!isDragging) return;
       modal.style.left = `${e.clientX - offsetX}px`;
       modal.style.top = `${e.clientY - offsetY}px`;
+      modal.style.right = 'auto';
     };
 
     document.onmouseup = function () {
@@ -346,7 +351,6 @@ function setupModalDrag(modal) {
     };
   };
 }
-
 
 const renderTable = (teams) => {
   const tbody = document.querySelector('tbody');
@@ -563,16 +567,15 @@ const displayTeams = async () => {
 
 async function lazyLoadMessageStats() {
   const rows = document.querySelectorAll('.team-row');
-  const teamIds = Array.from(rows).map(row => row.dataset.teamId);
+  const teamIds = Array.from(rows).map((row) => row.dataset.teamId);
 
   const MAX_CONCURRENT = 10;
 
   const updateRow = (teamId, stats) => {
-
-    const team = currentTeams.find(t => t.id === teamId);
+    const team = currentTeams.find((t) => t.id === teamId);
     if (!team || team.messageCount) return; // 🧠 Already loaded
 
-    const row = Array.from(rows).find(row => row.dataset.teamId === teamId);
+    const row = Array.from(rows).find((row) => row.dataset.teamId === teamId);
     if (!row) return;
 
     const msgCountCell = row.querySelector('.msg-count');
@@ -593,14 +596,12 @@ async function lazyLoadMessageStats() {
       const el = document.getElementById('active-teams-count');
       el.textContent = (parseInt(el.textContent, 10) || 0) + 1;
     }
-
   };
 
   let index = 0;
   let active = 0;
 
   return new Promise((resolve) => {
-
     function next() {
       if (index >= teamIds.length && active === 0) {
         return resolve();
@@ -610,23 +611,23 @@ async function lazyLoadMessageStats() {
         const teamId = teamIds[index++];
         active++;
         getTeamMessageStats(teamId)
-        .then(stats => updateRow(teamId, stats))
-        .catch(err => {
-          console.error(`Error loading team ${teamId}:`, err);
-          updateRow(teamId, {
-            messageCount: '-',
-            latestMessage: '-',
-            recentCount: '-'
+          .then((stats) => updateRow(teamId, stats))
+          .catch((err) => {
+            console.error(`Error loading team ${teamId}:`, err);
+            updateRow(teamId, {
+              messageCount: '-',
+              latestMessage: '-',
+              recentCount: '-',
+            });
+          })
+          .finally(() => {
+            active--;
+            next();
           });
-        })
-        .finally(() => {
-          active--;
-          next();
-        });
       }
     }
 
-      next();
+    next();
   });
 }
 
