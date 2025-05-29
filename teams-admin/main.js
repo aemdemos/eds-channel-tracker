@@ -295,7 +295,7 @@ function renderSingleTeamRow(team) {
         container.appendChild(row);
 
         // eslint-disable-next-line no-use-before-define
-        showSuccessModal(`Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}. Some users may need to accept an email invitation before they can access the system. Please allow a few minutes for the changes to take effect. A refresh of the page may be required.`);
+        showSuccessModal(`Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}. <br> Some users may need to accept an email invitation before they can access the system. Please allow a few minutes for the changes to take effect. A refresh of the page may be required.`);
 
         await updateTeamRowAfterDelay(team);
 
