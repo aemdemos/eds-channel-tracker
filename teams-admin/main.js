@@ -77,6 +77,13 @@ window.addEventListener('beforeunload', (event) => {
   }
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('modal');
+  if (modal) {
+    setupModalDrag(modal);
+  }
+});
+
 const createCell = (content, nobreak = false) => {
   const td = document.createElement('td');
   td.textContent = content;
@@ -163,8 +170,10 @@ function renderSingleTeamRow(team) {
   modal.style.cursor = "move";
   modal.onmousedown = function (e) {
     isDragging = true;
-    offsetX = e.clientX - modal.offsetLeft;
-    offsetY = e.clientY - modal.offsetTop;
+    const rect = modal.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+
     document.onmousemove = onMouseMove;
     document.onmouseup = onMouseUp;
   };
@@ -172,8 +181,8 @@ function renderSingleTeamRow(team) {
   function onMouseMove(e) {
     if (!isDragging) return;
     modal.style.position = "absolute";
-    modal.style.left = e.clientX - offsetX + "px";
-    modal.style.top = e.clientY - offsetY + "px";
+    modal.style.left = window.scrollX + e.clientX - offsetX + "px";
+    modal.style.top = window.scrollY + e.clientY - offsetY + "px";
   }
 
   function onMouseUp() {
@@ -313,6 +322,31 @@ function renderSingleTeamRow(team) {
 
   return tr;
 }
+
+function setupModalDrag(modal) {
+  let isDragging = false;
+  let offsetX, offsetY;
+
+  modal.onmousedown = function (e) {
+    isDragging = true;
+    const rect = modal.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+
+    document.onmousemove = function (e) {
+      if (!isDragging) return;
+      modal.style.left = `${e.clientX - offsetX}px`;
+      modal.style.top = `${e.clientY - offsetY}px`;
+    };
+
+    document.onmouseup = function () {
+      isDragging = false;
+      document.onmousemove = null;
+      document.onmouseup = null;
+    };
+  };
+}
+
 
 const renderTable = (teams) => {
   const tbody = document.querySelector('tbody');
@@ -531,7 +565,7 @@ async function lazyLoadMessageStats() {
   const rows = document.querySelectorAll('.team-row');
   const teamIds = Array.from(rows).map(row => row.dataset.teamId);
 
-  const MAX_CONCURRENT = 5;
+  const MAX_CONCURRENT = 10;
 
   const updateRow = (teamId, stats) => {
 
