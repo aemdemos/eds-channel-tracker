@@ -19,15 +19,17 @@ import {
   addMembersToTeam,
   getTeamMessageStats,
 } from './api.js';
-
 import {
+  sortTable,
   decodeHTML,
   escapeHTML,
-  sortTable,
-  renderMemberList,
-  handleModalInteraction,
   sleep,
 } from './utils.js';
+import {
+  handleModalInteraction,
+  setupModalDrag,
+} from './modal.js';
+import renderMemberList from './members.js';
 
 let userProfile;
 
@@ -163,36 +165,12 @@ function renderSingleTeamRow(team) {
   membersCountCell.appendChild(membersLink); // Add the hyperlink
 
   const modal = document.getElementById('modal');
-
-  let offsetX = 0; let offsetY = 0; let
-    isDragging = false;
-
-  modal.style.cursor = 'move';
-  modal.onmousedown = function (e) {
-    isDragging = true;
-    const rect = modal.getBoundingClientRect();
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
-
-    document.onmousemove = onMouseMove;
-    document.onmouseup = onMouseUp;
-  };
-
-  function onMouseMove(e) {
-    if (!isDragging) return;
-    modal.style.position = 'absolute';
-    modal.style.left = `${window.scrollX + e.clientX - offsetX}px`;
-    modal.style.top = `${window.scrollY + e.clientY - offsetY}px`;
-  }
-
-  function onMouseUp() {
-    isDragging = false;
-    document.onmousemove = null;
-    document.onmouseup = null;
-  }
+  setupModalDrag(modal);
 
   membersCountCell.addEventListener('click', async (e) => {
+   console.log('Members count cell clicked');
     e.stopPropagation();
+    e.preventDefault();
     await handleModalInteraction(membersCountCell, team.id, modal, async () => {
       const members = await getTeamMembers(team.id);
       return {
@@ -322,34 +300,6 @@ function renderSingleTeamRow(team) {
   );
 
   return tr;
-}
-
-function setupModalDrag(modal, cursor = 'move') {
-  let isDragging = false;
-  let offsetX, offsetY;
-
-  modal.style.cursor = cursor;
-
-  modal.onmousedown = function (e) {
-    if (e.button !== 0) return;
-    isDragging = true;
-    const rect = modal.getBoundingClientRect();
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
-
-    document.onmousemove = function (e) {
-      if (!isDragging) return;
-      modal.style.left = `${e.clientX - offsetX}px`;
-      modal.style.top = `${e.clientY - offsetY}px`;
-      modal.style.right = 'auto';
-    };
-
-    document.onmouseup = function () {
-      isDragging = false;
-      document.onmousemove = null;
-      document.onmouseup = null;
-    };
-  };
 }
 
 const renderTable = (teams) => {
