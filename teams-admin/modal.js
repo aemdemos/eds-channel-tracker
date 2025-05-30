@@ -73,6 +73,34 @@ export const handleModalInteraction = async (cell, teamId, modal, fetchDataCallb
     modal.innerHTML = '<p style="color: red;">Error loading data</p>';
   }
 };
+export function showSuccessModal(message) {
+  const overlay = document.getElementById('success-modal-overlay');
+  const messageEl = document.getElementById('success-modal-message');
+  const closeButton = document.getElementById('success-modal-close');
+
+  messageEl.innerHTML = message; // Use innerHTML for HTML content
+
+  overlay.classList.remove('hidden');
+  requestAnimationFrame(() => overlay.classList.add('visible'));
+
+  const close = () => {
+    overlay.classList.remove('visible');
+    overlay.addEventListener('transitionend', () => {
+      overlay.classList.add('hidden');
+    }, { once: true });
+
+    // eslint-disable-next-line no-use-before-define
+    overlay.removeEventListener('click', onOverlayClick);
+    closeButton.removeEventListener('click', close);
+  };
+
+  const onOverlayClick = (e) => {
+    if (e.target === overlay) close();
+  };
+
+  overlay.addEventListener('click', onOverlayClick);
+  closeButton.addEventListener('click', close);
+}
 
 export function setupModalDrag(modal) {
   let isDragging = false;

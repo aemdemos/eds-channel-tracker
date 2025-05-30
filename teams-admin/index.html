@@ -13,7 +13,7 @@
 </head>
 
 <body class="teams-admin">
-<a href="/index.html" class="header-left">
+<a href="../index.html" class="header-left">
   <span style="margin-right: 5px;">🏠</span>Home
 </a>
 
@@ -64,32 +64,19 @@
     <div id="teams-container">
     </div>
 
-    <!-- Add Users Modal -->
-    <div id="add-users-modal" style="display: none;">
-      <div class="modal-content-add-users">
-        <span id="close-add-users" class="close">&times;</span>
-        <h3 id="modal-team-name">Invite users to Team</h3>
-        <div id="spinner" class="spinner" style="display: none"></div>
-        <form id="add-users-form">
-          <div id="user-rows-container">
-            <div class="user-row">
-              <input class="user-display-name" type="text" name="displayName" placeholder="Display Name" required>
-              <input class="user-email" type="email" name="email" placeholder="Email" required>
-              <button type="button" class="remove-row" title="Remove">−</button>
-            </div>
-          </div>
-          <button type="button" id="add-row-button">+ Add Row</button>
-          <button id="submit-users-btn" class="button" type="submit">Submit</button>
-        </form>
+    <div id="members-modal" class="modal">
+      <div class="modal-header">
+        <h4 class="modal-title">Members</h4>
+      </div>
+      <div class="modal-body">
       </div>
     </div>
 
-    <div id="modal" class="modal">
+    <div id="add-users-modal" class="modal">
       <div class="modal-header">
-        <h4 class="modal-title"></h4>
+        <h4 class="modal-title">Add Users</h4>
       </div>
       <div class="modal-body">
-        <!-- member list goes here -->
       </div>
     </div>
 

@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 import getUserProfile from './userProfile.js';
+import renderMemberList from './members.js';
 import API_ENDPOINT from './config.js';
 import {
   getMyTeams,
@@ -27,14 +28,16 @@ import {
 } from './utils.js';
 import {
   handleModalInteraction,
+  showSuccessModal,
   setupModalDrag,
 } from './modal.js';
-import renderMemberList from './members.js';
 
+// Ensure the userProfile is fetched if not set
 let userProfile;
 
 const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
+// If running on localhost, fetch userProfile from query params
 if (isLocalhost) {
   const params = new URLSearchParams(window.location.search);
   const email = params.get('email');
@@ -48,17 +51,7 @@ if (isLocalhost) {
   }
 }
 
-let sortDirection = 'asc'; // Default sort direction
-let currentTeams = [];
-let currentInviteTeamId = null;
-let currentInviteTeamRow = null;
-
-const pendingApiCalls = new Set();
-
-const teamsContainer = document.getElementById('teams-container');
-
 const doReload = () => window.location.reload();
-
 const sk = document.querySelector('aem-sidekick');
 
 if (sk) {
@@ -70,21 +63,21 @@ if (sk) {
     document.querySelector('aem-sidekick').addEventListener('logged-in', doReload);
   }, { once: true });
 }
-
-const searchButton = document.getElementById('teams');
-
-window.addEventListener('beforeunload', (event) => {
-  if (pendingApiCalls.size > 0) {
-    event.preventDefault();
-  }
-});
+const membersModal = document.getElementById('members-modal');
+const addUsersModal = document.getElementById('add-users-modal');
 
 document.addEventListener('DOMContentLoaded', () => {
-  const modal = document.getElementById('modal');
-  if (modal) {
-    setupModalDrag(modal);
-  }
+  if (membersModal) setupModalDrag(membersModal);
+  if (addUsersModal) setupModalDrag(addUsersModal);
 });
+
+let sortDirection = 'asc'; // Default sort direction
+let currentTeams = [];
+let currentInviteTeamId = null;
+let currentInviteTeamRow = null;
+
+const searchButton = document.getElementById('teams');
+const teamsContainer = document.getElementById('teams-container');
 
 const createCell = (content, nobreak = false) => {
   const td = document.createElement('td');
@@ -94,6 +87,35 @@ const createCell = (content, nobreak = false) => {
   }
   return td;
 };
+async function updateTeamRowAfterDelay(team) {
+  await sleep(5000); // Wait 4 seconds
+
+  try {
+    if (currentInviteTeamRow) {
+      const currentTeam = currentTeams.find((t) => t.id === currentInviteTeamId);
+      const currentTeamMembers = await getTeamMembers(currentInviteTeamId);
+      const memberEmails = currentTeamMembers.map((t) => t.email);
+      const isMember = memberEmails.includes(userProfile.email);
+
+      if (team) {
+        Object.assign(team, {
+          webUrl: team.webUrl || '',
+          created: team.created || '',
+          messageCount: currentTeam.messageCount || 0,
+          latestMessage: currentTeam.latestMessage || '-',
+          recentCount: currentTeam.recentCount || '0',
+          memberCount: memberEmails.length || 0,
+          isMember,
+        });
+
+        const newRow = renderSingleTeamRow(team);
+        currentInviteTeamRow.replaceWith(newRow);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to update team row after delay:', err);
+  }
+}
 
 function renderSingleTeamRow(team) {
   const tr = document.createElement('tr');
@@ -105,7 +127,9 @@ function renderSingleTeamRow(team) {
   nameCell.className = 'name-column';
 
   if (team.webUrl) {
-    nameCell.innerHTML = `<a href="${escapeHTML(team.webUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(team.displayName)}</a>`;
+    nameCell.innerHTML = `<a href="${escapeHTML(
+      team.webUrl,
+    )}" target="_blank" rel="noopener noreferrer">${escapeHTML(team.displayName)}</a>`;
   } else {
     nameCell.textContent = team.displayName;
   }
@@ -132,7 +156,8 @@ function renderSingleTeamRow(team) {
   const descriptionText = decodeHTML(team.description || '');
   const descriptionCell = createCell(descriptionText);
 
-  const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
+  const dateOnly = team.created ? new Date(team.created).toISOString()
+    .split('T')[0] : 'N/A';
   const createdCell = createCell(dateOnly, true);
 
   const totalMessagesCell = document.createElement('td');
@@ -164,14 +189,10 @@ function renderSingleTeamRow(team) {
   membersCountCell.innerHTML = ''; // Clear current content
   membersCountCell.appendChild(membersLink); // Add the hyperlink
 
-  const modal = document.getElementById('modal');
-  setupModalDrag(modal);
-
   membersCountCell.addEventListener('click', async (e) => {
-   console.log('Members count cell clicked');
     e.stopPropagation();
     e.preventDefault();
-    await handleModalInteraction(membersCountCell, team.id, modal, async () => {
+    await handleModalInteraction(membersCountCell, team.id, membersModal, async () => {
       const members = await getTeamMembers(team.id);
       return {
         modalContent: renderMemberList(members),
@@ -188,52 +209,66 @@ function renderSingleTeamRow(team) {
   addButton.textContent = '+';
   addButton.title = 'Add Users';
   addButton.classList.add('add-users-button');
-
   addButton.textContent = '👤 +';
 
-  function handleAddRow(container) {
-    const row = document.createElement('div');
-    row.classList.add('user-row');
-    row.innerHTML = `
+  addButton.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    currentInviteTeamId = team.id;
+    currentInviteTeamRow = tr; // store row reference
+    await handleModalInteraction(
+      addButton, // trigger element for positioning
+      team.id,
+      addUsersModal,
+      async () =>
+        // Return an object with modalContent and teamName
+        ({
+          modalContent: `
+          <form id="add-users-form">
+            <div id="user-rows-container">
+              <div class="user-row">
+                <input type="text" name="displayName" placeholder="Display Name" required>
+                <input type="email" name="email" placeholder="Email" required>
+                <button type="button" class="remove-row" title="Remove">−</button>
+              </div>
+            </div>
+            <button type="button" id="add-row-button">+ Add Row</button>
+            <button id="submit-users-btn" class="button" type="submit">Submit</button>
+            <span class="spinner" style="display:none"></span>
+          </form>
+        `,
+          teamName: `Add users to ${team.displayName}`,
+        }),
+
+    );
+
+    // Now select the elements inside the modal
+    const form = addUsersModal.querySelector('#add-users-form');
+    const container = addUsersModal.querySelector('#user-rows-container');
+    const addRowBtn = addUsersModal.querySelector('#add-row-button');
+    const submitButton = addUsersModal.querySelector('#submit-users-btn');
+    const spinner = addUsersModal.querySelector('.spinner');
+    // Add row handler
+    addRowBtn.addEventListener('click', () => {
+      const row = document.createElement('div');
+      row.classList.add('user-row');
+      row.innerHTML = `
     <input type="text" name="displayName" placeholder="Display Name" required>
     <input type="email" name="email" placeholder="Email" required>
     <button type="button" class="remove-row" title="Remove">−</button>
   `;
-    container.appendChild(row);
-  }
-
-  addButton.addEventListener('click', (e) => {
-    document.getElementById('modal-team-name').textContent = `Add users to ${team.displayName}`;
-    currentInviteTeamId = team.id;
-    currentInviteTeamRow = tr; // store row reference
-
-    const modal = document.getElementById('add-users-modal');
-    setupModalDrag(modal);
-    const rect = e.target.getBoundingClientRect();
-    modal.style.position = 'absolute';
-    modal.style.top = `${rect.top + window.scrollY - 50}px`;
-    modal.style.left = `${rect.right + 10 + window.scrollX}px`;
-    modal.style.display = 'block';
-
-    const form = document.getElementById('add-users-form');
-    const container = document.getElementById('user-rows-container');
-    const addRowBtn = document.getElementById('add-row-button');
-
-    // Remove previous listener, then add
-    addRowBtn.removeEventListener('click', addRowBtn._handler);
-    addRowBtn._handler = () => handleAddRow(container);
-    addRowBtn.addEventListener('click', addRowBtn._handler);
-    // Remove a user row
+      container.appendChild(row);
+    });
+    // Remove row handler
     container.addEventListener('click', (e) => {
       if (e.target.classList.contains('remove-row')) {
-        e.target.closest('.user-row').remove();
+        e.target.closest('.user-row')
+          .remove();
       }
     });
-
-    // Handle form submission
+    // Form submit handler
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
       const rows = container.querySelectorAll('.user-row');
       const users = Array.from(rows).map((row) => ({
         displayName: row.querySelector('input[name="displayName"]').value.trim(),
@@ -241,14 +276,7 @@ function renderSingleTeamRow(team) {
       }));
 
       try {
-        const modal = document.getElementById('add-users-modal');
-        const submitButton = document.getElementById('submit-users-btn');
-        const form = document.getElementById('add-users-form');
         form.style.display = 'none';
-
-        // Create or select a spinner inside the modal
-        const spinner = modal.querySelector('.spinner');
-        // Show spinner and disable submit button
         spinner.style.display = 'block';
         submitButton.disabled = true;
 
@@ -258,19 +286,18 @@ function renderSingleTeamRow(team) {
 
         spinner.style.display = 'none';
         form.style.display = 'flex';
-
-        modal.style.display = 'none';
+        addUsersModal.style.display = 'none';
         submitButton.disabled = false;
 
-        // Clear out user rows
+        // Reset form
         container.innerHTML = '';
         const row = document.createElement('div');
         row.classList.add('user-row');
         row.innerHTML = `
-  <input type="text" name="displayName" placeholder="Display Name" required>
-  <input type="email" name="email" placeholder="Email" required>
-  <button type="button" class="remove-row" title="Remove">−</button>
-`;
+      <input type="text" name="displayName" placeholder="Display Name" required>
+      <input type="email" name="email" placeholder="Email" required>
+      <button type="button" class="remove-row" title="Remove">−</button>
+    `;
         container.appendChild(row);
 
         // eslint-disable-next-line no-use-before-define
@@ -280,6 +307,9 @@ function renderSingleTeamRow(team) {
 
         document.getElementById('add-users-modal').style.display = 'none';
       } catch (err) {
+        spinner.style.display = 'none';
+        form.style.display = 'flex';
+        submitButton.disabled = false;
         alert('Failed to add users.');
       }
     });
@@ -301,7 +331,6 @@ function renderSingleTeamRow(team) {
 
   return tr;
 }
-
 const renderTable = (teams) => {
   const tbody = document.querySelector('tbody');
   tbody.innerHTML = '';
@@ -414,9 +443,6 @@ const displayTeams = async () => {
   progressBar.style.display = 'none';
 
   teamsContainer.innerHTML = ''; // Clear any existing content
-
-  // Wait for all pending API calls to complete
-  await Promise.all(pendingApiCalls);
 
   if (!userProfile) {
     try {
@@ -563,8 +589,9 @@ async function lazyLoadMessageStats() {
       }
 
       while (active < MAX_CONCURRENT && index < teamIds.length) {
-        const teamId = teamIds[index++];
-        active++;
+        const teamId = teamIds[index];
+        index += 1;
+        active += 1;
         getTeamMessageStats(teamId)
           .then((stats) => updateRow(teamId, stats))
           .catch((err) => {
@@ -576,73 +603,15 @@ async function lazyLoadMessageStats() {
             });
           })
           .finally(() => {
-            active--;
+            active -= 1;
             next();
           });
       }
+      return null;
     }
 
     next();
   });
-}
-
-async function updateTeamRowAfterDelay(team) {
-  await sleep(5000); // Wait 4 seconds
-
-  try {
-    if (currentInviteTeamRow) {
-      const currentTeam = currentTeams.find((t) => t.id === currentInviteTeamId);
-      const currentTeamMembers = await getTeamMembers(currentInviteTeamId);
-      const memberEmails = currentTeamMembers.map((t) => t.email);
-      const isMember = memberEmails.includes(userProfile.email);
-
-      if (team) {
-        Object.assign(team, {
-          webUrl: team.webUrl || '',
-          created: team.created || '',
-          messageCount: currentTeam.messageCount || 0,
-          latestMessage: currentTeam.latestMessage || '-',
-          recentCount: currentTeam.recentCount || '0',
-          memberCount: memberEmails.length || 0,
-          isMember,
-        });
-
-        const newRow = renderSingleTeamRow(team);
-        currentInviteTeamRow.replaceWith(newRow);
-      }
-    }
-  } catch (err) {
-    console.error('Failed to update team row after delay:', err);
-  }
-}
-
-function showSuccessModal(message) {
-  const overlay = document.getElementById('success-modal-overlay');
-  const messageEl = document.getElementById('success-modal-message');
-  const closeButton = document.getElementById('success-modal-close');
-
-  messageEl.innerHTML = message; // Use innerHTML for HTML content
-
-  overlay.classList.remove('hidden');
-  requestAnimationFrame(() => overlay.classList.add('visible'));
-
-  const close = () => {
-    overlay.classList.remove('visible');
-    overlay.addEventListener('transitionend', () => {
-      overlay.classList.add('hidden');
-    }, { once: true });
-
-    // eslint-disable-next-line no-use-before-define
-    overlay.removeEventListener('click', onOverlayClick);
-    closeButton.removeEventListener('click', close);
-  };
-
-  const onOverlayClick = (e) => {
-    if (e.target === overlay) close();
-  };
-
-  overlay.addEventListener('click', onOverlayClick);
-  closeButton.addEventListener('click', close);
 }
 
 // search triggered by pressing enter
@@ -653,11 +622,6 @@ document.addEventListener('keydown', (event) => {
 });
 
 // Disable Search button if there are pending API calls
-
 searchButton.addEventListener('click', async () => {
   await displayTeams();
-});
-
-document.getElementById('close-add-users').addEventListener('click', () => {
-  document.getElementById('add-users-modal').style.display = 'none';
 });
