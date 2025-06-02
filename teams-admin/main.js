@@ -183,7 +183,7 @@ function renderSingleTeamRow(team) {
     });
   });
 
-  async function updateTeamRowAfterDelay(team) {
+  async function updateTeamRowAfterDelay() {
     await sleep(5000); // Wait 4 seconds
 
     try {
@@ -389,7 +389,7 @@ async function lazyLoadMessageStats() {
     const team = currentTeams.find((t) => t.id === teamId);
     if (!team || team.messageCount) return; // 🧠 Already loaded
 
-    const row = Array.from(rows).find((row) => row.dataset.teamId === teamId);
+    const row = Array.from(rows).find((r) => r.dataset.teamId === teamId);
     if (!row) return;
 
     const msgCountCell = row.querySelector('.msg-count');
