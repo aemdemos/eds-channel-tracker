@@ -109,10 +109,9 @@ function renderSingleTeamRow(team) {
   const nameCell = document.createElement('td');
   nameCell.className = 'name-column';
 
-  if (team.webUrl) {
-    nameCell.innerHTML = `<a href="${escapeHTML(
-      team.webUrl,
-    )}" target="_blank" rel="noopener noreferrer">${escapeHTML(team.displayName)}</a>`;
+  // Name column with optional webUrl link (only if isMember)
+  if (team.webUrl && team.isMember) {
+    nameCell.innerHTML = `<a href="${escapeHTML(team.webUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(team.displayName)}</a>`;
   } else {
     nameCell.textContent = team.displayName;
   }
