@@ -66,9 +66,33 @@ if (sk) {
 const membersModal = document.getElementById('members-modal');
 const addUsersModal = document.getElementById('add-users-modal');
 
+const focusFirstInput = (modal) => {
+  const firstInput = modal.querySelector('input');
+  if (firstInput) firstInput.focus();
+};
+
+addUsersModal.addEventListener('transitionend', () => {
+  if (addUsersModal.classList.contains('show')) {
+    focusFirstInput(addUsersModal);
+  }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   if (membersModal) setupModalDrag(membersModal);
   if (addUsersModal) setupModalDrag(addUsersModal);
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    membersModal.style.display = 'none';
+    addUsersModal.style.display = 'none';
+  }
+});
+
+document.getElementById('success-modal-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) {
+    addUsersModal.style.display = 'none';
+  }
 });
 
 let sortDirection = 'asc'; // Default sort direction
@@ -286,7 +310,6 @@ function renderSingleTeamRow(team) {
 
         spinner.style.display = 'none';
         form.style.display = 'flex';
-        addUsersModal.style.display = 'none';
         submitButton.disabled = false;
 
         // Reset form
@@ -300,12 +323,14 @@ function renderSingleTeamRow(team) {
     `;
         container.appendChild(row);
 
+        // Close the modal
+        addUsersModal.classList.remove('show');
+        addUsersModal.style.display = 'none';
+
         // eslint-disable-next-line no-use-before-define
-        showSuccessModal(`Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}. <br> Some users may need to accept an email invitation before they can access the system. Please allow a few minutes for the changes to take effect. A refresh of the page may be required.`);
+        showSuccessModal(`Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}<br> Some users may need to accept an email invitation before they can access the system. Please allow a few minutes for the changes to take effect. A refresh of the page may be required.`);
 
         await updateTeamRowAfterDelay(team);
-
-        document.getElementById('add-users-modal').style.display = 'none';
       } catch (err) {
         spinner.style.display = 'none';
         form.style.display = 'flex';
