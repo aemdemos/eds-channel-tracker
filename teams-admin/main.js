@@ -513,35 +513,16 @@ const displayTeams = async () => {
 
   const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
-
-  const spinner = document.getElementsByClassName('spinner')[0];
-  spinner.style.display = 'block';
-
-  const progressContainer = document.getElementById('progress-container');
-  progressContainer.style.display = 'block';
-
-  const progressBar = document.getElementById('progress-bar');
-  const progressFill = document.getElementById('progress-fill');
-  const progressLabel = document.getElementById('progress-label');
-
-  progressLabel.innerHTML = '';
-  progressBar.style.display = 'none';
-
-  teamsContainer.innerHTML = ''; // Clear any existing content
-
-  if (!userProfile) {
-    try {
-      userProfile = await getUserProfile();
-    } catch (error) {
-      teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
-    }
-  }
-
   const myTeams = await getMyTeams(userProfile.email);
   if (myTeams.length === 0) {
     teamsContainer.innerHTML = `
-    <p>No teams found. Click <a href="#" id="send-invitation-link">here</a> to send an invitation.</p>
-   `;
+  <div class="no-teams-message">
+    <p>
+      <span class="no-teams-icon">🚫</span>
+      No teams found. Click <a href="#" id="send-invitation-link">here</a> to send an invitation.
+    </p>
+  </div>
+`;
     document.getElementById('send-invitation-link').addEventListener('click', async (event) => {
       event.preventDefault();
 
@@ -571,6 +552,29 @@ const displayTeams = async () => {
       }
     });
     return;
+  }
+
+  const spinner = document.getElementsByClassName('spinner')[0];
+  spinner.style.display = 'block';
+
+  const progressContainer = document.getElementById('progress-container');
+  progressContainer.style.display = 'block';
+
+  const progressBar = document.getElementById('progress-bar');
+  const progressFill = document.getElementById('progress-fill');
+  const progressLabel = document.getElementById('progress-label');
+
+  progressLabel.innerHTML = '';
+  progressBar.style.display = 'none';
+
+  teamsContainer.innerHTML = ''; // Clear any existing content
+
+  if (!userProfile) {
+    try {
+      userProfile = await getUserProfile();
+    } catch (error) {
+      teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
+    }
   }
 
   let teams = await getFilteredTeams(nameFilter, descriptionFilter);
