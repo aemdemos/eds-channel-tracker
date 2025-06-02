@@ -513,6 +513,15 @@ const displayTeams = async () => {
   const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
   const myTeams = await getMyTeams(userProfile.email);
+
+  if (!userProfile) {
+    try {
+      userProfile = await getUserProfile();
+    } catch (error) {
+      teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
+    }
+  }
+
   if (myTeams.length === 0) {
     teamsContainer.innerHTML = `
   <div class="no-teams-message">
@@ -567,14 +576,6 @@ const displayTeams = async () => {
   progressBar.style.display = 'none';
 
   teamsContainer.innerHTML = ''; // Clear any existing content
-
-  if (!userProfile) {
-    try {
-      userProfile = await getUserProfile();
-    } catch (error) {
-      teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
-    }
-  }
 
   let teams = await getFilteredTeams(nameFilter, descriptionFilter);
   teams = teams.filter((team) => team && typeof team === 'object');
