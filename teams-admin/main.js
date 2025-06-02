@@ -262,14 +262,14 @@ function renderSingleTeamRow(team) {
 
     // Add row handler
     addRowBtn.addEventListener('click', () => {
-      const row = document.createElement('div');
-      row.classList.add('user-row');
-      row.innerHTML = `
+      const userRow = document.createElement('div');
+      userRow.classList.add('user-row');
+      userRow.innerHTML = `
     <input type="text" name="displayName" placeholder="Display Name" required>
     <input type="email" name="email" placeholder="Email" required>
     <button type="button" class="remove-row" title="Remove">−</button>
   `;
-      container.appendChild(row);
+      container.appendChild(userRow);
     });
     // Remove row handler
     container.addEventListener('click', (event) => {
@@ -427,19 +427,19 @@ async function lazyLoadMessageStats() {
         index += 1;
         active += 1;
         getTeamMessageStats(teamId)
-        .then((stats) => updateRow(teamId, stats))
-        .catch((err) => {
-          console.error(`Error loading team ${teamId}:`, err);
-          updateRow(teamId, {
-            messageCount: '-',
-            latestMessage: '-',
-            recentCount: '-',
+          .then((stats) => updateRow(teamId, stats))
+          .catch((err) => {
+            console.error(`Error loading team ${teamId}:`, err);
+            updateRow(teamId, {
+              messageCount: '-',
+              latestMessage: '-',
+              recentCount: '-',
+            });
+          })
+          .finally(() => {
+            active -= 1;
+            next();
           });
-        })
-        .finally(() => {
-          active -= 1;
-          next();
-        });
       }
       return null;
     }
@@ -577,9 +577,9 @@ const displayTeams = async () => {
   teams = teams.filter((team) => team && typeof team === 'object');
 
   const myTeamIds = myTeams.map((myTeam) => myTeam.id);
-  teams.forEach((team) => {
+  teams.forEach((t) => {
     // Ensure `isMember` is updated based on `myTeams`
-    team.isMember = myTeamIds.includes(team.id);
+    t.isMember = myTeamIds.includes(t.id);
   });
   const teamIds = teams.map((team) => team.id);
 
@@ -630,7 +630,6 @@ const displayTeams = async () => {
 
   searchButton.disabled = false;
 };
-
 
 // search triggered by pressing enter
 document.addEventListener('keydown', (event) => {

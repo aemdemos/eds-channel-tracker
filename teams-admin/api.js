@@ -59,7 +59,7 @@ export const getTeamMessageStats = async (teamId) => {
 
   try {
     while (partial) {
-      let url = new URL(`${API_ENDPOINT}/teams/messages`);
+      const url = new URL(`${API_ENDPOINT}/teams/messages`);
 
       const response = await fetch(url.toString(), {
         method: 'POST',
@@ -68,15 +68,15 @@ export const getTeamMessageStats = async (teamId) => {
         },
         body: JSON.stringify({
           teamId,
-          ...(continuationToken ? { continuationToken } : {})
+          ...(continuationToken ? { continuationToken } : {}),
         }),
       });
 
-    if (!response.ok) {
+      if (!response.ok) {
       // eslint-disable-next-line no-console
-      console.warn(`Non-OK response for team ${teamId}`, response.status);
-      return { messageCount: '-', latestMessage: '-' };
-    }
+        console.warn(`Non-OK response for team ${teamId}`, response.status);
+        return { messageCount: '-', latestMessage: '-' };
+      }
 
       const data = await response.json();
 
