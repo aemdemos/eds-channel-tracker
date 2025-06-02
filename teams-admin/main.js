@@ -177,7 +177,7 @@ function renderSingleTeamRow(team) {
       const members = await getTeamMembers(team.id);
       return {
         modalContent: renderMemberList(members),
-        teamName: team.displayName,
+        teamName: `Members of ${team.displayName}`,
         members,
       };
     });
