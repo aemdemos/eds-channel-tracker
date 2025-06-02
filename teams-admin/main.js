@@ -512,7 +512,6 @@ const displayTeams = async () => {
 
   const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
-  const myTeams = await getMyTeams(userProfile.email);
 
   if (!userProfile) {
     try {
@@ -521,6 +520,7 @@ const displayTeams = async () => {
       teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
     }
   }
+  const myTeams = await getMyTeams(userProfile.email);
 
   if (myTeams.length === 0) {
     teamsContainer.innerHTML = `
