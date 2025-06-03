@@ -58,6 +58,7 @@ export const getTeamMessageStats = async (teamId) => {
   try {
       let url = new URL(`${API_ENDPOINT}/teams/messages`);
 
+      // eslint-disable-next-line no-await-in-loop
       const response = await fetch(url.toString(), {
         method: 'POST',
         headers: {
@@ -66,12 +67,13 @@ export const getTeamMessageStats = async (teamId) => {
         body: JSON.stringify({ teamId }),
       });
 
-    if (!response.ok) {
+      if (!response.ok) {
       // eslint-disable-next-line no-console
-      console.warn(`Non-OK response for team ${teamId}`, response.status);
-      return { messageCount: '-', latestMessage: '-' };
-    }
+        console.warn(`Non-OK response for team ${teamId}`, response.status);
+        return { messageCount: '-', latestMessage: '-' };
+      }
 
+      // eslint-disable-next-line no-await-in-loop
       const data = await response.json();
 
       // Aggregate results

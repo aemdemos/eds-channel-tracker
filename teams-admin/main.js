@@ -71,6 +71,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (addUsersModal) setupModalDrag(addUsersModal);
 });
 
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    membersModal.style.display = 'none';
+    addUsersModal.style.display = 'none';
+  }
+});
+
+document.getElementById('success-modal-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) {
+    addUsersModal.style.display = 'none';
+  }
+});
+
 let sortDirection = 'asc'; // Default sort direction
 let currentTeams = [];
 let currentInviteTeamId = null;
@@ -87,36 +100,6 @@ const createCell = (content, nobreak = false) => {
   }
   return td;
 };
-async function updateTeamRowAfterDelay(team) {
-  await sleep(5000); // Wait 4 seconds
-
-  try {
-    if (currentInviteTeamRow) {
-      const currentTeam = currentTeams.find((t) => t.id === currentInviteTeamId);
-      const currentTeamMembers = await getTeamMembers(currentInviteTeamId);
-      const memberEmails = currentTeamMembers.map((t) => t.email);
-      const isMember = memberEmails.includes(userProfile.email);
-
-      if (team) {
-        Object.assign(team, {
-          webUrl: team.webUrl || '',
-          created: team.created || '',
-          messageCount: currentTeam.messageCount || 0,
-          latestMessage: currentTeam.latestMessage || '-',
-          recentCount: currentTeam.recentCount || '0',
-          memberCount: memberEmails.length || 0,
-          isMember,
-        });
-
-        const newRow = renderSingleTeamRow(team);
-        currentInviteTeamRow.replaceWith(newRow);
-      }
-    }
-  } catch (err) {
-    console.error('Failed to update team row after delay:', err);
-  }
-}
-
 function renderSingleTeamRow(team) {
   const tr = document.createElement('tr');
   tr.classList.add('team-row');
@@ -126,10 +109,9 @@ function renderSingleTeamRow(team) {
   const nameCell = document.createElement('td');
   nameCell.className = 'name-column';
 
-  if (team.webUrl) {
-    nameCell.innerHTML = `<a href="${escapeHTML(
-      team.webUrl,
-    )}" target="_blank" rel="noopener noreferrer">${escapeHTML(team.displayName)}</a>`;
+  // Name column with optional webUrl link (only if isMember)
+  if (team.webUrl && team.isMember) {
+    nameCell.innerHTML = `<a href="${escapeHTML(team.webUrl)}" target="_blank" rel="noopener noreferrer" title="Open in Microsoft Teams">${escapeHTML(team.displayName)}</a>`;
   } else {
     nameCell.textContent = team.displayName;
   }
@@ -156,8 +138,7 @@ function renderSingleTeamRow(team) {
   const descriptionText = decodeHTML(team.description || '');
   const descriptionCell = createCell(descriptionText);
 
-  const dateOnly = team.created ? new Date(team.created).toISOString()
-    .split('T')[0] : 'N/A';
+  const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
   const createdCell = createCell(dateOnly, true);
 
   const totalMessagesCell = document.createElement('td');
@@ -185,7 +166,7 @@ function renderSingleTeamRow(team) {
   // Modify the membersCountCell to make it look like a hyperlink
   const membersLink = document.createElement('a');
   membersLink.textContent = `${team.memberCount ?? 0}`; // You can append "Members" text or leave it as just the count
-
+  membersLink.title = 'View Members';
   membersCountCell.innerHTML = ''; // Clear current content
   membersCountCell.appendChild(membersLink); // Add the hyperlink
 
@@ -196,11 +177,42 @@ function renderSingleTeamRow(team) {
       const members = await getTeamMembers(team.id);
       return {
         modalContent: renderMemberList(members),
-        teamName: team.displayName,
+        teamName: `Members of ${team.displayName}`,
         members,
       };
     });
   });
+
+  async function updateTeamRowAfterDelay() {
+    await sleep(5000); // Wait 4 seconds
+
+    try {
+      if (currentInviteTeamRow) {
+        const currentTeam = currentTeams.find((t) => t.id === currentInviteTeamId);
+        const currentTeamMembers = await getTeamMembers(currentInviteTeamId);
+        const memberEmails = currentTeamMembers.map((t) => t.email);
+        const isMember = memberEmails.includes(userProfile.email);
+
+        if (team) {
+          Object.assign(team, {
+            webUrl: team.webUrl || '',
+            created: team.created || '',
+            messageCount: currentTeam.messageCount || 0,
+            latestMessage: currentTeam.latestMessage || '-',
+            recentCount: currentTeam.recentCount || '0',
+            memberCount: memberEmails.length || 0,
+            isMember,
+          });
+
+          const newRow = renderSingleTeamRow(team);
+          currentInviteTeamRow.replaceWith(newRow);
+        }
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to update team row after delay:', err);
+    }
+  }
 
   // Actions cell
   const actionsCell = document.createElement('td');
@@ -220,10 +232,8 @@ function renderSingleTeamRow(team) {
       addButton, // trigger element for positioning
       team.id,
       addUsersModal,
-      async () =>
-        // Return an object with modalContent and teamName
-        ({
-          modalContent: `
+      async () => ({
+        modalContent: `
           <form id="add-users-form">
             <div id="user-rows-container">
               <div class="user-row">
@@ -234,12 +244,12 @@ function renderSingleTeamRow(team) {
             </div>
             <button type="button" id="add-row-button">+ Add Row</button>
             <button id="submit-users-btn" class="button" type="submit">Submit</button>
-            <span class="spinner" style="display:none"></span>
           </form>
+          <div id="add-users-error" style="color: red; margin-top: 10px; display: none;"></div>
+          <span class="spinner" style="display:none"></span>
         `,
-          teamName: `Add users to ${team.displayName}`,
-        }),
-
+        teamName: `Add users to ${team.displayName}`,
+      }),
     );
 
     // Now select the elements inside the modal
@@ -248,27 +258,31 @@ function renderSingleTeamRow(team) {
     const addRowBtn = addUsersModal.querySelector('#add-row-button');
     const submitButton = addUsersModal.querySelector('#submit-users-btn');
     const spinner = addUsersModal.querySelector('.spinner');
+    const errorDiv = addUsersModal.querySelector('#add-users-error');
+
     // Add row handler
     addRowBtn.addEventListener('click', () => {
-      const row = document.createElement('div');
-      row.classList.add('user-row');
-      row.innerHTML = `
+      const userRow = document.createElement('div');
+      userRow.classList.add('user-row');
+      userRow.innerHTML = `
     <input type="text" name="displayName" placeholder="Display Name" required>
     <input type="email" name="email" placeholder="Email" required>
     <button type="button" class="remove-row" title="Remove">−</button>
   `;
-      container.appendChild(row);
+      container.appendChild(userRow);
     });
     // Remove row handler
-    container.addEventListener('click', (e) => {
-      if (e.target.classList.contains('remove-row')) {
-        e.target.closest('.user-row')
+    container.addEventListener('click', (event) => {
+      if (event.target.classList.contains('remove-row')) {
+        event.target.closest('.user-row')
           .remove();
       }
     });
     // Form submit handler
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      errorDiv.style.display = 'none';
+      errorDiv.textContent = '';
       const rows = container.querySelectorAll('.user-row');
       const users = Array.from(rows).map((row) => ({
         displayName: row.querySelector('input[name="displayName"]').value.trim(),
@@ -276,8 +290,9 @@ function renderSingleTeamRow(team) {
       }));
 
       try {
-        form.style.display = 'none';
+        // Show spinner and disable submit button
         spinner.style.display = 'block';
+        form.style.display = 'none';
         submitButton.disabled = true;
 
         const addedBy = userProfile.name || userProfile.email;
@@ -286,7 +301,6 @@ function renderSingleTeamRow(team) {
 
         spinner.style.display = 'none';
         form.style.display = 'flex';
-        addUsersModal.style.display = 'none';
         submitButton.disabled = false;
 
         // Reset form
@@ -300,17 +314,20 @@ function renderSingleTeamRow(team) {
     `;
         container.appendChild(row);
 
+        // Close the modal
+        addUsersModal.classList.remove('show');
+        addUsersModal.style.display = 'none';
+
         // eslint-disable-next-line no-use-before-define
-        showSuccessModal(`Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}. <br> Some users may need to accept an email invitation before they can access the system. Please allow a few minutes for the changes to take effect. A refresh of the page may be required.`);
+        showSuccessModal(`Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}<br> Some users may need to accept an email invitation before they can access the system. Please allow a few minutes for the changes to take effect. A refresh of the page may be required.`);
 
         await updateTeamRowAfterDelay(team);
-
-        document.getElementById('add-users-modal').style.display = 'none';
       } catch (err) {
         spinner.style.display = 'none';
         form.style.display = 'flex';
         submitButton.disabled = false;
-        alert('Failed to add users.');
+        errorDiv.textContent = 'Failed to add users. Please try again.';
+        errorDiv.style.display = 'block';
       }
     });
   });
@@ -362,6 +379,76 @@ const addSortingToTable = (table) => {
     });
   });
 };
+
+async function lazyLoadMessageStats() {
+  const rows = document.querySelectorAll('.team-row');
+  const teamIds = Array.from(rows).map((row) => row.dataset.teamId);
+
+  const MAX_CONCURRENT = 10;
+
+  const updateRow = (teamId, stats) => {
+    const team = currentTeams.find((t) => t.id === teamId);
+    if (!team || team.messageCount) return; // 🧠 Already loaded
+
+    const row = Array.from(rows).find((r) => r.dataset.teamId === teamId);
+    if (!row) return;
+
+    const msgCountCell = row.querySelector('.msg-count');
+    const latestMsgCell = row.querySelector('.latest-msg');
+    const recentMsgsCell = row.querySelector('.recent-count');
+
+    // 🗃️ Cache message stats
+    team.messageCount = stats?.messageCount;
+    team.latestMessage = stats?.latestMessage;
+    team.recentCount = stats?.recentCount;
+
+    msgCountCell.textContent = stats?.messageCount ?? '-';
+    latestMsgCell.textContent = stats?.latestMessage ?? '-';
+    recentMsgsCell.textContent = stats?.recentCount ?? '-';
+
+    // increment active teams count if there are recent messages
+    if (stats?.recentCount > 0) {
+      const el = document.getElementById('active-teams-count');
+      el.textContent = (parseInt(el.textContent, 10) || 0) + 1;
+    }
+  };
+
+  let index = 0;
+  let active = 0;
+
+  return new Promise((resolve) => {
+    function next() {
+      if (index >= teamIds.length && active === 0) {
+        return resolve();
+      }
+
+      while (active < MAX_CONCURRENT && index < teamIds.length) {
+        const teamId = teamIds[index];
+        index += 1;
+        active += 1;
+        getTeamMessageStats(teamId)
+          .then((stats) => updateRow(teamId, stats))
+          .catch((err) => {
+            // eslint-disable-next-line no-console
+            console.error(`Error loading team ${teamId}:`, err);
+            updateRow(teamId, {
+              messageCount: '-',
+              latestMessage: '-',
+              recentCount: '-',
+            });
+          })
+        // eslint-disable-next-line no-loop-func
+          .finally(() => {
+            active -= 1;
+            next();
+          });
+      }
+      return null;
+    }
+
+    next();
+  });
+}
 
 // Modify initTable to accept the combinedTeams array
 const initTable = (teams) => {
@@ -416,6 +503,7 @@ const initTable = (teams) => {
   lazyLoadMessageStats().then(() => {
     addSortingToTable(table);
   }).catch((err) => {
+    // eslint-disable-next-line no-console
     console.error('Error loading message stats:', err);
   });
 };
@@ -429,21 +517,6 @@ const displayTeams = async () => {
   const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
 
-  const spinner = document.getElementsByClassName('spinner')[0];
-  spinner.style.display = 'block';
-
-  const progressContainer = document.getElementById('progress-container');
-  progressContainer.style.display = 'block';
-
-  const progressBar = document.getElementById('progress-bar');
-  const progressFill = document.getElementById('progress-fill');
-  const progressLabel = document.getElementById('progress-label');
-
-  progressLabel.innerHTML = '';
-  progressBar.style.display = 'none';
-
-  teamsContainer.innerHTML = ''; // Clear any existing content
-
   if (!userProfile) {
     try {
       userProfile = await getUserProfile();
@@ -451,12 +524,17 @@ const displayTeams = async () => {
       teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
     }
   }
-
   const myTeams = await getMyTeams(userProfile.email);
+
   if (myTeams.length === 0) {
     teamsContainer.innerHTML = `
-    <p>No teams found. Click <a href="#" id="send-invitation-link">here</a> to send an invitation.</p>
-   `;
+  <div class="no-teams-message">
+    <p>
+      <span class="no-teams-icon">🚫</span>
+      It appears that you are not a member of the Adobe Enterprise Support Teams Organization. Please click <a href="#" id="send-invitation-link">here</a> to receive an invitation. Once you accept the invitation, you will be able to run queries.
+    </p>
+  </div>
+`;
     document.getElementById('send-invitation-link').addEventListener('click', async (event) => {
       event.preventDefault();
 
@@ -488,13 +566,28 @@ const displayTeams = async () => {
     return;
   }
 
+  const spinner = document.getElementsByClassName('spinner')[0];
+  spinner.style.display = 'block';
+
+  const progressContainer = document.getElementById('progress-container');
+  progressContainer.style.display = 'block';
+
+  const progressBar = document.getElementById('progress-bar');
+  const progressFill = document.getElementById('progress-fill');
+  const progressLabel = document.getElementById('progress-label');
+
+  progressLabel.innerHTML = '';
+  progressBar.style.display = 'none';
+
+  teamsContainer.innerHTML = ''; // Clear any existing content
+
   let teams = await getFilteredTeams(nameFilter, descriptionFilter);
   teams = teams.filter((team) => team && typeof team === 'object');
 
   const myTeamIds = myTeams.map((myTeam) => myTeam.id);
-  teams.forEach((team) => {
+  teams.forEach((t) => {
     // Ensure `isMember` is updated based on `myTeams`
-    team.isMember = myTeamIds.includes(team.id);
+    t.isMember = myTeamIds.includes(t.id);
   });
   const teamIds = teams.map((team) => team.id);
 
@@ -545,74 +638,6 @@ const displayTeams = async () => {
 
   searchButton.disabled = false;
 };
-
-async function lazyLoadMessageStats() {
-  const rows = document.querySelectorAll('.team-row');
-  const teamIds = Array.from(rows).map((row) => row.dataset.teamId);
-
-  const MAX_CONCURRENT = 10;
-
-  const updateRow = (teamId, stats) => {
-    const team = currentTeams.find((t) => t.id === teamId);
-    if (!team || team.messageCount) return; // 🧠 Already loaded
-
-    const row = Array.from(rows).find((row) => row.dataset.teamId === teamId);
-    if (!row) return;
-
-    const msgCountCell = row.querySelector('.msg-count');
-    const latestMsgCell = row.querySelector('.latest-msg');
-    const recentMsgsCell = row.querySelector('.recent-count');
-
-    // 🗃️ Cache message stats
-    team.messageCount = stats?.messageCount;
-    team.latestMessage = stats?.latestMessage;
-    team.recentCount = stats?.recentCount;
-
-    msgCountCell.textContent = stats?.messageCount ?? '-';
-    latestMsgCell.textContent = stats?.latestMessage ?? '-';
-    recentMsgsCell.textContent = stats?.recentCount ?? '-';
-
-    // incrememt active teams count if there are recent messages
-    if (stats?.recentCount > 0) {
-      const el = document.getElementById('active-teams-count');
-      el.textContent = (parseInt(el.textContent, 10) || 0) + 1;
-    }
-  };
-
-  let index = 0;
-  let active = 0;
-
-  return new Promise((resolve) => {
-    function next() {
-      if (index >= teamIds.length && active === 0) {
-        return resolve();
-      }
-
-      while (active < MAX_CONCURRENT && index < teamIds.length) {
-        const teamId = teamIds[index];
-        index += 1;
-        active += 1;
-        getTeamMessageStats(teamId)
-          .then((stats) => updateRow(teamId, stats))
-          .catch((err) => {
-            console.error(`Error loading team ${teamId}:`, err);
-            updateRow(teamId, {
-              messageCount: '-',
-              latestMessage: '-',
-              recentCount: '-',
-            });
-          })
-          .finally(() => {
-            active -= 1;
-            next();
-          });
-      }
-      return null;
-    }
-
-    next();
-  });
-}
 
 // search triggered by pressing enter
 document.addEventListener('keydown', (event) => {
