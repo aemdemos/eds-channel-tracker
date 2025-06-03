@@ -426,19 +426,20 @@ async function lazyLoadMessageStats() {
         index += 1;
         active += 1;
         getTeamMessageStats(teamId)
-        .then(((id) => (stats) => updateRow(id, stats))(teamId))
-        .catch(((id) => (err) => {
-          console.error(`Error loading team ${id}:`, err);
-          updateRow(id, {
-            messageCount: '-',
-            latestMessage: '-',
-            recentCount: '-',
+          .then((stats) => updateRow(teamId, stats))
+          .catch((err) => {
+            console.error(`Error loading team ${teamId}:`, err);
+            updateRow(teamId, {
+              messageCount: '-',
+              latestMessage: '-',
+              recentCount: '-',
+            });
+          })
+        // eslint-disable-next-line no-loop-func
+          .finally(() => {
+            active -= 1;
+            next();
           });
-        })(teamId))
-        .finally(() => {
-          active -= 1;
-          next();
-        });
       }
       return null;
     }
