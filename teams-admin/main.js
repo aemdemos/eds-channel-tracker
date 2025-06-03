@@ -209,6 +209,7 @@ function renderSingleTeamRow(team) {
         }
       }
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Failed to update team row after delay:', err);
     }
   }
@@ -428,6 +429,7 @@ async function lazyLoadMessageStats() {
         getTeamMessageStats(teamId)
           .then((stats) => updateRow(teamId, stats))
           .catch((err) => {
+            // eslint-disable-next-line no-console
             console.error(`Error loading team ${teamId}:`, err);
             updateRow(teamId, {
               messageCount: '-',
@@ -501,6 +503,7 @@ const initTable = (teams) => {
   lazyLoadMessageStats().then(() => {
     addSortingToTable(table);
   }).catch((err) => {
+    // eslint-disable-next-line no-console
     console.error('Error loading message stats:', err);
   });
 };
