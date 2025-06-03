@@ -531,7 +531,7 @@ const displayTeams = async () => {
   <div class="no-teams-message">
     <p>
       <span class="no-teams-icon">🚫</span>
-      No teams found. Click <a href="#" id="send-invitation-link">here</a> to send an invitation.
+      It appears that you are not a member of the Adobe Enterprise Support Teams Organization. Please click <a href="#" id="send-invitation-link">here</a> to receive an invitation. Once you accept the invitation, you will be able to run queries.
     </p>
   </div>
 `;
