@@ -111,7 +111,7 @@ function renderSingleTeamRow(team) {
 
   // Name column with optional webUrl link (only if isMember)
   if (team.webUrl && team.isMember) {
-    nameCell.innerHTML = `<a href="${escapeHTML(team.webUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(team.displayName)}</a>`;
+    nameCell.innerHTML = `<a href="${escapeHTML(team.webUrl)}" target="_blank" rel="noopener noreferrer" title="Open in Microsoft Teams">${escapeHTML(team.displayName)}</a>`;
   } else {
     nameCell.textContent = team.displayName;
   }
@@ -166,7 +166,7 @@ function renderSingleTeamRow(team) {
   // Modify the membersCountCell to make it look like a hyperlink
   const membersLink = document.createElement('a');
   membersLink.textContent = `${team.memberCount ?? 0}`; // You can append "Members" text or leave it as just the count
-
+  membersLink.title='View Members';
   membersCountCell.innerHTML = ''; // Clear current content
   membersCountCell.appendChild(membersLink); // Add the hyperlink
 
