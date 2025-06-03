@@ -61,6 +61,7 @@ export const getTeamMessageStats = async (teamId) => {
     while (partial) {
       const url = new URL(`${API_ENDPOINT}/teams/messages`);
 
+      // eslint-disable-next-line no-await-in-loop
       const response = await fetch(url.toString(), {
         method: 'POST',
         headers: {
@@ -78,6 +79,7 @@ export const getTeamMessageStats = async (teamId) => {
         return { messageCount: '-', latestMessage: '-' };
       }
 
+      // eslint-disable-next-line no-await-in-loop
       const data = await response.json();
 
       // Aggregate results
@@ -90,7 +92,8 @@ export const getTeamMessageStats = async (teamId) => {
       if (data.latestMessage) {
         const current = new Date(data.latestMessage);
         if (!latestMessage || current > new Date(latestMessage)) {
-          latestMessage = current.toISOString().split('T')[0];
+          const [dateOnly] = current.toISOString().split('T');
+          latestMessage = dateOnly;
         }
       }
     }
