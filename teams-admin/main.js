@@ -166,7 +166,7 @@ function renderSingleTeamRow(team) {
   // Modify the membersCountCell to make it look like a hyperlink
   const membersLink = document.createElement('a');
   membersLink.textContent = `${team.memberCount ?? 0}`; // You can append "Members" text or leave it as just the count
-  membersLink.title='View Members';
+  membersLink.title = 'View Members';
   membersCountCell.innerHTML = ''; // Clear current content
   membersCountCell.appendChild(membersLink); // Add the hyperlink
 
@@ -426,19 +426,19 @@ async function lazyLoadMessageStats() {
         index += 1;
         active += 1;
         getTeamMessageStats(teamId)
-          .then((stats) => updateRow(teamId, stats))
-          .catch((err) => {
-            console.error(`Error loading team ${teamId}:`, err);
-            updateRow(teamId, {
-              messageCount: '-',
-              latestMessage: '-',
-              recentCount: '-',
-            });
-          })
-          .finally(() => {
-            active -= 1;
-            next();
+        .then(((id) => (stats) => updateRow(id, stats))(teamId))
+        .catch(((id) => (err) => {
+          console.error(`Error loading team ${id}:`, err);
+          updateRow(id, {
+            messageCount: '-',
+            latestMessage: '-',
+            recentCount: '-',
           });
+        })(teamId))
+        .finally(() => {
+          active -= 1;
+          next();
+        });
       }
       return null;
     }
