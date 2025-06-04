@@ -50,6 +50,64 @@ const wrapWithCloseButton = (content, onClose, title = '') => {
   return wrapper;
 };
 
+export function setupModalDrag(modal) {
+  const header = modal.querySelector('.modal-header');
+  if (!header) return;
+
+  let isDragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  header.style.cursor = 'move';
+  modal.style.position = 'absolute';
+
+  const onMouseMove = (e) => {
+    if (!isDragging) return;
+
+    const modalWidth = modal.offsetWidth;
+    const modalHeight = modal.offsetHeight;
+
+    let newLeft = e.clientX - offsetX;
+    let newTop = e.clientY - offsetY;
+
+    // Restrict dragging within the viewport
+    const maxLeft = window.innerWidth - modalWidth;
+    const maxTop = window.innerHeight - modalHeight;
+
+    newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+    newTop = Math.max(0, Math.min(newTop, maxTop));
+
+    modal.style.left = `${newLeft}px`;
+    modal.style.top = `${newTop}px`;
+  };
+
+  const onMouseUp = () => {
+    isDragging = false;
+    modal.classList.remove('dragging');
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  };
+
+  header.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    isDragging = true;
+
+    // Get current position before removing transform
+    const rect = modal.getBoundingClientRect();
+    modal.style.left = `${rect.left + window.scrollX}px`;
+    modal.style.top = `${rect.top + window.scrollY}px`;
+
+    modal.classList.add('dragging');
+
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+}
+
 export const handleModalInteraction = async (cell, teamId, modal, fetchDataCallback) => {
   // Always position the modal first
   showModal(modal, cell);
@@ -69,6 +127,7 @@ export const handleModalInteraction = async (cell, teamId, modal, fetchDataCallb
 
     modal.innerHTML = ''; // Clear any existing content
     modal.appendChild(wrapped); // Append the new content
+    setupModalDrag(modal); // Setup drag functionality
   } catch {
     modal.innerHTML = '<p style="color: red;">Error loading data</p>';
   }
@@ -100,35 +159,4 @@ export function showSuccessModal(message) {
 
   overlay.addEventListener('click', onOverlayClick);
   closeButton.addEventListener('click', close);
-}
-
-export function setupModalDrag(modal) {
-  let isDragging = false;
-  let offsetX = 0;
-  let offsetY = 0;
-
-  modal.style.cursor = 'move';
-
-  const onMouseMove = (e) => {
-    if (!isDragging) return;
-    modal.style.left = `${e.clientX - offsetX}px`;
-    modal.style.top = `${e.clientY - offsetY}px`;
-  };
-
-  const onMouseUp = () => {
-    isDragging = false;
-    document.removeEventListener('mousemove', onMouseMove);
-    document.removeEventListener('mouseup', onMouseUp);
-  };
-
-  modal.addEventListener('mousedown', (e) => {
-    if (e.button !== 0) return; // Only allow to left-click
-    isDragging = true;
-    const rect = modal.getBoundingClientRect();
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
-
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-  });
 }
