@@ -54,12 +54,9 @@ export const getTeamMessageStats = async (teamId) => {
   let messageCount = 0;
   let recentCount = 0;
   let latestMessage = null;
-  let continuationToken = null;
-  let partial = true;
 
   try {
-    while (partial) {
-      const url = new URL(`${API_ENDPOINT}/teams/messages`);
+      let url = new URL(`${API_ENDPOINT}/teams/messages`);
 
       // eslint-disable-next-line no-await-in-loop
       const response = await fetch(url.toString(), {
@@ -67,10 +64,7 @@ export const getTeamMessageStats = async (teamId) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          teamId,
-          ...(continuationToken ? { continuationToken } : {}),
-        }),
+        body: JSON.stringify({ teamId }),
       });
 
       if (!response.ok) {
@@ -83,19 +77,15 @@ export const getTeamMessageStats = async (teamId) => {
       const data = await response.json();
 
       // Aggregate results
-      messageCount += data.messageCount || 0;
-      recentCount += data.recentCount || 0;
-      partial = data.partial;
-      continuationToken = data.continuationToken || null;
+      messageCount = data.messageCount || 0;
+      recentCount = data.recentCount || 0;
 
       // Keep the latest message date
       if (data.latestMessage) {
         const current = new Date(data.latestMessage);
         if (!latestMessage || current > new Date(latestMessage)) {
-          const [dateOnly] = current.toISOString().split('T');
-          latestMessage = dateOnly;
+          latestMessage = current.toISOString().split('T')[0];
         }
-      }
     }
 
     return {
