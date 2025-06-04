@@ -334,14 +334,21 @@ td.member-column:hover {
 }
 
 .modal {
-    transform: scale(0.9);
+    position: absolute;
     opacity: 0;
     transition: transform 0.3s ease, opacity 0.3s ease;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
 }
 
 .modal.show {
     transform: scale(1);
     opacity: 1;
+}
+
+.modal.dragging {
+    transform: none !important;
 }
 
 .modal-header {
