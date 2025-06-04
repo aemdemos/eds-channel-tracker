@@ -75,15 +75,14 @@ export const getTeamMessageStats = async (teamId) => {
 
       // eslint-disable-next-line no-await-in-loop
       const data = await response.json();
-      const jsonObject = JSON.parse(data);
 
       // Aggregate results
-      messageCount = jsonObject.messageCount || 0;
-      recentCount = jsonObject.recentCount || 0;
+      messageCount = data.messageCount || 0;
+      recentCount = data.recentCount || 0;
 
       // Keep the latest message date
-      if (jsonObject.latestMessage) {
-        const current = new Date(jsonObject.latestMessage);
+      if (data.latestMessage) {
+        const current = new Date(data.latestMessage);
         if (!latestMessage || current > new Date(latestMessage)) {
           latestMessage = current.toISOString().split('T')[0];
         }
