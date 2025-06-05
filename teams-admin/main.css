@@ -208,9 +208,11 @@
     padding: 15px;
     max-height: 400px;
     overflow: hidden auto;
-    cursor: move;
 }
 
+.modal-header {
+    cursor: move;
+}
 
 .modal h4 {
     font-size: 15px;
