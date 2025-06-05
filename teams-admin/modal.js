@@ -83,7 +83,7 @@ export function setupModalDrag(modal) {
   let offsetX = 0;
   let offsetY = 0;
 
-  header.style.cursor = 'move';
+  modal.style.cursor = 'move';
   modal.style.position = 'fixed';
 
   const onMouseMove = (e) => {
@@ -111,7 +111,7 @@ export function setupModalDrag(modal) {
     document.removeEventListener('mouseup', onMouseUp);
   };
 
-  header.addEventListener('mousedown', (e) => {
+ modal.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
     e.preventDefault();
     isDragging = true;
