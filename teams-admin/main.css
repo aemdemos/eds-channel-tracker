@@ -208,9 +208,6 @@
     padding: 15px;
     max-height: 400px;
     overflow: hidden auto;
-}
-
-.modal-header {
     cursor: move;
 }
 
