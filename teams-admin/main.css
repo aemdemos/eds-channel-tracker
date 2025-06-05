@@ -189,9 +189,8 @@
 
 .modal {
     position: fixed;
-    top: 20%;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
@@ -212,12 +211,12 @@
     cursor: move;
 }
 
+
 .modal h4 {
     font-size: 15px;
 }
 
 .modal.show {
-    transform: scale(1);
     opacity: 1;
     pointer-events: auto;
 }
@@ -333,15 +332,6 @@ td.member-column:hover {
     min-width: 115px;
 }
 
-.modal {
-    position: absolute;
-    opacity: 0;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) scale(0.85);
-}
-
 .modal.show {
     transform: scale(1);
     opacity: 1;
@@ -365,6 +355,34 @@ td.member-column:hover {
     font-weight: bold;
     color: #333;
     margin: 0;
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: 10px;
+    padding: 24px;
+    width: 400px;
+    max-width: 90%;
+    position: relative;
+    font-family: system-ui, sans-serif;
+}
+
+.modal-content::after {
+    content: '';
+    display: block;
+    height: 1rem; /* or adjust as needed */
+    box-sizing: unset;
+}
+
+.modal-content .button:hover {
+    background-color: #0056b3;
 }
 
 .modal-close {
@@ -394,9 +412,6 @@ td.member-column:hover {
     color: #333;
     text-align: left;
 }
-
-
-
 
 @keyframes spin {
     to { transform: rotate(360deg); }
@@ -489,31 +504,11 @@ td.member-column:hover {
     width: 520px;
 }
 
-.modal-content h3 {
-    margin-top: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
-}
 
 #add-users-modal h3 {
     margin-top: 0;
     margin-bottom: 20px;
     font-size: 18px;
-}
-
-.modal-content {
-    background: #fff;
-    border-radius: 10px;
-    padding: 24px;
-    width: 400px;
-    max-width: 90%;
-    position: relative;
-    font-family: system-ui, sans-serif;
-}
-
-.modal-content .button:hover {
-    background-color: #0056b3;
 }
 
 .close {
@@ -623,13 +618,6 @@ td.member-column:hover {
     margin: 15% auto;
     max-width: 400px;
     text-align: center;
-}
-
-.modal-content::after {
-    content: '';
-    display: block;
-    height: 1rem; /* or adjust as needed */
-    box-sizing: unset;
 }
 
 #success-modal-message {

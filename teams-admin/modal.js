@@ -1,24 +1,55 @@
 function positionModal(modal, triggerElement) {
   const rect = triggerElement.getBoundingClientRect();
-  const modalWidth = modal.offsetWidth || 300;
-  const maxLeft = window.innerWidth - modalWidth - 10;
 
-  modal.style.position = 'absolute';
-  modal.style.top = `${rect.top + window.scrollY - 50}px`;
-  modal.style.left = `${Math.min(rect.right + 10 + window.scrollX, maxLeft)}px`;
+  // Temporarily make modal visible to measure its size
+  modal.style.visibility = 'hidden';
+  modal.style.display = 'block';
+
+  const modalWidth = modal.offsetWidth || 300;
+  const modalHeight = modal.offsetHeight || 200;
+
+  const maxLeft = window.innerWidth - modalWidth - 10;
+  const maxTop = window.innerHeight - modalHeight - 10;
+
+  const left = Math.min(rect.right + 10, maxLeft);
+  const top = Math.max(Math.min(rect.top - 50, maxTop), 10);
+
+  modal.style.left = `${left}px`;
+  modal.style.top = `${top}px`;
+
+  // Store initial positions as data attributes
+  modal.dataset.initialLeft = left;
+  modal.dataset.initialTop = top;
+
+  modal.style.visibility = '';
 }
 
-function showModal(modal, triggerElement) {
-  positionModal(modal, triggerElement);
+function showModal(modal, triggerElement = null) {
+  if (triggerElement) {
+    positionModal(modal, triggerElement);
+  } else {
+    // Center modal if no trigger provided
+    const modalWidth = modal.offsetWidth || 300;
+    const modalHeight = modal.offsetHeight || 200;
+
+    modal.style.position = 'absolute';
+    modal.style.left = `${(window.innerWidth - modalWidth) / 2 + window.scrollX}px`;
+    modal.style.top = `${(window.innerHeight - modalHeight) / 2 + window.scrollY}px`;
+  }
+
   modal.style.display = 'block';
   requestAnimationFrame(() => modal.classList.add('show'));
 }
 
 function hideModal(modal) {
   modal.classList.remove('show');
-  modal.addEventListener('transitionend', () => {
-    modal.style.display = 'none';
-  }, { once: true });
+  modal.addEventListener(
+    'transitionend',
+    () => {
+      modal.style.display = 'none';
+    },
+    { once: true },
+  );
 }
 
 const wrapWithCloseButton = (content, onClose, title = '') => {
@@ -36,13 +67,7 @@ const wrapWithCloseButton = (content, onClose, title = '') => {
     <div class="modal-body">${content}</div>
   `;
 
-  const closeBtn = wrapper.querySelector('.modal-close-button');
-
-  // Remove all previous click listeners by cloning the node
-  const newCloseBtn = closeBtn.cloneNode(true);
-  closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-
-  newCloseBtn.addEventListener('click', (e) => {
+  wrapper.querySelector('.modal-close-button').addEventListener('click', (e) => {
     e.stopPropagation();
     onClose();
   });
@@ -59,7 +84,7 @@ export function setupModalDrag(modal) {
   let offsetY = 0;
 
   header.style.cursor = 'move';
-  modal.style.position = 'absolute';
+  modal.style.position = 'fixed';
 
   const onMouseMove = (e) => {
     if (!isDragging) return;
@@ -70,7 +95,6 @@ export function setupModalDrag(modal) {
     let newLeft = e.clientX - offsetX;
     let newTop = e.clientY - offsetY;
 
-    // Restrict dragging within the viewport
     const maxLeft = window.innerWidth - modalWidth;
     const maxTop = window.innerHeight - modalHeight;
 
@@ -83,7 +107,6 @@ export function setupModalDrag(modal) {
 
   const onMouseUp = () => {
     isDragging = false;
-    modal.classList.remove('dragging');
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
   };
@@ -93,12 +116,7 @@ export function setupModalDrag(modal) {
     e.preventDefault();
     isDragging = true;
 
-    // Get current position before removing transform
     const rect = modal.getBoundingClientRect();
-    modal.style.left = `${rect.left + window.scrollX}px`;
-    modal.style.top = `${rect.top + window.scrollY}px`;
-
-    modal.classList.add('dragging');
 
     offsetX = e.clientX - rect.left;
     offsetY = e.clientY - rect.top;
@@ -132,12 +150,13 @@ export const handleModalInteraction = async (cell, teamId, modal, fetchDataCallb
     modal.innerHTML = '<p style="color: red;">Error loading data</p>';
   }
 };
+
 export function showSuccessModal(message) {
   const overlay = document.getElementById('success-modal-overlay');
   const messageEl = document.getElementById('success-modal-message');
   const closeButton = document.getElementById('success-modal-close');
 
-  messageEl.innerHTML = message; // Use innerHTML for HTML content
+  messageEl.innerHTML = message;
 
   overlay.classList.remove('hidden');
   requestAnimationFrame(() => overlay.classList.add('visible'));
@@ -147,7 +166,6 @@ export function showSuccessModal(message) {
     overlay.addEventListener('transitionend', () => {
       overlay.classList.add('hidden');
     }, { once: true });
-
     // eslint-disable-next-line no-use-before-define
     overlay.removeEventListener('click', onOverlayClick);
     closeButton.removeEventListener('click', close);
