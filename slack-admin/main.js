@@ -266,8 +266,6 @@ async function startFetching() {
   const channelNameFilter = rawChannel === '' || rawChannel === '*' ? undefined : rawChannel;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
 
-  const activeOnly = document.getElementById('active-only-checkbox').checked;
-
   // Immediately show empty loading UI
   initTable([]);
 
@@ -341,26 +339,6 @@ async function startFetching() {
     const percentage = Math.min((loadedCount / channels.length) * 100, 100);
     progressFill.style.width = `${percentage}%`;
     progressLabel.textContent = `Analyzing ${loadedCount} of ${channels.length} channels…`;
-  }
-
-  // ❗ Now all channels are enriched with lstMsgDt
-  if (activeOnly) {
-    const now = new Date();
-    const days30Ago = new Date();
-    days30Ago.setDate(now.getDate() - 30);
-
-    channels = channels.filter((channel) => {
-      if (!channel.lstMsgDt || channel.lstMsgDt === 'No Messages') return false;
-      const lastMessageDate = new Date(channel.lstMsgDt);
-      return lastMessageDate >= days30Ago;
-    });
-
-    // Re-render the filtered list
-    initTable(channels);
-
-    // Update the active channels count
-    activeChannelsCount = channels.length;
-    document.getElementById('active-channels-count').textContent = activeChannelsCount;
   }
 
   isSortingEnabled = true;
