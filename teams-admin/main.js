@@ -34,7 +34,6 @@ import {
 
 // Ensure the userProfile is fetched if not set
 let userProfile;
-let turnstileToken = null;
 
 const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
@@ -175,7 +174,7 @@ function renderSingleTeamRow(team) {
     e.stopPropagation();
     e.preventDefault();
     await handleModalInteraction(membersCountCell, team.id, membersModal, async () => {
-      const members = await getTeamMembers(turnstileToken, team.id);
+      const members = await getTeamMembers(team.id);
       return {
         modalContent: renderMemberList(members),
         teamName: `Members of ${team.displayName}`,
@@ -190,7 +189,7 @@ function renderSingleTeamRow(team) {
     try {
       if (currentInviteTeamRow) {
         const currentTeam = currentTeams.find((t) => t.id === currentInviteTeamId);
-        const currentTeamMembers = await getTeamMembers(turnstileToken, currentInviteTeamId);
+        const currentTeamMembers = await getTeamMembers(currentInviteTeamId);
         const memberEmails = currentTeamMembers.map((t) => t.email);
         const isMember = memberEmails.includes(userProfile.email);
 
@@ -299,7 +298,7 @@ function renderSingleTeamRow(team) {
         submitButton.disabled = true;
 
         const addedBy = userProfile.name || userProfile.email;
-        const result = await addMembersToTeam(turnstileToken, currentInviteTeamId, users, addedBy);
+        const result = await addMembersToTeam(currentInviteTeamId, users, addedBy);
         const addedCount = result.filter((user) => user.added).length;
 
         spinner.style.display = 'none';
@@ -429,7 +428,7 @@ async function lazyLoadMessageStats() {
         const teamId = teamIds[index];
         index += 1;
         active += 1;
-        getTeamMessageStats(turnstileToken, teamId)
+        getTeamMessageStats(teamId)
           .then((stats) => updateRow(teamId, stats))
           .catch((err) => {
             // eslint-disable-next-line no-console
@@ -527,7 +526,7 @@ const displayTeams = async () => {
       teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
     }
   }
-  const myTeams = await getMyTeams(turnstileToken, userProfile.emai);
+  const myTeams = await getMyTeams(userProfile.email);
 
   if (myTeams.length === 0) {
     teamsContainer.innerHTML = `
@@ -547,7 +546,6 @@ const displayTeams = async () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'CF-Turnstile-Token': turnstileToken
           },
           body: JSON.stringify({
             email: userProfile?.email || '',
@@ -585,7 +583,7 @@ const displayTeams = async () => {
 
   teamsContainer.innerHTML = ''; // Clear any existing content
 
-  let teams = await getFilteredTeams(turnstileToken, nameFilter, descriptionFilter);
+  let teams = await getFilteredTeams(nameFilter, descriptionFilter);
   teams = teams.filter((team) => team && typeof team === 'object');
 
   const myTeamIds = myTeams.map((myTeam) => myTeam.id);
@@ -607,7 +605,7 @@ const displayTeams = async () => {
   await Promise.all(
     chunkedTeamIds.map(async (chunk) => {
       try {
-        const summaries = await getTeamSummaries(turnstileToken, chunk);
+        const summaries = await getTeamSummaries(chunk);
         teamSummaries.push(...summaries);
       } catch (err) { /* empty */ }
       loaded += chunk.length;
@@ -643,21 +641,14 @@ const displayTeams = async () => {
   searchButton.disabled = false;
 };
 
-function onTurnstileSuccess(token) {
-  turnstileToken = token;
-  displayTeams().then(() => {});
-}
-
 // search triggered by pressing enter
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
-    // Execute invisible Turnstile challenge
-    turnstile.execute();
+    displayTeams().then(() => {});
   }
 });
 
 // Disable Search button if there are pending API calls
 searchButton.addEventListener('click', async () => {
-  // Execute invisible Turnstile challenge
-  turnstile.execute();
+  await displayTeams();
 });
