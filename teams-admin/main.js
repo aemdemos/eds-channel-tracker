@@ -645,18 +645,17 @@ const displayTeams = async (turnstileToken) => {
 
 function onTurnstileSuccess(token) {
   turnstileToken = token;
+  console.log('Token received: ' + tunstileToken);
 }
 
 // search triggered by pressing enter
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
-    // Execute invisible Turnstile challenge
-    turnstile.execute();
+    displayTeams().then(() => {});
   }
 });
 
 // Disable Search button if there are pending API calls
 searchButton.addEventListener('click', async () => {
-  // Execute invisible Turnstile challenge
-  turnstile.execute();
+  await displayTeams();
 });
