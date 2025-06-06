@@ -11,16 +11,20 @@
  */
 import API_ENDPOINT from './config.js';
 
-export const getMyTeams = async (email) => {
+export const getMyTeams = async (turnstileToken, email) => {
   try {
     const url = new URL(`${API_ENDPOINT}/users/${email}/teams`);
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      headers: {
+        'CF-Turnstile-Token': turnstileToken
+      }
+    });
     return response.ok ? await response.json() : [];
   } catch (e) { /* empty */ }
   return [];
 };
 
-export const getFilteredTeams = async (name = '', description = '') => {
+export const getFilteredTeams = async (turnstileToken, name = '', description = '') => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams`);
     const cleanedName = name.trim();
@@ -34,23 +38,31 @@ export const getFilteredTeams = async (name = '', description = '') => {
       url.searchParams.append('descriptionFilter', cleanedDescription.replace(/\*/g, ''));
     }
 
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      headers: {
+        'CF-Turnstile-Token': turnstileToken
+      }
+    });
 
     return response.ok ? await response.json() : [];
   } catch (e) { /* empty */ }
   return [];
 };
 
-export async function getTeamMembers(teamId) {
+export async function getTeamMembers(turnstileToken, teamId) {
   try {
     const url = new URL(`${API_ENDPOINT}/teams/${teamId}/members`);
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      headers: {
+        'CF-Turnstile-Token': turnstileToken
+      }
+    });
     return response.ok ? response.json() : [];
   } catch (e) { /* empty */ }
   return [];
 }
 
-export const getTeamMessageStats = async (teamId) => {
+export const getTeamMessageStats = async (turnstileToken, teamId) => {
   let messageCount = 0;
   let recentCount = 0;
   let latestMessage = null;
@@ -63,6 +75,7 @@ export const getTeamMessageStats = async (teamId) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'CF-Turnstile-Token': turnstileToken
         },
         body: JSON.stringify({ teamId }),
       });
@@ -100,13 +113,14 @@ export const getTeamMessageStats = async (teamId) => {
   }
 };
 
-export const getTeamSummaries = async (teamIds) => {
+export const getTeamSummaries = async (turnstileToken, teamIds) => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams/summary`);
     const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'CF-Turnstile-Token': turnstileToken
       },
       body: JSON.stringify({ teamIds }),
     });
@@ -115,13 +129,14 @@ export const getTeamSummaries = async (teamIds) => {
   return [];
 };
 
-export const addMembersToTeam = async (teamId, users, addedBy) => {
+export const addMembersToTeam = async (turnstileToken, teamId, users, addedBy) => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams/${teamId}/members`);
     const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'CF-Turnstile-Token': turnstileToken
       },
       body: JSON.stringify({ users, addedBy }),
     });

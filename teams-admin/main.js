@@ -34,6 +34,7 @@ import {
 
 // Ensure the userProfile is fetched if not set
 let userProfile;
+let turnstileToken = null;
 
 const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
@@ -510,7 +511,7 @@ const initTable = (teams) => {
   });
 };
 
-const displayTeams = async () => {
+const displayTeams = async (turnstileToken) => {
   searchButton.disabled = true;
   sortDirection = 'asc'; // Reset sort direction to default
   const rawName = document.getElementById('team-name').value.trim();
@@ -521,12 +522,12 @@ const displayTeams = async () => {
 
   if (!userProfile) {
     try {
-      userProfile = await getUserProfile();
+      userProfile = await getUserProfile(token);
     } catch (error) {
       teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
     }
   }
-  const myTeams = await getMyTeams(userProfile.email);
+  const myTeams = await getMyTeams(turnstileToken, userProfile.emai);
 
   if (myTeams.length === 0) {
     teamsContainer.innerHTML = `
@@ -546,6 +547,7 @@ const displayTeams = async () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'CF-Turnstile-Token': turnstileToken
           },
           body: JSON.stringify({
             email: userProfile?.email || '',
@@ -583,7 +585,7 @@ const displayTeams = async () => {
 
   teamsContainer.innerHTML = ''; // Clear any existing content
 
-  let teams = await getFilteredTeams(nameFilter, descriptionFilter);
+  let teams = await getFilteredTeams(turnstileToken, nameFilter, descriptionFilter);
   teams = teams.filter((team) => team && typeof team === 'object');
 
   const myTeamIds = myTeams.map((myTeam) => myTeam.id);
@@ -605,7 +607,7 @@ const displayTeams = async () => {
   await Promise.all(
     chunkedTeamIds.map(async (chunk) => {
       try {
-        const summaries = await getTeamSummaries(chunk);
+        const summaries = await getTeamSummaries(turnstileToken, chunk);
         teamSummaries.push(...summaries);
       } catch (err) { /* empty */ }
       loaded += chunk.length;
@@ -641,14 +643,20 @@ const displayTeams = async () => {
   searchButton.disabled = false;
 };
 
+function onTurnstileSuccess(token) {
+  turnstileToken = token;
+}
+
 // search triggered by pressing enter
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
-    displayTeams().then(() => {});
+    // Execute invisible Turnstile challenge
+    turnstile.execute();
   }
 });
 
 // Disable Search button if there are pending API calls
 searchButton.addEventListener('click', async () => {
-  await displayTeams();
+  // Execute invisible Turnstile challenge
+  turnstile.execute();
 });
