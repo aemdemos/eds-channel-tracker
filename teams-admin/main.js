@@ -248,7 +248,7 @@ function renderSingleTeamRow(team) {
           <div id="add-users-error" style="color: red; margin-top: 10px; display: none;"></div>
           <span class="spinner" style="display:none"></span>
         `,
-        teamName: `Add users to ${team.displayName}`,
+        teamName: `Add guests to ${team.displayName}`,
       }),
     );
 

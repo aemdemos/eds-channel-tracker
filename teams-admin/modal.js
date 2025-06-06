@@ -113,6 +113,12 @@ export function setupModalDrag(modal) {
 
  modal.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
+
+   // If the clicked element is an input, textarea, or button, don't start dragging
+   if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'LABEL'].includes(e.target.tagName)) {
+     return;
+   }
+
     e.preventDefault();
     isDragging = true;
 

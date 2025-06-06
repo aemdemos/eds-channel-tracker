@@ -397,8 +397,8 @@ td.member-column:hover {
 
 .modal-close-button {
     position: fixed;
-    right: 45px;
-    top: 20px;
+    right: 20px;
+    top: 10px;
 }
 
 .modal-close:hover {
@@ -500,7 +500,6 @@ td.member-column:hover {
     align-items: center;
     justify-content: center;
     margin: 0;
-    width: 520px;
 }
 
 
