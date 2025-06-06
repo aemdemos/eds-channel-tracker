@@ -34,7 +34,6 @@ import {
 
 // Ensure the userProfile is fetched if not set
 let userProfile;
-let turnstileToken = null;
 
 const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
@@ -511,7 +510,7 @@ const initTable = (teams) => {
   });
 };
 
-const displayTeams = async (turnstileToken) => {
+const displayTeams = async () => {
   searchButton.disabled = true;
   sortDirection = 'asc'; // Reset sort direction to default
   const rawName = document.getElementById('team-name').value.trim();
@@ -522,12 +521,12 @@ const displayTeams = async (turnstileToken) => {
 
   if (!userProfile) {
     try {
-      userProfile = await getUserProfile(token);
+      userProfile = await getUserProfile();
     } catch (error) {
       teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
     }
   }
-  const myTeams = await getMyTeams(turnstileToken, userProfile.emai);
+  const myTeams = await getMyTeams(userProfile.emai);
 
   if (myTeams.length === 0) {
     teamsContainer.innerHTML = `
@@ -546,8 +545,7 @@ const displayTeams = async (turnstileToken) => {
         const response = await fetch(url.toString(), {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'CF-Turnstile-Token': turnstileToken
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             email: userProfile?.email || '',
@@ -585,7 +583,7 @@ const displayTeams = async (turnstileToken) => {
 
   teamsContainer.innerHTML = ''; // Clear any existing content
 
-  let teams = await getFilteredTeams(turnstileToken, nameFilter, descriptionFilter);
+  let teams = await getFilteredTeams(nameFilter, descriptionFilter);
   teams = teams.filter((team) => team && typeof team === 'object');
 
   const myTeamIds = myTeams.map((myTeam) => myTeam.id);
@@ -607,7 +605,7 @@ const displayTeams = async (turnstileToken) => {
   await Promise.all(
     chunkedTeamIds.map(async (chunk) => {
       try {
-        const summaries = await getTeamSummaries(turnstileToken, chunk);
+        const summaries = await getTeamSummaries(chunk);
         teamSummaries.push(...summaries);
       } catch (err) { /* empty */ }
       loaded += chunk.length;
@@ -642,11 +640,6 @@ const displayTeams = async (turnstileToken) => {
 
   searchButton.disabled = false;
 };
-
-function onTurnstileSuccess(token) {
-  turnstileToken = token;
-  console.log('Token received: ' + tunstileToken);
-}
 
 // search triggered by pressing enter
 document.addEventListener('keydown', (event) => {
