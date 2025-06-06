@@ -526,7 +526,7 @@ const displayTeams = async () => {
       teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
     }
   }
-  const myTeams = await getMyTeams(userProfile.emai);
+  const myTeams = await getMyTeams(userProfile.email);
 
   if (myTeams.length === 0) {
     teamsContainer.innerHTML = `
