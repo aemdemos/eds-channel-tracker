@@ -251,6 +251,8 @@ function renderSingleTeamRow(team) {
         teamName: `Add guests to ${team.displayName}`,
       }),
     );
+    const firstInput = addUsersModal.querySelector('input[name="displayName"]');
+    if (firstInput) firstInput.focus();
 
     // Now select the elements inside the modal
     const form = addUsersModal.querySelector('#add-users-form');
