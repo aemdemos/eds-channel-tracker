@@ -31,7 +31,7 @@ export const fetchWithRetry = async (url, attempts = 0) => {
   }
 };
 
-export const getAllSlackChannels = async (channelName = '', description = '') => {
+export const getAllSlackChannels = async (userProfile, channelName = '', description = '') => {
   try {
     const url = new URL(`${API_ENDPOINT}/slack/channels`);
 
@@ -44,6 +44,11 @@ export const getAllSlackChannels = async (channelName = '', description = '') =>
 
     if (cleanedDescription && cleanedDescription !== '*') {
       url.searchParams.append('description', cleanedDescription.replace(/\*/g, ''));
+    }
+
+    const searchBy = userProfile.name || userProfile.email;
+    if (searchBy) {
+      url.searchParams.append('searchBy', searchBy);
     }
 
     const response = await fetch(url.toString());

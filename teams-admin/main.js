@@ -519,6 +519,9 @@ const displayTeams = async () => {
   const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
 
+  const spinner = document.getElementsByClassName('spinner')[0];
+  spinner.style.display = 'block';
+
   if (!userProfile) {
     try {
       userProfile = await getUserProfile();
@@ -567,9 +570,6 @@ const displayTeams = async () => {
     });
     return;
   }
-
-  const spinner = document.getElementsByClassName('spinner')[0];
-  spinner.style.display = 'block';
 
   const progressContainer = document.getElementById('progress-container');
   progressContainer.style.display = 'block';
