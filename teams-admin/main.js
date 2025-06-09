@@ -583,7 +583,7 @@ const displayTeams = async () => {
 
   teamsContainer.innerHTML = ''; // Clear any existing content
 
-  let teams = await getFilteredTeams(nameFilter, descriptionFilter);
+  let teams = await getFilteredTeams(userProfile, nameFilter, descriptionFilter);
   teams = teams.filter((team) => team && typeof team === 'object');
 
   const myTeamIds = myTeams.map((myTeam) => myTeam.id);
