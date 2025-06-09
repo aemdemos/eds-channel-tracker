@@ -20,7 +20,7 @@ export const getMyTeams = async (email) => {
   return [];
 };
 
-export const getFilteredTeams = async (name = '', description = '') => {
+export const getFilteredTeams = async (userProfile,  name = '', description = '') => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams`);
     const cleanedName = name.trim();
@@ -32,6 +32,11 @@ export const getFilteredTeams = async (name = '', description = '') => {
 
     if (cleanedDescription && cleanedDescription !== '*') {
       url.searchParams.append('descriptionFilter', cleanedDescription.replace(/\*/g, ''));
+    }
+
+    const searchBy = userProfile.name || userProfile.email;
+    if (searchBy) {
+      url.searchParams.append('searchBy', searchBy);
     }
 
     const response = await fetch(url.toString());

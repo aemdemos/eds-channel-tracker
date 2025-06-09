@@ -522,6 +522,9 @@ const displayTeams = async () => {
   const nameFilter = rawName === '' || rawName === '*' ? undefined : rawName;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
 
+  const spinner = document.getElementsByClassName('spinner')[0];
+  spinner.style.display = 'block';
+
   if (!userProfile) {
     try {
       userProfile = await getUserProfile();
@@ -548,7 +551,7 @@ const displayTeams = async () => {
         const response = await fetch(url.toString(), {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             email: userProfile?.email || '',
@@ -571,9 +574,6 @@ const displayTeams = async () => {
     return;
   }
 
-  const spinner = document.getElementsByClassName('spinner')[0];
-  spinner.style.display = 'block';
-
   const progressContainer = document.getElementById('progress-container');
   progressContainer.style.display = 'block';
 
@@ -586,7 +586,7 @@ const displayTeams = async () => {
 
   teamsContainer.innerHTML = ''; // Clear any existing content
 
-  let teams = await getFilteredTeams(nameFilter, descriptionFilter);
+  let teams = await getFilteredTeams(userProfile, nameFilter, descriptionFilter);
   teams = teams.filter((team) => team && typeof team === 'object');
 
   const myTeamIds = myTeams.map((myTeam) => myTeam.id);

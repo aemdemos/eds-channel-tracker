@@ -13,6 +13,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable max-len */
 import { getMessageStats, getMemberIds, getAllSlackChannels } from './api.js';
+import getUserProfile from './userProfile.js';
 import { countMembers } from './members.js';
 import {
   sortTable,
@@ -27,6 +28,25 @@ let activeChannelsCount = 0;
 let isSortingEnabled = false;
 const maxMessagesCount = 10;
 const slackChannelsContainer = document.getElementById('slack-channels-container');
+
+// Ensure the userProfile is fetched if not set
+let userProfile;
+
+const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+// If running on localhost, fetch userProfile from query params
+if (isLocalhost) {
+  const params = new URLSearchParams(window.location.search);
+  const email = params.get('email');
+  const name = params.get('name');
+
+  if (email && name) {
+    userProfile = { email, name };
+  } else {
+    // eslint-disable-next-line no-alert
+    alert('missing email and name query params for local debug');
+  }
+}
 
 const escapeHTML = (str) => {
   const div = document.createElement('div');
@@ -266,11 +286,19 @@ async function startFetching() {
   const channelNameFilter = rawChannel === '' || rawChannel === '*' ? undefined : rawChannel;
   const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
 
+  if (!userProfile) {
+    try {
+      userProfile = await getUserProfile();
+    } catch (error) {
+      teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
+    }
+  }
+
   // Immediately show empty loading UI
   initTable([]);
 
   // Now fetch channels asynchronously
-  let channels = await getAllSlackChannels(channelNameFilter, descriptionFilter);
+  let channels = await getAllSlackChannels(userProfile, channelNameFilter, descriptionFilter);
 
   // Sort early for predictable loading
   channels.sort((a, b) => a.name.localeCompare(b.name));
