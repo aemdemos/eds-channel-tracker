@@ -56,29 +56,29 @@ export const getTeamMessageStats = async (teamId) => {
   let latestMessage = null;
 
   try {
-      let url = new URL(`${API_ENDPOINT}/teams/messages`);
+    const url = new URL(`${API_ENDPOINT}/teams/messages`);
 
-      // eslint-disable-next-line no-await-in-loop
-      const response = await fetch(url.toString(), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ teamId }),
-      });
+    // eslint-disable-next-line no-await-in-loop
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ teamId }),
+    });
 
-      if (!response.ok) {
+    if (!response.ok) {
       // eslint-disable-next-line no-console
-        console.warn(`Non-OK response for team ${teamId}`, response.status);
-        return { messageCount: '-', latestMessage: '-' };
-      }
+      console.warn(`Non-OK response for team ${teamId}`, response.status);
+      return { messageCount: '-', latestMessage: '-' };
+    }
 
-      // eslint-disable-next-line no-await-in-loop
-      const data = await response.json();
+    // eslint-disable-next-line no-await-in-loop
+    const data = await response.json();
 
-      // Aggregate results
-      messageCount = data.messageCount || 0;
-      recentCount = data.recentCount || 0;
+    // Aggregate results
+    messageCount = data.messageCount || 0;
+    recentCount = data.recentCount || 0;
 
       // Keep the latest message date
       if (data.latestMessage) {
@@ -124,6 +124,22 @@ export const addMembersToTeam = async (teamId, users, addedBy) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ users, addedBy }),
+    });
+    return response.ok ? await response.json() : [];
+  } catch (e) { /* empty */ }
+  return [];
+};
+
+export const removeMemberFromTeam = async (teamId, email, removedBy) => {
+  try {
+    const users = [{ email }];
+    const url = new URL(`${API_ENDPOINT}/teams/${teamId}/members`);
+    const response = await fetch(url.toString(), {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ users, removedBy }),
     });
     return response.ok ? await response.json() : [];
   } catch (e) { /* empty */ }
