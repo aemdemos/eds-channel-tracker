@@ -20,7 +20,7 @@ export const getMyTeams = async (email) => {
   return [];
 };
 
-export const getFilteredTeams = async (userProfile,  name = '', description = '') => {
+export const getFilteredTeams = async (userProfile, name = '', description = '') => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams`);
     const cleanedName = name.trim();
@@ -85,12 +85,12 @@ export const getTeamMessageStats = async (teamId) => {
     messageCount = data.messageCount || 0;
     recentCount = data.recentCount || 0;
 
-      // Keep the latest message date
-      if (data.latestMessage) {
-        const current = new Date(data.latestMessage);
-        if (!latestMessage || current > new Date(latestMessage)) {
-          latestMessage = current.toISOString().split('T')[0];
-        }
+    // Keep the latest message date
+    if (data.latestMessage) {
+      const current = new Date(data.latestMessage);
+      if (!latestMessage || current > new Date(latestMessage)) {
+        latestMessage = current.toISOString().split('T')[0];
+      }
     }
 
     return {
