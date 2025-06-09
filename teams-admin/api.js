@@ -34,9 +34,9 @@ export const getFilteredTeams = async (userProfile,  name = '', description = ''
       url.searchParams.append('descriptionFilter', cleanedDescription.replace(/\*/g, ''));
     }
 
-    const addedBy = userProfile.name || userProfile.email;
-    if (addedBy) {
-      url.searchParams.append('addedBy', addedBy);
+    const searchBy = userProfile.name || userProfile.email;
+    if (searchBy) {
+      url.searchParams.append('searchBy', searchBy);
     }
 
     const response = await fetch(url.toString());
