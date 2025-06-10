@@ -486,7 +486,7 @@ const initTable = (teams) => {
         <th data-sort="recentCount">
           Messages (Last 30 days)
         </th>
-        <th data-sort="memberCount">Total Members</th>
+        <th data-sort="memberCount">Current Members</th>
         <th class="sorting-disabled">Actions</th>
       </tr>
     </thead>
