@@ -25,9 +25,7 @@ export function onTurnstileLoad() {
   // Render Turnstile widget with "invisible" mode
   turnstile.render('#turnstile-container', {
     sitekey: '0x4AAAAAABgUT3ukRO60nTNJ',
-    size: 'invisible',  // invisible widget triggers automatically
     callback: (token) => {
-      console.log('Turnstile token:', token);
       // Send token to backend for verification
       fetch(url.toString(), {
         method: 'POST',
