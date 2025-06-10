@@ -331,7 +331,7 @@ function renderSingleTeamRow(team) {
         spinner.style.display = 'none';
         form.style.display = 'flex';
         submitButton.disabled = false;
-        errorDiv.textContent = 'Failed to add users. Please try again.';
+        errorDiv.textContent = 'Failed to add members. Please try again.';
         errorDiv.style.display = 'block';
       }
     });
