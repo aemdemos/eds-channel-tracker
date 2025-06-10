@@ -222,7 +222,7 @@ function renderSingleTeamRow(team) {
   actionsCell.style.textAlign = 'center';
   const addButton = document.createElement('button');
   addButton.textContent = '+';
-  addButton.title = 'Add Users';
+  addButton.title = 'Add Members';
   addButton.classList.add('add-users-button');
   addButton.textContent = '👤 +';
 
@@ -324,7 +324,7 @@ function renderSingleTeamRow(team) {
         addUsersModal.style.display = 'none';
 
         // eslint-disable-next-line no-use-before-define
-        showSuccessModal(`Added: ${addedCount} user${addedCount !== 1 ? 's' : ''}<br> Some users may need to accept an email invitation before they can access the system. Please allow a few minutes for the changes to take effect. A refresh of the page may be required.`);
+        showSuccessModal(`Added ${addedCount} member${addedCount !== 1 ? 's' : ''} to  <b> ${escapeHTML(team.displayName)}</b><br>If a member is new to the organization, they must accept the email invitation sent to them before they can access the team. Please allow a few minutes for the updates to take effect. A refresh of the page may be required.`);
 
         await updateTeamRowAfterDelay(team);
       } catch (err) {
