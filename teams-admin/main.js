@@ -173,6 +173,9 @@ function renderSingleTeamRow(team) {
   membersCountCell.addEventListener('click', async (e) => {
     e.stopPropagation();
     e.preventDefault();
+    membersModal.dataset.teamId = team.id; // Store team ID in modal for later use
+    membersModal.dataset.removedBy = userProfile.name;
+    membersModal.dataset.currentUserEmail = userProfile.email;
     await handleModalInteraction(membersCountCell, team.id, membersModal, async () => {
       const members = await getTeamMembers(team.id);
       return {
@@ -248,7 +251,7 @@ function renderSingleTeamRow(team) {
           <div id="add-users-error" style="color: red; margin-top: 10px; display: none;"></div>
           <span class="spinner" style="display:none"></span>
         `,
-        teamName: `Add guests to ${team.displayName}`,
+        teamName: `Add members to ${team.displayName}`,
       }),
     );
     const firstInput = addUsersModal.querySelector('input[name="displayName"]');
@@ -548,7 +551,7 @@ const displayTeams = async () => {
         const response = await fetch(url.toString(), {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             email: userProfile?.email || '',
@@ -641,14 +644,17 @@ const displayTeams = async () => {
   searchButton.disabled = false;
 };
 
-// search triggered by pressing enter
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') {
-    displayTeams().then(() => {});
-  }
+const teamNameInput = document.getElementById('team-name');
+const teamDescriptionInput = document.getElementById('team-description');
+
+[teamNameInput, teamDescriptionInput].forEach((input) => {
+  input.addEventListener('keydown', async (event) => {
+    if (event.key === 'Enter') {
+      await displayTeams();
+    }
+  });
 });
 
-// Disable Search button if there are pending API calls
 searchButton.addEventListener('click', async () => {
   await displayTeams();
 });
