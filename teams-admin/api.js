@@ -36,8 +36,6 @@ export function onTurnstileLoad() {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          // Allow page content to show or proceed
-          document.body.style.visibility = 'visible';
         } else {
           // Block access or show error
           alert('Verification failed, please try again.');

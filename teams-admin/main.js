@@ -39,9 +39,7 @@ let userProfile;
 const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
 if (!isLocalhost) {
-  window.onload = () => {
-    // Hide page until verification passes
-    document.body.style.visibility = 'hidden';
+  window.requestIdleCallback = () => {
     onTurnstileLoad();
   };
 }
