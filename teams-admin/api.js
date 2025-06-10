@@ -20,6 +20,37 @@ export const getMyTeams = async (email) => {
   return [];
 };
 
+export function onTurnstileLoad() {
+  const url = new URL(`${API_ENDPOINT}/verify-turnstile`);
+  // Render Turnstile widget with "invisible" mode
+  turnstile.render('#turnstile-container', {
+    sitekey: '0x4AAAAAABgUT3ukRO60nTNJ',
+    size: 'invisible',  // invisible widget triggers automatically
+    callback: (token) => {
+      console.log('Turnstile token:', token);
+      // Send token to backend for verification
+      fetch(url.toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          // Allow page content to show or proceed
+          document.body.style.visibility = 'visible';
+        } else {
+          // Block access or show error
+          alert('Verification failed, please try again.');
+        }
+      });
+    }
+  });
+
+  // Execute the challenge immediately on load
+  turnstile.execute();
+}
+
 export const getFilteredTeams = async (userProfile, name = '', description = '') => {
   try {
     const url = new URL(`${API_ENDPOINT}/teams`);

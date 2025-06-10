@@ -19,6 +19,7 @@ import {
   getTeamMembers,
   addMembersToTeam,
   getTeamMessageStats,
+  onTurnstileLoad,
 } from './api.js';
 import {
   sortTable,
@@ -36,6 +37,15 @@ import {
 let userProfile;
 
 const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+if (!isLocalhost) {
+  window.onload = () => {
+    // Hide page until verification passes
+    document.body.style.visibility = 'hidden';
+    onTurnstileLoad();
+  };
+}
+
 
 // If running on localhost, fetch userProfile from query params
 if (isLocalhost) {
