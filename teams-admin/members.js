@@ -58,7 +58,7 @@ export default function renderMemberList(members) {
           <strong>${m.displayName}</strong><br>
           <span style="color: #555;">${m.email}</span>
           ${m.role === 'guest' ? `
-           <button class="remove-member-btn" title="Remove guest ${m.displayName}" aria-label="Remove guest ${m.displayName}" style="float: right; background: none; border: none; cursor: pointer; padding: 0; font-size: 1.8em; line-height: 1;">
+           <button class="remove-member-btn" title="Remove guest ${m.displayName}" aria-label="Remove guest ${m.displayName}" style=" opacity: 0.6; float: right; background: none; border: none; cursor: pointer; padding: 0; font-size: 1.8em; line-height: 1;">
   &times;
 </button>
           ` : ''}
