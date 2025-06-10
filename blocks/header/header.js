@@ -11,7 +11,9 @@ function closeOnEscape(e) {
     const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
     if (navSectionExpanded && isDesktop.matches) {
       // eslint-disable-next-line no-use-before-define
-      toggleAllNavSections(navSections);
+      if (navSections) {
+        toggleAllNavSections(navSections);
+      }
       navSectionExpanded.focus();
     } else if (!isDesktop.matches) {
       // eslint-disable-next-line no-use-before-define
@@ -28,7 +30,9 @@ function closeOnFocusLost(e) {
     const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
     if (navSectionExpanded && isDesktop.matches) {
       // eslint-disable-next-line no-use-before-define
-      toggleAllNavSections(navSections, false);
+      if (navSections) {
+        toggleAllNavSections(navSections, false);
+      }
     } else if (!isDesktop.matches) {
       // eslint-disable-next-line no-use-before-define
       toggleMenu(nav, navSections, false);
@@ -42,7 +46,9 @@ function openOnKeydown(e) {
   if (isNavDrop && (e.code === 'Enter' || e.code === 'Space')) {
     const dropExpanded = focused.getAttribute('aria-expanded') === 'true';
     // eslint-disable-next-line no-use-before-define
-    toggleAllNavSections(focused.closest('.nav-sections'));
+    if (navSections) {
+      toggleAllNavSections(focused.closest('.nav-sections'));
+    }
     focused.setAttribute('aria-expanded', dropExpanded ? 'false' : 'true');
   }
 }
@@ -69,11 +75,14 @@ function toggleAllNavSections(sections, expanded = false) {
  * @param {*} forceExpanded Optional param to force nav expand behavior when not null
  */
 function toggleMenu(nav, navSections, forceExpanded = null) {
+  if (!navSections) return;
   const expanded = forceExpanded !== null ? !forceExpanded : nav.getAttribute('aria-expanded') === 'true';
   const button = nav.querySelector('.nav-hamburger button');
   document.body.style.overflowY = (expanded || isDesktop.matches) ? '' : 'hidden';
   nav.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-  toggleAllNavSections(navSections, expanded || isDesktop.matches ? 'false' : 'true');
+  if (navSections) {
+    toggleAllNavSections(navSections, expanded || isDesktop.matches ? 'false' : 'true');
+  }
   button.setAttribute('aria-label', expanded ? 'Open navigation' : 'Close navigation');
   // enable nav dropdown keyboard accessibility
   const navDrops = navSections.querySelectorAll('.nav-drop');
@@ -108,11 +117,19 @@ function toggleMenu(nav, navSections, forceExpanded = null) {
  * @param {Element} block The header block element
  */
 export default async function decorate(block) {
+  if (!block.firstElementChild) {
+    // Optionally, add default content or just return
+    block.textContent = 'Header';
+    return;
+  }
   // load nav as fragment
   const navMeta = getMetadata('nav');
   const navPath = navMeta ? new URL(navMeta, window.location).pathname : '/nav';
   const fragment = await loadFragment(navPath);
-
+  if (!fragment) {
+    block.textContent = 'Navigation could not be loaded.';
+    return;
+  }
   // decorate nav DOM
   block.textContent = '';
   const nav = document.createElement('nav');
@@ -126,10 +143,12 @@ export default async function decorate(block) {
   });
 
   const navBrand = nav.querySelector('.nav-brand');
-  const brandLink = navBrand.querySelector('.button');
-  if (brandLink) {
-    brandLink.className = '';
-    brandLink.closest('.button-container').className = '';
+  if (navBrand) {
+    const brandLink = navBrand.querySelector('.button');
+    if (brandLink) {
+      brandLink.className = '';
+      brandLink.closest('.button-container').className = '';
+    }
   }
 
   const navSections = nav.querySelector('.nav-sections');
@@ -139,7 +158,9 @@ export default async function decorate(block) {
       navSection.addEventListener('click', () => {
         if (isDesktop.matches) {
           const expanded = navSection.getAttribute('aria-expanded') === 'true';
-          toggleAllNavSections(navSections);
+          if (navSections) {
+            toggleAllNavSections(navSections);
+          }
           navSection.setAttribute('aria-expanded', expanded ? 'false' : 'true');
         }
       });
