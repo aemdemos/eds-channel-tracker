@@ -39,7 +39,7 @@ let userProfile;
 const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
 if (!isLocalhost) {
-  window.requestIdleCallback = () => {
+  window.onload = () => {
     onTurnstileLoad();
   };
 }
