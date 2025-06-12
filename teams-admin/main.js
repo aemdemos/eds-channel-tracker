@@ -35,11 +35,12 @@ import {
 // Ensure the userProfile is fetched if not set
 let userProfile;
 
+const params = new URLSearchParams(window.location.search);
+
 const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
 // If running on localhost, fetch userProfile from query params
 if (isLocalhost) {
-  const params = new URLSearchParams(window.location.search);
   const email = params.get('email');
   const name = params.get('name');
 
@@ -49,6 +50,12 @@ if (isLocalhost) {
     // eslint-disable-next-line no-alert
     alert('missing email and name query params for local debug');
   }
+}
+
+const createTeams = params.get('createTeams');
+
+if (createTeams === 'true' || isLocalhost) {
+  document.getElementById('create-team-btn').classList.remove("hidden");
 }
 
 const doReload = () => window.location.reload();
@@ -658,4 +665,63 @@ const teamDescriptionInput = document.getElementById('team-description');
 
 searchButton.addEventListener('click', async () => {
   await displayTeams();
+});
+
+const createTeamBtn = document.getElementById('create-team-btn');
+const createTeamModal = document.getElementById('create-team-modal');
+const cancelCreateTeam = document.getElementById('cancel-create-team');
+const createTeamForm = document.getElementById('create-team-form');
+
+const companyInput = document.getElementById('new-company-name');
+const descriptionInput = document.getElementById('new-team-description');
+
+let userHasEditedDescription = false;
+
+// Stop auto-fill if the user types in the description manually
+descriptionInput.addEventListener('input', () => {
+  userHasEditedDescription = true;
+});
+
+companyInput.addEventListener('input', () => {
+  const company = companyInput.value.trim();
+  const defaultTemplate = `Collaboration channel for ${company || '<COMPANY_NAME>'} and Adobe, focused on Edge Delivery Services`;
+
+  // Only auto-fill if user hasn't edited the description manually
+  if (!userHasEditedDescription || descriptionInput.value.includes('<COMPANY_NAME>')) {
+    descriptionInput.value = defaultTemplate;
+    userHasEditedDescription = false; // still allow re-sync while typing
+  }
+});
+
+createTeamBtn.addEventListener('click', () => {
+  createTeamModal.classList.remove('hidden');
+});
+
+cancelCreateTeam.addEventListener('click', () => {
+  createTeamModal.classList.add('hidden');
+});
+
+createTeamForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('new-team-name').value.trim();
+  const description = document.getElementById('new-team-description').value.trim();
+
+  try {
+    const response = await fetch(`${API_ENDPOINT}/teams`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, description }),
+    });
+
+    if (response.ok) {
+      createTeamModal.classList.add('hidden');
+      alert('Team created successfully!');
+      // Optionally trigger reload of team list here
+    } else {
+      alert('Error creating team.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Network or server error.');
+  }
 });

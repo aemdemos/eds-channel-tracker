@@ -211,6 +211,32 @@
     cursor: move;
 }
 
+.create-team-modal {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
+    z-index: 1000;
+    width: 400px;
+    font-family: Arial, sans-serif;
+    border: 1px solid #ccc;
+    transition: transform 0.35s ease-out, opacity 0.35s ease-out;
+    max-width: 700px;
+    text-align: center;
+    font-size: 14px;
+    padding: 15px;
+    overflow: hidden auto;
+    cursor: move;
+}
+
+.modal-show {
+    display: block !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
 .modal h4 {
     font-size: 15px;
 }
@@ -569,7 +595,7 @@ td.member-column:hover {
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 /* Overlay with fade animation */
@@ -646,4 +672,8 @@ td.member-column:hover {
 @keyframes fadeInModal {
     from { opacity: 0; transform: translateY(30px) scale(0.98);}
     to   { opacity: 1; transform: translateY(0) scale(1);}
+}
+
+#create-team-form input {
+    margin-bottom: 20px;
 }
