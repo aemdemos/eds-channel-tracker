@@ -685,7 +685,6 @@ companyInput.addEventListener('input', () => {
   }
 });
 
-
 createTeamBtn.addEventListener('click', () => {
   createTeamModal.classList.remove('hidden');
 });

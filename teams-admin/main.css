@@ -675,6 +675,6 @@ td.member-column:hover {
     to   { opacity: 1; transform: translateY(0) scale(1);}
 }
 
-#new-team-name {
+#create-team-form input {
     margin-bottom: 20px;
 }
