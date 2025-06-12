@@ -664,6 +664,28 @@ const createTeamModal = document.getElementById('create-team-modal');
 const cancelCreateTeam = document.getElementById('cancel-create-team');
 const createTeamForm = document.getElementById('create-team-form');
 
+const companyInput = document.getElementById('new-company-name');
+const descriptionInput = document.getElementById('new-team-description');
+
+let userHasEditedDescription = false;
+
+// Stop auto-fill if the user types in the description manually
+descriptionInput.addEventListener('input', () => {
+  userHasEditedDescription = true;
+});
+
+companyInput.addEventListener('input', () => {
+  const company = companyInput.value.trim();
+  const defaultTemplate = `Collaboration channel for ${company || '<COMPANY_NAME>'} and Adobe, focused on Edge Delivery Services`;
+
+  // Only auto-fill if user hasn't edited the description manually
+  if (!userHasEditedDescription || descriptionInput.value.includes('<COMPANY_NAME>')) {
+    descriptionInput.value = defaultTemplate;
+    userHasEditedDescription = false; // still allow re-sync while typing
+  }
+});
+
+
 createTeamBtn.addEventListener('click', () => {
   createTeamModal.classList.remove('hidden');
 });
