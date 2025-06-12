@@ -227,7 +227,6 @@
     text-align: center;
     font-size: 14px;
     padding: 15px;
-    max-height: 400px;
     overflow: hidden auto;
     cursor: move;
 }
