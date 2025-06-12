@@ -211,6 +211,12 @@
     cursor: move;
 }
 
+.modal-show {
+    display: block !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
 .modal h4 {
     font-size: 15px;
 }

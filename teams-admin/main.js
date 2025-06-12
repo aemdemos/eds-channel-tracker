@@ -665,11 +665,11 @@ const cancelCreateTeam = document.getElementById('cancel-create-team');
 const createTeamForm = document.getElementById('create-team-form');
 
 createTeamBtn.addEventListener('click', () => {
-  createTeamModal.classList.remove('hidden');
+  createTeamModal.classList.remove('modal-show');
 });
 
 cancelCreateTeam.addEventListener('click', () => {
-  createTeamModal.classList.add('hidden');
+  createTeamModal.classList.add('modal-show');
 });
 
 createTeamForm.addEventListener('submit', async (e) => {
@@ -685,7 +685,7 @@ createTeamForm.addEventListener('submit', async (e) => {
     });
 
     if (response.ok) {
-      createTeamModal.classList.add('hidden');
+      createTeamModal.classList.remove('modal-show');
       alert('Team created successfully!');
       // Optionally trigger reload of team list here
     } else {
