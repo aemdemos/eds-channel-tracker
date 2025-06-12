@@ -43,18 +43,18 @@ if (isLocalhost) {
   const email = params.get('email');
   const name = params.get('name');
 
-  const createTeams = params.get('createTeams');
-
-  if (createTeams) {
-    document.getElementById('create-team-btn').classList.remove("hidden");
-  }
-
   if (email && name) {
     userProfile = { email, name };
   } else {
     // eslint-disable-next-line no-alert
     alert('missing email and name query params for local debug');
   }
+}
+
+const createTeams = params.get('createTeams');
+
+if (createTeams) {
+  document.getElementById('create-team-btn').classList.remove("hidden");
 }
 
 const doReload = () => window.location.reload();
