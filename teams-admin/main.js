@@ -678,7 +678,7 @@ createTeamForm.addEventListener('submit', async (e) => {
   const description = document.getElementById('new-team-description').value.trim();
 
   try {
-    const response = await fetch('/api/create-team', {
+    const response = await fetch(`${API_ENDPOINT}/teams`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, description }),
