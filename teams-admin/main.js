@@ -35,11 +35,12 @@ import {
 // Ensure the userProfile is fetched if not set
 let userProfile;
 
+const params = new URLSearchParams(window.location.search);
+
 const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
 // If running on localhost, fetch userProfile from query params
 if (isLocalhost) {
-  const params = new URLSearchParams(window.location.search);
   const email = params.get('email');
   const name = params.get('name');
 
