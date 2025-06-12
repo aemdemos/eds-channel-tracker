@@ -28,6 +28,9 @@
       <img src="../icons/adobe.png" alt="Adobe Logo" class="adobe-logo" />
       <h2>Edge Delivery Services - Microsoft Teams</h2>
     </div>
+    <div style="text-align: right; margin: 1em 0;">
+      <button id="create-team-btn" class="button">➕ Create New Team</button>
+    </div>
     <!-- Search Filters -->
     <div id="search-box" class="search-filters">
       <div>
@@ -82,6 +85,26 @@
       <div id="success-modal" class="modal-content">
         <button id="success-modal-close" class="close-button">&times;</button>
         <div id="success-modal-message"></div>
+      </div>
+    </div>
+
+    <div id="create-team-modal" class="modal hidden">
+      <div class="modal-header">
+        <h4 class="modal-title">Create New Team</h4>
+      </div>
+      <div class="modal-body">
+        <form id="create-team-form">
+          <label for="new-team-name">Team Name</label>
+          <input type="text" id="new-team-name" name="name" required />
+
+          <label for="new-team-description">Description</label>
+          <input type="text" id="new-team-description" name="description" required />
+
+          <div class="button-wrapper" style="margin-top: 1em;">
+            <button type="submit" class="button">Submit</button>
+            <button type="button" class="button secondary" id="cancel-create-team">Cancel</button>
+          </div>
+        </form>
       </div>
     </div>
 

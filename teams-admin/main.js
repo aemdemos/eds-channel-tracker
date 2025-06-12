@@ -658,3 +658,41 @@ const teamDescriptionInput = document.getElementById('team-description');
 searchButton.addEventListener('click', async () => {
   await displayTeams();
 });
+
+const createTeamBtn = document.getElementById('create-team-btn');
+const createTeamModal = document.getElementById('create-team-modal');
+const cancelCreateTeam = document.getElementById('cancel-create-team');
+const createTeamForm = document.getElementById('create-team-form');
+
+createTeamBtn.addEventListener('click', () => {
+  createTeamModal.classList.remove('hidden');
+});
+
+cancelCreateTeam.addEventListener('click', () => {
+  createTeamModal.classList.add('hidden');
+});
+
+createTeamForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('new-team-name').value.trim();
+  const description = document.getElementById('new-team-description').value.trim();
+
+  try {
+    const response = await fetch('/api/create-team', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, description }),
+    });
+
+    if (response.ok) {
+      createTeamModal.classList.add('hidden');
+      alert('Team created successfully!');
+      // Optionally trigger reload of team list here
+    } else {
+      alert('Error creating team.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Network or server error.');
+  }
+});
