@@ -43,6 +43,12 @@ if (isLocalhost) {
   const email = params.get('email');
   const name = params.get('name');
 
+  const createTeams = params.get('createTeams');
+
+  if (createTeams) {
+    document.getElementById('create-team-btn').style.display = 'block';
+  }
+
   if (email && name) {
     userProfile = { email, name };
   } else {
