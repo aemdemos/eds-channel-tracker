@@ -623,6 +623,7 @@ const displayTeams = async () => {
 
   // Hide the progress bar after loading
   progressContainer.style.display = 'none';
+  document.getElementById('progress').style.display = 'none';
 
   // Combine the teams and summaries into one object
   const combinedTeams = teams.map((team) => {
