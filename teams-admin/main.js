@@ -54,7 +54,7 @@ if (isLocalhost) {
 
 const createTeams = params.get('createTeams');
 
-if (createTeams) {
+if (createTeams === 'true' || isLocalhost) {
   document.getElementById('create-team-btn').classList.remove("hidden");
 }
 
