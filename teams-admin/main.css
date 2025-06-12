@@ -595,7 +595,7 @@ td.member-column:hover {
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 /* Overlay with fade animation */

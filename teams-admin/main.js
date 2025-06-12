@@ -46,7 +46,7 @@ if (isLocalhost) {
   const createTeams = params.get('createTeams');
 
   if (createTeams) {
-    document.getElementById('create-team-btn').style.display = 'block';
+    document.getElementById('create-team-btn').classList.remove("hidden");
   }
 
   if (email && name) {
