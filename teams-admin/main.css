@@ -223,7 +223,6 @@
     font-family: Arial, sans-serif;
     border: 1px solid #ccc;
     transition: transform 0.35s ease-out, opacity 0.35s ease-out;
-    pointer-events: none;
     max-width: 700px;
     text-align: center;
     font-size: 14px;
