@@ -26,7 +26,7 @@ export const postWithTurnstile = async (url, body = {}) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Turnstile-Token': token, // or send token in body if needed
+        'X-Turnstile-Token': token,
       },
       body: JSON.stringify(body),
     });
@@ -43,13 +43,12 @@ export const postWithTurnstile = async (url, body = {}) => {
 };
 
 export const deleteWithTurnstile = async (url, body) => {
-  // call verifyTurnstile to get token or do the token fetch
   const token = await verifyTurnstile(); // you need to implement this
   const response = await fetch(url, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
-      'X-Turnstile-Token': token, // or send token in body if needed
+      'X-Turnstile-Token': token,
     },
     body: JSON.stringify(body),
   });
