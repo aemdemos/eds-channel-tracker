@@ -19,7 +19,6 @@ import {
   getTeamMembers,
   addMembersToTeam,
   getTeamMessageStats,
-  verifyTurnstile,
 } from './api.js';
 import {
   sortTable,
