@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 import API_ENDPOINT from './config.js';
+import { postWithTurnstile, deleteWithTurnstile } from './authentication.js';
 
 export const getMyTeams = async (email) => {
   try {
@@ -19,34 +20,6 @@ export const getMyTeams = async (email) => {
   } catch (e) { /* empty */ }
   return [];
 };
-
-export function onTurnstileLoad() {
-  const url = new URL(`${API_ENDPOINT}/verify-turnstile`);
-  // Render Turnstile widget with "invisible" mode
-  turnstile.render('#turnstile-container', {
-    sitekey: '0x4AAAAAABgUT3ukRO60nTNJ',
-    size: 'invisible',  // invisible widget triggers automatically
-    callback: (token) => {
-      // Send token to backend for verification
-      fetch(url.toString(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-        } else {
-          // Block access or show error
-          alert('Verification failed, please try again.');
-        }
-      });
-    }
-  });
-
-  // Execute the challenge immediately on load
-  turnstile.execute();
-}
 
 export const getFilteredTeams = async (userProfile, name = '', description = '') => {
   try {
@@ -150,31 +123,21 @@ export const getTeamSummaries = async (teamIds) => {
 
 export const addMembersToTeam = async (teamId, users, addedBy) => {
   try {
-    const url = new URL(`${API_ENDPOINT}/teams/${teamId}/members`);
-    const response = await fetch(url.toString(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ users, addedBy }),
-    });
-    return response.ok ? await response.json() : [];
-  } catch (e) { /* empty */ }
+    const url = `${API_ENDPOINT}/teams/${teamId}/members`;
+    return await postWithTurnstile(url, { users, addedBy });
+  } catch (e) {
+    // optionally log error
+  }
   return [];
 };
 
 export const removeMemberFromTeam = async (teamId, email, removedBy) => {
   try {
     const users = [{ email }];
-    const url = new URL(`${API_ENDPOINT}/teams/${teamId}/members`);
-    const response = await fetch(url.toString(), {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ users, removedBy }),
-    });
-    return response.ok ? await response.json() : [];
-  } catch (e) { /* empty */ }
+    const url = `${API_ENDPOINT}/teams/${teamId}/members`;
+    return await deleteWithTurnstile(url, { users, removedBy });
+  } catch (e) {
+    // optionally log error
+  }
   return [];
 };
