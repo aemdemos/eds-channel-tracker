@@ -39,6 +39,7 @@ const params = new URLSearchParams(window.location.search);
 
 const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
+
 // If running on localhost, fetch userProfile from query params
 if (isLocalhost) {
   const email = params.get('email');
