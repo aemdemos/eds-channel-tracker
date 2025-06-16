@@ -432,7 +432,6 @@ td.member-column:hover {
 }
 
 .modal-body {
-    padding: 20px;
     font-size: 14px;
     color: #333;
     text-align: left;
@@ -463,6 +462,10 @@ td.member-column:hover {
 
 .add-users-button:hover {
     color: #201F3B; /* Darker accent on hover */
+}
+
+#add-users-modal {
+    width: 480px;
 }
 
 #add-users-form {
