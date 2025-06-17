@@ -706,12 +706,14 @@ createTeamForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const name = document.getElementById('new-team-name').value.trim();
   const description = document.getElementById('new-team-description').value.trim();
+  const createdBy = userProfile.name || userProfile.email;
+
 
   try {
     const response = await fetch(`${API_ENDPOINT}/teams`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, description }),
+      body: JSON.stringify({ createdBy, name, description }),
     });
 
     if (response.ok) {
