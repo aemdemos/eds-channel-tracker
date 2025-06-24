@@ -692,6 +692,7 @@ createTeamBtn.addEventListener('click', () => {
         <button type="submit" class="button">Submit</button>
       </div>
     </form>
+    <div id="create-team-error" style="color: red; margin-top: 10px; display: none;"></div>
     <span class="spinner" style="display:none"></span>
   `;
 
@@ -711,7 +712,7 @@ createTeamBtn.addEventListener('click', () => {
   const descriptionInput = createTeamModal.querySelector('#new-team-description');
   let userHasEditedDescription = false;
 
-  // Stop auto-fill if the user types in the description manually
+  // Stop autofill if the user types in the description manually
   descriptionInput.addEventListener('input', () => {
     userHasEditedDescription = true;
   });
@@ -719,33 +720,27 @@ createTeamBtn.addEventListener('click', () => {
   companyInput.addEventListener('input', () => {
     const company = companyInput.value.trim();
     const defaultTemplate = `Collaboration channel for ${company || '<COMPANY_NAME>'} and Adobe, focused on Edge Delivery Services`;
-    // Only auto-fill if user hasn't edited the description manually
+    // Only autofill if user hasn't edited the description manually
     if (!userHasEditedDescription || descriptionInput.value.includes('<COMPANY_NAME>')) {
       descriptionInput.value = defaultTemplate;
-      userHasEditedDescription = false; // still allow re-sync while typing
+      userHasEditedDescription = false; // still allow to re-sync while typing
     }
   });
 
   const createTeamForm = createTeamModal.querySelector('#create-team-form');
   createTeamForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    showSpinner(createTeamModal);
-
     // Disable all fields and the submit button
     const fields = createTeamForm.querySelectorAll('input, textarea, button');
     fields.forEach((field) => { field.disabled = true; });
+    const errorDiv = createTeamModal.querySelector('#create-team-error');
 
-    const name = document.getElementById('new-team-name').value.trim();
-    const description = document.getElementById('new-team-description').value.trim();
+    errorDiv.style.display = 'none';
+    errorDiv.textContent = '';
+    showSpinner(createTeamModal);
 
-    if (!userProfile) {
-      try {
-        userProfile = await getUserProfile();
-      } catch (error) {
-        teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
-      }
-    }
-
+    const name = createTeamForm.querySelector('#new-team-name').value.trim();
+    const description = createTeamForm.querySelector('#new-team-description').value.trim();
     const createdBy = userProfile.name || userProfile.email;
 
     try {
@@ -759,20 +754,22 @@ createTeamBtn.addEventListener('click', () => {
         }),
       });
 
-      hideSpinner(createTeamModal);
-
       if (response.ok) {
-        createTeamModal.classList.add('hidden');
-        alert('Team created successfully!');
-        // Optionally trigger reload of team list here
+        hideSpinner(createTeamModal);
+        createTeamModal.classList.remove('show');
+        createTeamModal.style.display = 'none';
+        showSuccessModal(`Team <b>${escapeHTML(name)}</b> created successfully!`);
       } else {
-        alert('Error creating team.');
+        const errorText = await response.text();
+        hideSpinner(createTeamModal);
+        errorDiv.textContent = `Error creating team: ${errorText}`;
+        errorDiv.style.display = 'block';
         fields.forEach((field) => { field.disabled = false; });
       }
     } catch (err) {
       hideSpinner(createTeamModal);
-      console.error(err);
-      alert('Network or server error.');
+      errorDiv.textContent = `Error creating team: ${err.message}`;
+      errorDiv.style.display = 'block';
       fields.forEach((field) => { field.disabled = false; });
     }
   });
