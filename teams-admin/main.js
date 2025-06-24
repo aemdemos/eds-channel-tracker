@@ -73,10 +73,12 @@ if (sk) {
 }
 const membersModal = document.getElementById('members-modal');
 const addUsersModal = document.getElementById('add-users-modal');
+const createTeamModal = document.getElementById('create-team-modal');
 
 document.addEventListener('DOMContentLoaded', () => {
   if (membersModal) setupModalDrag(membersModal);
   if (addUsersModal) setupModalDrag(addUsersModal);
+  if (createTeamModal) setupModalDrag(createTeamModal);
 });
 
 document.addEventListener('keydown', (e) => {
@@ -669,7 +671,6 @@ searchButton.addEventListener('click', async () => {
 });
 
 const createTeamBtn = document.getElementById('create-team-btn');
-const createTeamModal = document.getElementById('create-team-modal');
 const cancelCreateTeam = document.getElementById('cancel-create-team');
 const createTeamForm = document.getElementById('create-team-form');
 
