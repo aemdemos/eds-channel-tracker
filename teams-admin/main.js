@@ -729,7 +729,7 @@ createTeamBtn.addEventListener('click', () => {
     e.preventDefault();
     // Disable all fields and the submit button
     const fields = createTeamForm.querySelectorAll('input, textarea, button');
-    fields.forEach(field => field.disabled = true);
+    fields.forEach((field) => { field.disabled = true; });
 
     const name = document.getElementById('new-team-name')
       .value
