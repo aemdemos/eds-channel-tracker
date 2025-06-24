@@ -157,6 +157,22 @@ export const handleModalInteraction = async (cell, teamId, modal, fetchDataCallb
   }
 };
 
+// Show spinner in the modal
+export function showSpinner(modal) {
+  const spinner = modal.querySelector('.spinner');
+  if (spinner) {
+    spinner.style.display = 'block';
+  }
+}
+
+// Hide spinner in the modal
+export function hideSpinner(modal) {
+  const spinner = modal.querySelector('.spinner');
+  if (spinner) {
+    spinner.style.display = 'none';
+  }
+}
+
 export function showSuccessModal(message) {
   const overlay = document.getElementById('success-modal-overlay');
   const messageEl = document.getElementById('success-modal-message');

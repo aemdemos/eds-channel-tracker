@@ -28,6 +28,8 @@ import {
 } from './utils.js';
 import {
   handleModalInteraction,
+  showSpinner,
+  hideSpinner,
   wrapWithCloseButton,
   showModal,
   hideModal,
@@ -727,16 +729,14 @@ createTeamBtn.addEventListener('click', () => {
   const createTeamForm = createTeamModal.querySelector('#create-team-form');
   createTeamForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    showSpinner(createTeamModal);
+
     // Disable all fields and the submit button
     const fields = createTeamForm.querySelectorAll('input, textarea, button');
     fields.forEach((field) => { field.disabled = true; });
 
-    const name = document.getElementById('new-team-name')
-      .value
-      .trim();
-    const description = document.getElementById('new-team-description')
-      .value
-      .trim();
+    const name = document.getElementById('new-team-name').value.trim();
+    const description = document.getElementById('new-team-description').value.trim();
 
     if (!userProfile) {
       try {
@@ -759,16 +759,21 @@ createTeamBtn.addEventListener('click', () => {
         }),
       });
 
+   //   hideSpinner(createTeamModal);
+
       if (response.ok) {
         createTeamModal.classList.add('hidden');
         alert('Team created successfully!');
         // Optionally trigger reload of team list here
       } else {
         alert('Error creating team.');
+        fields.forEach((field) => { field.disabled = false; });
       }
     } catch (err) {
+      hideSpinner(createTeamModal);
       console.error(err);
       alert('Network or server error.');
+      fields.forEach((field) => { field.disabled = false; });
     }
   });
 });
