@@ -529,9 +529,27 @@ const initTable = (teams) => {
   });
 };
 
-const displayTeams = async () => {
+async function ensureUserProfile() {
+  if (!userProfile) {
+    try {
+      userProfile = await getUserProfile();
+    } catch (error) {
+      teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
+      throw error; // Stop further execution if user profile cannot be fetched
+    }
+  }
+}
+
+async function displayTeams (){
   searchButton.disabled = true;
   sortDirection = 'asc'; // Reset sort direction to default
+  try {
+    await ensureUserProfile(); // Ensure user profile is fetched before proceeding
+  } catch {
+    searchButton.disabled = false; // Re-enable search button if fetching fails
+    return;
+  }
+
   const rawName = document.getElementById('team-name').value.trim();
   const rawDescription = document.getElementById('team-description').value.trim();
 
@@ -541,13 +559,6 @@ const displayTeams = async () => {
   const spinner = document.getElementsByClassName('spinner')[0];
   spinner.style.display = 'block';
 
-  if (!userProfile) {
-    try {
-      userProfile = await getUserProfile();
-    } catch (error) {
-      teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
-    }
-  }
   const myTeams = await getMyTeams(userProfile.email);
 
   if (myTeams.length === 0) {
@@ -730,10 +741,17 @@ createTeamBtn.addEventListener('click', () => {
   const createTeamForm = createTeamModal.querySelector('#create-team-form');
   createTeamForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const errorDiv = createTeamModal.querySelector('#create-team-error');
+    try {
+      await ensureUserProfile();
+    } catch {
+      errorDiv.textContent = 'An error occurred while fetching your user profile. Please try again later.';
+      errorDiv.style.display = 'block';
+      return;
+    }
     // Disable all fields and the submit button
     const fields = createTeamForm.querySelectorAll('input, textarea, button');
     fields.forEach((field) => { field.disabled = true; });
-    const errorDiv = createTeamModal.querySelector('#create-team-error');
 
     errorDiv.style.display = 'none';
     errorDiv.textContent = '';
