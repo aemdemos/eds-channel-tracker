@@ -684,7 +684,8 @@ createTeamBtn.addEventListener('click', () => {
       <label for="new-company-name">Company Name</label>
       <input type="text" id="new-company-name" />
       <label for="new-team-description">Description</label>
-      <input type="text" id="new-team-description" name="description" value="Collaboration channel for <COMPANY_NAME> and Adobe, focused on Edge Delivery Services" required />
+      <textarea id="new-team-description" name="description" rows="3" required
+         style="width:100%;resize:vertical;font-size:15px;padding:8px 10px;margin-bottom:18px;">Collaboration channel for <COMPANY_NAME> and Adobe, focused on Edge Delivery Services</textarea>
       <div class="button-wrapper" style="margin-top: 1em;">
         <button type="submit" class="button">Submit</button>
       </div>
