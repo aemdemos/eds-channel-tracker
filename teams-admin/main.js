@@ -759,7 +759,7 @@ createTeamBtn.addEventListener('click', () => {
         }),
       });
 
-   //   hideSpinner(createTeamModal);
+      hideSpinner(createTeamModal);
 
       if (response.ok) {
         createTeamModal.classList.add('hidden');
