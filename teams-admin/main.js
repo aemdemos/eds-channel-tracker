@@ -28,8 +28,12 @@ import {
 } from './utils.js';
 import {
   handleModalInteraction,
+  wrapWithCloseButton,
+  showModal,
+  hideModal,
   showSuccessModal,
   setupModalDrag,
+
 } from './modal.js';
 
 // Ensure the userProfile is fetched if not set
@@ -38,7 +42,6 @@ let userProfile;
 const params = new URLSearchParams(window.location.search);
 
 const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-
 
 // If running on localhost, fetch userProfile from query params
 if (isLocalhost) {
@@ -56,7 +59,7 @@ if (isLocalhost) {
 const createTeams = params.get('createTeams');
 
 if (createTeams === 'true' || isLocalhost) {
-  document.getElementById('create-team-btn').classList.remove("hidden");
+  document.getElementById('create-team-btn').classList.remove('hidden');
 }
 
 const doReload = () => window.location.reload();
@@ -85,6 +88,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     membersModal.style.display = 'none';
     addUsersModal.style.display = 'none';
+    createTeamModal.style.display = 'none';
   }
 });
 
@@ -671,69 +675,95 @@ searchButton.addEventListener('click', async () => {
 });
 
 const createTeamBtn = document.getElementById('create-team-btn');
-const cancelCreateTeam = document.getElementById('cancel-create-team');
-const createTeamForm = document.getElementById('create-team-form');
-
-const companyInput = document.getElementById('new-company-name');
-const descriptionInput = document.getElementById('new-team-description');
-
-let userHasEditedDescription = false;
-
-// Stop auto-fill if the user types in the description manually
-descriptionInput.addEventListener('input', () => {
-  userHasEditedDescription = true;
-});
-
-companyInput.addEventListener('input', () => {
-  const company = companyInput.value.trim();
-  const defaultTemplate = `Collaboration channel for ${company || '<COMPANY_NAME>'} and Adobe, focused on Edge Delivery Services`;
-
-  // Only auto-fill if user hasn't edited the description manually
-  if (!userHasEditedDescription || descriptionInput.value.includes('<COMPANY_NAME>')) {
-    descriptionInput.value = defaultTemplate;
-    userHasEditedDescription = false; // still allow re-sync while typing
-  }
-});
-
 createTeamBtn.addEventListener('click', () => {
-  createTeamModal.classList.remove('hidden');
-});
+  // Prepare the form HTML
+  const formHtml = `
+    <form id="create-team-form">
+      <label for="new-team-name">Team Name</label>
+      <input type="text" id="new-team-name" name="team-name" value="aem-" required />
+      <label for="new-company-name">Company Name</label>
+      <input type="text" id="new-company-name" />
+      <label for="new-team-description">Description</label>
+      <input type="text" id="new-team-description" name="description" value="Collaboration channel for <COMPANY_NAME> and Adobe, focused on Edge Delivery Services" required />
+      <div class="button-wrapper" style="margin-top: 1em;">
+        <button type="submit" class="button">Submit</button>
+      </div>
+    </form>
+    <span class="spinner" style="display:none"></span>
+  `;
 
-cancelCreateTeam.addEventListener('click', () => {
-  createTeamModal.classList.add('hidden');
-});
+  const modalContent = wrapWithCloseButton(
+    formHtml,
+    () => hideModal(createTeamModal),
+    'Create New Team',
+  );
+  // Clear and append new content
+  createTeamModal.innerHTML = '';
+  createTeamModal.appendChild(modalContent);
 
-createTeamForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const name = document.getElementById('new-team-name').value.trim();
-  const description = document.getElementById('new-team-description').value.trim();
+  // Show the modal centered
+  showModal(createTeamModal);
 
-  if (!userProfile) {
+  const companyInput = createTeamModal.querySelector('#new-company-name');
+  const descriptionInput = createTeamModal.querySelector('#new-team-description');
+  let userHasEditedDescription = false;
+
+  // Stop auto-fill if the user types in the description manually
+  descriptionInput.addEventListener('input', () => {
+    userHasEditedDescription = true;
+  });
+
+  companyInput.addEventListener('input', () => {
+    const company = companyInput.value.trim();
+    const defaultTemplate = `Collaboration channel for ${company || '<COMPANY_NAME>'} and Adobe, focused on Edge Delivery Services`;
+    // Only auto-fill if user hasn't edited the description manually
+    if (!userHasEditedDescription || descriptionInput.value.includes('<COMPANY_NAME>')) {
+      descriptionInput.value = defaultTemplate;
+      userHasEditedDescription = false; // still allow re-sync while typing
+    }
+  });
+
+  const createTeamForm = createTeamModal.querySelector('#create-team-form');
+  createTeamForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('new-team-name')
+      .value
+      .trim();
+    const description = document.getElementById('new-team-description')
+      .value
+      .trim();
+
+    if (!userProfile) {
+      try {
+        userProfile = await getUserProfile();
+      } catch (error) {
+        teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
+      }
+    }
+
+    const createdBy = userProfile.name || userProfile.email;
+
     try {
-      userProfile = await getUserProfile();
-    } catch (error) {
-      teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
+      const response = await fetch(`${API_ENDPOINT}/teams`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          createdBy,
+          name,
+          description,
+        }),
+      });
+
+      if (response.ok) {
+        createTeamModal.classList.add('hidden');
+        alert('Team created successfully!');
+        // Optionally trigger reload of team list here
+      } else {
+        alert('Error creating team.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network or server error.');
     }
-  }
-
-  const createdBy = userProfile.name || userProfile.email;
-
-  try {
-    const response = await fetch(`${API_ENDPOINT}/teams`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ createdBy, name, description }),
-    });
-
-    if (response.ok) {
-      createTeamModal.classList.add('hidden');
-      alert('Team created successfully!');
-      // Optionally trigger reload of team list here
-    } else {
-      alert('Error creating team.');
-    }
-  } catch (err) {
-    console.error(err);
-    alert('Network or server error.');
-  }
+  });
 });

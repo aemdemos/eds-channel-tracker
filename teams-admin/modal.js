@@ -24,7 +24,7 @@ function positionModal(modal, triggerElement) {
   modal.style.visibility = '';
 }
 
-function showModal(modal, triggerElement = null) {
+export function showModal(modal, triggerElement = null) {
   if (triggerElement) {
     positionModal(modal, triggerElement);
   } else {
@@ -41,7 +41,7 @@ function showModal(modal, triggerElement = null) {
   requestAnimationFrame(() => modal.classList.add('show'));
 }
 
-function hideModal(modal) {
+export function hideModal(modal) {
   modal.classList.remove('show');
   modal.addEventListener(
     'transitionend',
@@ -52,7 +52,7 @@ function hideModal(modal) {
   );
 }
 
-const wrapWithCloseButton = (content, onClose, title = '') => {
+export function wrapWithCloseButton (content, onClose, title = '') {
   const wrapper = document.createElement('div');
   wrapper.classList.add('modal-content');
 
@@ -111,13 +111,13 @@ export function setupModalDrag(modal) {
     document.removeEventListener('mouseup', onMouseUp);
   };
 
- modal.addEventListener('mousedown', (e) => {
+  modal.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
 
-   // If the clicked element is an input, textarea, or button, don't start dragging
-   if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'LABEL'].includes(e.target.tagName)) {
-     return;
-   }
+    // If the clicked element is an input, textarea, or button, don't start dragging
+    if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'LABEL'].includes(e.target.tagName)) {
+      return;
+    }
 
     e.preventDefault();
     isDragging = true;
