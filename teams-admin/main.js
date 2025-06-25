@@ -59,10 +59,18 @@ if (isLocalhost) {
 }
 
 const createTeams = params.get('createTeams');
+const viewReport = params.get('viewReport');
 
 if (createTeams === 'true' || isLocalhost) {
   document.getElementById('create-team-btn').classList.remove('hidden');
 }
+if (viewReport === 'true' || isLocalhost) {
+  document.getElementById('view-report-btn').classList.remove('hidden');
+}
+
+document.getElementById('view-report-btn').addEventListener('click', () => {
+  window.location.href = './report.html';
+});
 
 const doReload = () => window.location.reload();
 const sk = document.querySelector('aem-sidekick');
@@ -369,6 +377,7 @@ function renderSingleTeamRow(team) {
 
   return tr;
 }
+
 const renderTable = (teams) => {
   const tbody = document.querySelector('tbody');
   tbody.innerHTML = '';
@@ -540,7 +549,7 @@ async function ensureUserProfile() {
   }
 }
 
-async function displayTeams (){
+async function displayTeams() {
   searchButton.disabled = true;
   sortDirection = 'asc'; // Reset sort direction to default
   try {
@@ -670,7 +679,7 @@ async function displayTeams (){
   initTable(combinedTeams); // Pass combined teams to initTable
 
   searchButton.disabled = false;
-};
+}
 
 const teamNameInput = document.getElementById('team-name');
 const teamDescriptionInput = document.getElementById('team-description');
