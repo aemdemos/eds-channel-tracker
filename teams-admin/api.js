@@ -59,6 +59,7 @@ export async function getTeamMembers(teamId) {
 export const getTeamMessageStats = async (teamId) => {
   let messageCount = 0;
   let recentCount = 0;
+  let questionCount = 0;
   let latestMessage = null;
 
   try {
@@ -76,7 +77,9 @@ export const getTeamMessageStats = async (teamId) => {
     if (!response.ok) {
       // eslint-disable-next-line no-console
       console.warn(`Non-OK response for team ${teamId}`, response.status);
-      return { messageCount: '-', latestMessage: '-' };
+      return {
+        messageCount: '-', recentCount: '-', latestMessage: '-', questionCount: '-', created: '-',
+      };
     }
 
     // eslint-disable-next-line no-await-in-loop
@@ -85,6 +88,7 @@ export const getTeamMessageStats = async (teamId) => {
     // Aggregate results
     messageCount = data.messageCount || 0;
     recentCount = data.recentCount || 0;
+    questionCount = data.questionCount || 0;
 
     // Keep the latest message date
     if (data.latestMessage) {
@@ -98,11 +102,15 @@ export const getTeamMessageStats = async (teamId) => {
       messageCount,
       recentCount,
       latestMessage,
+      questionCount,
+      created: data.created ? new Date(data.created).toISOString().split('T')[0] : '-',
     };
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error('Error in getTeamMessageStats', e);
-    return { messageCount: '-', latestMessage: '-' };
+    return {
+      messageCount: '-', recentCount: '-', latestMessage: '-', questionCount: '-', created: '-',
+    };
   }
 };
 
