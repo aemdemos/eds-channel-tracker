@@ -135,7 +135,9 @@ function renderSingleTeamRow(team) {
 
   // Name column with optional webUrl link (only if isMember)
   if (team.webUrl && team.isMember) {
-    nameCell.innerHTML = `<a href="${escapeHTML(team.webUrl)}" target="_blank" rel="noopener noreferrer" title="Open in Microsoft Teams">${escapeHTML(team.displayName)}</a>`;
+    nameCell.innerHTML = `<a href="${escapeHTML(
+      team.webUrl)}" target="_blank" rel="noopener noreferrer" title="Open in Microsoft Teams">${escapeHTML(
+      team.displayName)}</a>`;
   } else {
     nameCell.textContent = team.displayName;
   }
@@ -162,8 +164,14 @@ function renderSingleTeamRow(team) {
   const descriptionText = decodeHTML(team.description || '');
   const descriptionCell = createCell(descriptionText);
 
-  const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
+  const dateOnly = team.created ? new Date(team.created).toISOString()
+  .split('T')[0] : 'N/A';
   const createdCell = createCell(dateOnly, true);
+
+  if (team.created && team.created !== 'N/A' && team.created !== 'Invalid Date' && new Date(team.created) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)) {
+    const el = document.getElementById('created-teams-count');
+    el.textContent = (parseInt(el.textContent, 10) || 0) + 1;
+  }
 
   const totalMessagesCell = document.createElement('td');
   totalMessagesCell.classList.add('msg-count');
@@ -494,6 +502,7 @@ const initTable = (teams) => {
   summary.innerHTML = `
     <span>Total Teams: ${escapeHTML(teams.length.toString())}</span> |
     <span>Active Teams (Last 30 days): <span id="active-teams-count">0</span></span>
+    <span>Teams Created (Last 30 days): <span id="created-teams-count">0</span></span>
   `;
 
   summaryWrapper.appendChild(summary);
