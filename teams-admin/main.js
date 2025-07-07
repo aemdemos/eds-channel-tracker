@@ -59,18 +59,10 @@ if (isLocalhost) {
 }
 
 const createTeams = params.get('createTeams');
-const viewReport = params.get('viewReport');
 
 if (createTeams === 'true' || isLocalhost) {
   document.getElementById('create-team-btn').classList.remove('hidden');
 }
-if (viewReport === 'true' || isLocalhost) {
-  document.getElementById('view-report-btn').classList.remove('hidden');
-}
-
-document.getElementById('view-report-btn').addEventListener('click', () => {
-  window.location.href = './report.html';
-});
 
 const doReload = () => window.location.reload();
 const sk = document.querySelector('aem-sidekick');
@@ -136,8 +128,10 @@ function renderSingleTeamRow(team) {
   // Name column with optional webUrl link (only if isMember)
   if (team.webUrl && team.isMember) {
     nameCell.innerHTML = `<a href="${escapeHTML(
-      team.webUrl)}" target="_blank" rel="noopener noreferrer" title="Open in Microsoft Teams">${escapeHTML(
-      team.displayName)}</a>`;
+      team.webUrl,
+    )}" target="_blank" rel="noopener noreferrer" title="Open in Microsoft Teams">${escapeHTML(
+      team.displayName,
+    )}</a>`;
   } else {
     nameCell.textContent = team.displayName;
   }
@@ -165,7 +159,7 @@ function renderSingleTeamRow(team) {
   const descriptionCell = createCell(descriptionText);
 
   const dateOnly = team.created ? new Date(team.created).toISOString()
-  .split('T')[0] : 'N/A';
+    .split('T')[0] : 'N/A';
   const createdCell = createCell(dateOnly, true);
 
   if (team.created && team.created !== 'N/A' && team.created !== 'Invalid Date' && new Date(team.created) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)) {
