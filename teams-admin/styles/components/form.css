@@ -1,0 +1,203 @@
+/*
+ * Copyright 2025 Adobe. All rights reserved.
+ * This file is licensed to you under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License. You may obtain a copy
+ * of the License at http://www.Apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+/* Search filters */
+.search-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  background-color: #f4f4f4 !important;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.search-filters div {
+  display: flex;
+  flex-direction: column;
+}
+
+.search-filters label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.search-filters input {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Buttons */
+.button {
+  margin-top: 16px;
+  background-color: #007bff;
+  color: white;
+  padding: 10px 16px;
+  font-size: 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.button:hover {
+  background-color: #0056b3;
+}
+
+.button-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.button-wrapper .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.button-wrapper .button img {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+}
+
+.button-wrapper .button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 8px rgb(0 0 0 / 15%);
+}
+
+/* Create team form */
+#create-team-form {
+  max-height: none;
+  overflow: visible;
+}
+
+#create-team-form input {
+  margin-bottom: 20px;
+}
+
+#create-team-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  text-align: left;
+}
+
+#create-team-form input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 18px;
+  padding: 8px 10px;
+  font-size: 15px;
+}
+
+#create-team-form input[type="text"]#new-team-description {
+  width: 100%;
+  min-width: 0;
+  font-size: 15px;
+  padding: 8px 10px;
+  margin-bottom: 18px;
+}
+
+#create-team-form .button-wrapper {
+  margin-top: 1.5em;
+  text-align: right;
+}
+
+/* Add users form */
+#add-users-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.user-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.user-row input[type="text"],
+.user-row input[type="email"] {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.user-row button.add-row {
+  padding: 6px 10px;
+  background-color: #17a2b8;
+  color: white;
+  font-size: 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.user-row button.add-row:hover {
+  background-color: #138496;
+}
+
+.user-row button.remove-row {
+  background: #d73527;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.user-row button.remove-row:hover {
+  background: #bd2d20;
+}
+
+#add-row-button {
+  padding: 8px 16px;
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#add-row-button:hover {
+  background-color: #138496;
+}
+
+
+
+/* Remove member button */
+.remove-member-btn {
+  opacity: 0.6;
+  float: right;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1.8em;
+  line-height: 1;
+  color: #d73527;
+}
+
+.remove-member-btn:hover {
+  opacity: 1;
+  color: #bd2d20;
+} 

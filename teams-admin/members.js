@@ -81,19 +81,21 @@ document.addEventListener('click', async (e) => {
 
     try {
       const results = await removeMemberFromTeam(teamId, email, removedBy);
-      const result = results[0];
-      if (result.removed === true) {
-        listItem.remove();
-        updateTeamRowMemberCount(teamId);
-        if (email === currentUserEmail) {
-          updateIsMemberBadge(teamId, false);
-        }
-      } else {
-        console.warn('Member removal not confirmed:', result);
-      }
-    } catch (err) {
-      console.error('Failed to remove member:', err);
-    } finally {
+
+      // Check if results is valid and has at least one element
+      if (results && Array.isArray(results) && results.length > 0) {
+        const result = results[0];
+
+        // Check if result has the expected 'removed' property
+        if (result && result.removed === true) {
+          listItem.remove();
+          updateTeamRowMemberCount(teamId);
+          if (email === currentUserEmail) {
+            updateIsMemberBadge(teamId, false);
+          }
+        } else { /* empty */ }
+      } else { /* empty */ }
+    } catch (err) { /* empty */ } finally {
       btn.disabled = false;
     }
   }
