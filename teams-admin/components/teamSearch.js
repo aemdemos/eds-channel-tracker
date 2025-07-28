@@ -16,8 +16,10 @@ import {
   getFilteredTeams,
   getTeamSummaries,
 } from '../api.js';
+import { showSuccessModal } from '../modal.js';
+import ErrorHandler from './errorHandler.js';
 
-export class TeamSearch {
+class TeamSearch {
   constructor() {
     this.searchButton = document.getElementById('teams');
     this.teamNameInput = document.getElementById('team-name');
@@ -27,7 +29,7 @@ export class TeamSearch {
     this.progressBar = document.getElementById('progress-bar');
     this.progressFill = document.getElementById('progress-fill');
     this.progressLabel = document.getElementById('progress-label');
-    this.spinner = document.getElementsByClassName('spinner')[0];
+    this.spinner = document.querySelector('.spinner');
   }
 
   setupEventListeners(searchCallback) {
@@ -66,7 +68,7 @@ export class TeamSearch {
   updateProgress(loaded, total) {
     const percent = Math.round((loaded / total) * 100);
     this.progressFill.style.width = `${percent}%`;
-    
+
     // Show progress bar, hide spinner once loading begins
     this.spinner.style.display = 'none';
     this.progressBar.style.display = 'block';
@@ -113,11 +115,13 @@ export class TeamSearch {
       </div>
     `;
 
-    this.setupInvitationLink(userProfile);
+    TeamSearch.setupInvitationLink(userProfile);
   }
 
-  setupInvitationLink(userProfile) {
-    document.getElementById('send-invitation-link').addEventListener('click', async (event) => {
+  static setupInvitationLink(userProfile) {
+    const invitationLink = document.getElementById('send-invitation-link');
+    if (!invitationLink) return;
+    invitationLink.addEventListener('click', async (event) => {
       event.preventDefault();
 
       try {
@@ -134,12 +138,12 @@ export class TeamSearch {
         });
 
         if (response.ok) {
-          alert('Invitation sent successfully! Please check your email.');
+          showSuccessModal('Invitation sent successfully! Please check your email.');
         } else {
-          alert('Failed to send the invitation. Please try again.');
+          ErrorHandler.displayUserError('Failed to send the invitation. Please try again.');
         }
       } catch (error) {
-        alert('An error occurred while sending the invitation.');
+        ErrorHandler.displayUserError('An error occurred while sending the invitation.');
       }
     });
   }
@@ -162,7 +166,7 @@ export class TeamSearch {
   async loadTeamSummaries(teams) {
     const teamIds = teams.map((team) => team.id);
     const totalTeams = teamIds.length;
-    
+
     // Chunk team IDs for batch processing
     const chunkedTeamIds = [];
     for (let i = 0; i < totalTeams; i += 5) {
@@ -178,18 +182,19 @@ export class TeamSearch {
           const summaries = await getTeamSummaries(chunk);
           teamSummaries.push(...summaries);
         } catch (err) {
+          // eslint-disable-next-line no-console
           console.error('Error loading team summaries:', err);
         }
-        
+
         loaded += chunk.length;
         this.updateProgress(loaded, totalTeams);
       }),
     );
 
     return teamSummaries;
-  }
+  } // Fixed: close loadTeamSummaries method
 
-  combineTeamsWithSummaries(teams, teamSummaries) {
+  static combineTeamsWithSummaries(teams, teamSummaries) {
     return teams.map((team) => {
       const teamSummary = teamSummaries.find((summary) => summary.teamId === team.id);
       return {
@@ -220,20 +225,22 @@ export class TeamSearch {
 
       const teams = await this.loadTeamData(userProfile, myTeams);
       const teamSummaries = await this.loadTeamSummaries(teams);
-      
+
       // Hide progress
       this.hideProgress();
 
       // Combine data and initialize table
-      const combinedTeams = this.combineTeamsWithSummaries(teams, teamSummaries);
+      const combinedTeams = TeamSearch.combineTeamsWithSummaries(teams, teamSummaries);
       this.teamsContainer.innerHTML = '';
       initTableCallback(combinedTeams);
-
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Search error:', error);
       this.teamsContainer.innerHTML = '<p class="error">An error occurred while searching teams. Please try again later.</p>';
     } finally {
       this.enableSearchButton();
     }
   }
-} 
+}
+
+export default TeamSearch;

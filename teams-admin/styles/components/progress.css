@@ -94,7 +94,6 @@
   font-size: 13px;
   white-space: normal;
 }
-
 .tooltip-container:hover .custom-tooltip {
   visibility: visible;
   opacity: 1;
@@ -109,4 +108,4 @@
   border-width: 5px;
   border-style: solid;
   border-color: #333 transparent transparent;
-} 
+}

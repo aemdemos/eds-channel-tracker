@@ -93,9 +93,8 @@ export const getTeamMessageStats = async (teamId) => {
     // Keep the latest message date
     if (data.latestMessage) {
       const current = new Date(data.latestMessage);
-      if (!latestMessage || current > new Date(latestMessage)) {
-        latestMessage = current.toISOString().split('T')[0];
-      }
+      const [date] = current.toISOString().split('T');
+      latestMessage = date;
     }
 
     return {

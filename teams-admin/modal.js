@@ -18,8 +18,8 @@ function positionModal(modal, triggerElement) {
   modal.style.top = `${top}px`;
 
   // Store initial positions as data attributes
-  modal.dataset.initialLeft = left;
-  modal.dataset.initialTop = top;
+  modal.dataset.initialLeft = left.toString();
+  modal.dataset.initialTop = top.toString();
 
   modal.style.visibility = '';
 }
@@ -52,7 +52,7 @@ export function hideModal(modal) {
   );
 }
 
-export function wrapWithCloseButton (content, onClose, title = '') {
+export function wrapWithCloseButton(content, onClose, title = '') {
   const wrapper = document.createElement('div');
   wrapper.classList.add('modal-content');
 
@@ -73,7 +73,7 @@ export function wrapWithCloseButton (content, onClose, title = '') {
   });
 
   return wrapper;
-};
+}
 
 export function setupModalDrag(modal) {
   const header = modal.querySelector('.modal-header');

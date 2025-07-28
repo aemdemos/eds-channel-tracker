@@ -41,7 +41,7 @@
   text-align: left;
 }
 
-.styled-table th, 
+.styled-table th,
 .styled-table td {
   padding: 10px;
   border-bottom: 1px solid #ddd;
@@ -82,11 +82,7 @@ th[data-sort]::after {
 }
 
 .name-column a {
-  color: #0077c8;
-  text-decoration: none;
-}
-
-.name-column a:hover {
+  color: blue;
   text-decoration: underline;
 }
 
@@ -140,4 +136,4 @@ th[data-sort]::after {
   border-top-color: #555;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-} 
+}

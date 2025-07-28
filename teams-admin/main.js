@@ -10,9 +10,9 @@
  * governing permissions and limitations under the License.
  */
 
-import { ApplicationSetup } from './components/applicationSetup.js';
-import { TeamTable } from './components/teamTable.js';
-import { TeamSearch } from './components/teamSearch.js';
+import ApplicationSetup from './components/applicationSetup.js';
+import TeamTable from './components/teamTable.js';
+import TeamSearch from './components/teamSearch.js';
 import { setupCreateTeamButton } from './components/teamForms.js';
 import './members.js'; // Import to ensure global event listeners are attached
 
@@ -48,4 +48,7 @@ class TeamsAdminApp {
 
 // Initialize the application when the page loads
 const app = new TeamsAdminApp();
-app.initialize();
+app.initialize().catch((error) => {
+  // eslint-disable-next-line no-console
+  console.error('Failed to initialize application:', error);
+});

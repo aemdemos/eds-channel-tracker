@@ -11,26 +11,30 @@
  */
 
 import { getTeamMembers, getTeamMessageStats } from '../api.js';
-import { sortTable, decodeHTML, escapeHTML, sleep } from '../utils.js';
-import { handleModalInteraction, showSuccessModal } from '../modal.js';
+import {
+  sortTable, decodeHTML, escapeHTML, sleep,
+} from '../utils.js';
+import { handleModalInteraction } from '../modal.js';
 import renderMemberList from '../members.js';
 import { showAddUsersModal } from './teamForms.js';
-import { PerformanceOptimizer } from './performanceOptimizer.js';
-import { ErrorHandler } from './errorHandler.js';
+import PerformanceOptimizer from './performanceOptimizer.js';
+import ErrorHandler from './errorHandler.js';
+import CONSTANTS from './constants.js';
 
-export class TeamTable {
+class TeamTable {
   constructor(userProfile) {
     this.userProfile = userProfile;
     this.currentTeams = [];
     this.sortDirection = 'asc';
-    this.teamsContainer = PerformanceOptimizer.getElementById('teams-container');
-    this.membersModal = PerformanceOptimizer.getElementById('members-modal');
-    this.addUsersModal = PerformanceOptimizer.getElementById('add-users-modal');
+    this.teamsContainer = PerformanceOptimizer.getElementById(
+      CONSTANTS.ELEMENT_IDS.TEAMS_CONTAINER,
+    );
+    this.membersModal = PerformanceOptimizer.getElementById(CONSTANTS.ELEMENT_IDS.MEMBERS_MODAL);
     this.currentInviteTeamId = null;
     this.currentInviteTeamRow = null;
   }
 
-  createCell(content, nobreak = false) {
+  static createCell(content, nobreak = false) {
     const td = document.createElement('td');
     td.textContent = content;
     if (nobreak) {
@@ -60,24 +64,28 @@ export class TeamTable {
     tr.appendChild(nameCell);
 
     // Member column
-    const memberCell = this.createMemberCell(team.isMember);
+    const memberCell = TeamTable.createMemberCell(team.isMember);
     tr.appendChild(memberCell);
 
     // Description
     const descriptionText = decodeHTML(team.description || '');
-    const descriptionCell = this.createCell(descriptionText);
+    const descriptionCell = TeamTable.createCell(descriptionText);
     tr.appendChild(descriptionCell);
 
     // Created date
     const dateOnly = team.created ? new Date(team.created).toISOString().split('T')[0] : 'N/A';
-    const createdCell = this.createCell(dateOnly, true);
+    const createdCell = TeamTable.createCell(dateOnly, true);
     tr.appendChild(createdCell);
 
     // Update created teams count if recent
-    this.updateCreatedTeamsCount(team.created);
+    TeamTable.updateCreatedTeamsCount(team.created);
 
     // Message stats columns
-    const { totalMessagesCell, lastMessageCell, recentCountCell } = this.createMessageStatsColumns(team);
+    const {
+      totalMessagesCell,
+      lastMessageCell,
+      recentCountCell,
+    } = TeamTable.createMessageStatsColumns(team);
     tr.append(totalMessagesCell, lastMessageCell, recentCountCell);
 
     // Members count column
@@ -91,7 +99,7 @@ export class TeamTable {
     return tr;
   }
 
-  createMemberCell(isMember) {
+  static createMemberCell(isMember) {
     const memberCell = document.createElement('td');
     memberCell.className = 'member-column';
 
@@ -107,7 +115,7 @@ export class TeamTable {
     return memberCell;
   }
 
-  createMessageStatsColumns(team) {
+  static createMessageStatsColumns(team) {
     const totalMessagesCell = document.createElement('td');
     totalMessagesCell.classList.add('msg-count');
 
@@ -131,7 +139,7 @@ export class TeamTable {
   }
 
   createMembersCountCell(team) {
-    const membersCountCell = this.createCell(team.memberCount ?? '');
+    const membersCountCell = TeamTable.createCell(team.memberCount ?? '');
     membersCountCell.classList.add('members-count-cell');
 
     const membersLink = document.createElement('a');
@@ -152,7 +160,7 @@ export class TeamTable {
   createActionsCell(team, tr) {
     const actionsCell = document.createElement('td');
     actionsCell.style.textAlign = 'center';
-    
+
     const addButton = document.createElement('button');
     addButton.textContent = '👤 +';
     addButton.title = 'Add Members';
@@ -163,7 +171,12 @@ export class TeamTable {
       e.preventDefault();
       this.currentInviteTeamId = team.id;
       this.currentInviteTeamRow = tr;
-      await showAddUsersModal(addButton, team, this.userProfile, this.updateTeamRowAfterDelay.bind(this));
+      await showAddUsersModal(
+        addButton,
+        team,
+        this.userProfile,
+        this.updateTeamRowAfterDelay.bind(this),
+      );
     });
 
     actionsCell.appendChild(addButton);
@@ -174,7 +187,7 @@ export class TeamTable {
     this.membersModal.dataset.teamId = team.id;
     this.membersModal.dataset.removedBy = this.userProfile.name;
     this.membersModal.dataset.currentUserEmail = this.userProfile.email;
-    
+
     await handleModalInteraction(
       triggerElement,
       team.id,
@@ -186,13 +199,17 @@ export class TeamTable {
           teamName: `Members of ${team.displayName}`,
           members,
         };
-      }
+      },
     );
   }
 
-  updateCreatedTeamsCount(created) {
-    if (created && created !== 'N/A' && created !== 'Invalid Date' && 
-        new Date(created) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)) {
+  static updateCreatedTeamsCount(created) {
+    if (
+      created
+      && created !== 'N/A'
+      && created !== 'Invalid Date'
+      && new Date(created) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    ) {
       const el = PerformanceOptimizer.getElementById('created-teams-count');
       if (el) {
         el.textContent = (parseInt(el.textContent, 10) || 0) + 1;
@@ -201,8 +218,8 @@ export class TeamTable {
   }
 
   async updateTeamRowAfterDelay() {
-    return await ErrorHandler.withErrorHandling(async () => {
-      await sleep(5000);
+    return ErrorHandler.withErrorHandling(async () => {
+      await sleep(CONSTANTS.UPDATE_DELAY_MS);
 
       if (this.currentInviteTeamRow) {
         const currentTeam = this.currentTeams.find((t) => t.id === this.currentInviteTeamId);
@@ -306,8 +323,11 @@ export class TeamTable {
           index += 1;
           active += 1;
           getTeamMessageStats(teamId)
-            .then((stats) => updateRow(teamId, stats))
+            .then((stats) => {
+              updateRow(teamId, stats);
+            })
             .catch((err) => {
+              // eslint-disable-next-line no-console
               console.error(`Error loading team ${teamId}:`, err);
               updateRow(teamId, {
                 messageCount: '-',
@@ -315,6 +335,7 @@ export class TeamTable {
                 recentCount: '-',
               });
             })
+          // eslint-disable-next-line no-loop-func
             .finally(() => {
               active -= 1;
               next();
@@ -382,7 +403,10 @@ export class TeamTable {
         this.addSortingToTable(table);
       })
       .catch((err) => {
+        // eslint-disable-next-line no-console
         console.error('Error loading message stats:', err);
       });
   }
-} 
+}
+
+export default TeamTable;

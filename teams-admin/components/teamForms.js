@@ -13,24 +13,36 @@
 import API_ENDPOINT from '../config.js';
 import { addMembersToTeam } from '../api.js';
 import { escapeHTML } from '../utils.js';
-import { 
-  handleModalInteraction, 
-  showSpinner, 
-  hideSpinner, 
+import {
+  handleModalInteraction,
+  showSpinner,
+  hideSpinner,
   wrapWithCloseButton,
   showModal,
   hideModal,
-  showSuccessModal 
+  showSuccessModal,
 } from '../modal.js';
 
-export class TeamForms {
+function resetAddUsersForm(container) {
+  container.innerHTML = '';
+  const row = document.createElement('div');
+  row.classList.add('user-row');
+  row.innerHTML = `
+    <input type="text" name="displayName" placeholder="Display Name" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <button type="button" class="remove-row" title="Remove">−</button>
+  `;
+  container.appendChild(row);
+}
+
+class TeamForms {
   constructor() {
     this.createTeamModal = document.getElementById('create-team-modal');
     this.addUsersModal = document.getElementById('add-users-modal');
   }
 
   showCreateTeamModal(userProfile) {
-    const formHtml = this.generateCreateTeamFormHtml();
+    const formHtml = TeamForms.generateCreateTeamFormHtml();
     const modalContent = wrapWithCloseButton(
       formHtml,
       () => hideModal(this.createTeamModal),
@@ -44,7 +56,7 @@ export class TeamForms {
     this.setupCreateTeamFormHandlers(userProfile);
   }
 
-  generateCreateTeamFormHtml() {
+  static generateCreateTeamFormHtml() {
     return `
       <form id="create-team-form">
         <label for="new-team-name">Team Name</label>
@@ -70,7 +82,7 @@ export class TeamForms {
 
     let userHasEditedDescription = false;
 
-    // Description auto-fill based on company name
+    // Description autofill based on company name
     descriptionInput.addEventListener('input', () => {
       userHasEditedDescription = true;
     });
@@ -78,7 +90,7 @@ export class TeamForms {
     companyInput.addEventListener('input', () => {
       const company = companyInput.value.trim();
       const defaultTemplate = `Collaboration channel for ${company || '<COMPANY_NAME>'} and Adobe, focused on Edge Delivery Services`;
-      
+
       if (!userHasEditedDescription || descriptionInput.value.includes('<COMPANY_NAME>')) {
         descriptionInput.value = defaultTemplate;
         userHasEditedDescription = false;
@@ -93,7 +105,7 @@ export class TeamForms {
 
   async handleCreateTeamSubmit(e, userProfile) {
     e.preventDefault();
-    
+
     const form = e.target;
     const errorDiv = this.createTeamModal.querySelector('#create-team-error');
     const fields = form.querySelectorAll('input, textarea, button');
@@ -142,7 +154,7 @@ export class TeamForms {
     }
   }
 
-  generateAddUsersFormHtml() {
+  static generateAddUsersFormHtml() {
     return `
       <form id="add-users-form">
         <div id="user-rows-container">
@@ -166,7 +178,6 @@ export class TeamForms {
     const form = this.addUsersModal.querySelector('#add-users-form');
     const container = this.addUsersModal.querySelector('#user-rows-container');
     const addRowBtn = this.addUsersModal.querySelector('#add-row-button');
-    const submitButton = this.addUsersModal.querySelector('.button-wrapper .button');
     const spinner = this.addUsersModal.querySelector('.spinner');
     const errorDiv = this.addUsersModal.querySelector('#add-users-error');
 
@@ -191,16 +202,45 @@ export class TeamForms {
 
     // Form submit handler
     form.addEventListener('submit', async (event) => {
-      await this.handleAddUsersSubmit(event, team, userProfile, container, form, spinner, errorDiv, updateTeamRowCallback);
+      event.preventDefault();
+      // Hide previous error
+      errorDiv.style.display = 'none';
+      errorDiv.textContent = '';
+      try {
+        await this.handleAddUsersSubmit(
+          event,
+          team,
+          userProfile,
+          container,
+          form,
+          spinner,
+          errorDiv,
+          updateTeamRowCallback,
+        );
+      } catch (error) {
+        spinner.style.display = 'none';
+        form.style.display = 'flex';
+        errorDiv.textContent = 'An unexpected error occurred. Please try again.';
+        errorDiv.style.display = 'block';
+      }
     });
   }
 
-  async handleAddUsersSubmit(event, team, userProfile, container, form, spinner, errorDiv, updateTeamRowCallback) {
+  async handleAddUsersSubmit(
+    event,
+    team,
+    userProfile,
+    container,
+    form,
+    spinner,
+    errorDiv,
+    updateTeamRowCallback,
+  ) {
     event.preventDefault();
-    
+
     errorDiv.style.display = 'none';
     errorDiv.textContent = '';
-    
+
     const rows = container.querySelectorAll('.user-row');
     const users = Array.from(rows).map((row) => ({
       displayName: row.querySelector('input[name="displayName"]').value.trim(),
@@ -220,7 +260,7 @@ export class TeamForms {
       form.style.display = 'flex';
 
       // Reset form
-      this.resetAddUsersForm(container);
+      resetAddUsersForm(container);
 
       // Close the modal
       this.addUsersModal.classList.remove('show');
@@ -238,30 +278,18 @@ export class TeamForms {
       errorDiv.style.display = 'block';
     }
   }
-
-  resetAddUsersForm(container) {
-    container.innerHTML = '';
-    const row = document.createElement('div');
-    row.classList.add('user-row');
-    row.innerHTML = `
-      <input type="text" name="displayName" placeholder="Display Name" required>
-      <input type="email" name="email" placeholder="Email" required>
-      <button type="button" class="remove-row" title="Remove">−</button>
-    `;
-    container.appendChild(row);
-  }
 }
 
 // Convenience function for use in other modules
 export async function showAddUsersModal(triggerElement, team, userProfile, updateTeamRowCallback) {
   const teamForms = new TeamForms();
-  
+
   await handleModalInteraction(
     triggerElement,
     team.id,
     teamForms.addUsersModal,
     async () => ({
-      modalContent: teamForms.generateAddUsersFormHtml(),
+      modalContent: TeamForms.generateAddUsersFormHtml(),
       teamName: `Add members to ${team.displayName}`,
     }),
   );
@@ -275,8 +303,8 @@ export async function showAddUsersModal(triggerElement, team, userProfile, updat
 export function setupCreateTeamButton(userProfile) {
   const createTeamBtn = document.getElementById('create-team-btn');
   const teamForms = new TeamForms();
-  
+
   createTeamBtn.addEventListener('click', () => {
     teamForms.showCreateTeamModal(userProfile);
   });
-} 
+}

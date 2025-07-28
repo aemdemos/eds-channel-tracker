@@ -12,8 +12,9 @@
 
 import getUserProfile from '../userProfile.js';
 import { setupModalDrag } from '../modal.js';
+import CONSTANTS from './constants.js';
 
-export class ApplicationSetup {
+class ApplicationSetup {
   constructor() {
     this.userProfile = null;
     this.isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
@@ -29,6 +30,7 @@ export class ApplicationSetup {
       if (email && name) {
         this.userProfile = { email, name };
       } else {
+        // eslint-disable-next-line no-alert
         alert('missing email and name query params for local debug');
       }
     }
@@ -41,7 +43,7 @@ export class ApplicationSetup {
       try {
         this.userProfile = await getUserProfile();
       } catch (error) {
-        const teamsContainer = document.getElementById('teams-container');
+        const teamsContainer = document.getElementById(CONSTANTS.ELEMENT_IDS.TEAMS_CONTAINER);
         teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
         throw error;
       }
@@ -51,22 +53,26 @@ export class ApplicationSetup {
 
   setupCreateTeamButton() {
     const createTeams = this.params.get('createTeams');
-    
+
     if (createTeams === 'true' || this.isLocalhost) {
       document.getElementById('create-team-btn').classList.remove('hidden');
     }
   }
 
-  setupSidekickListeners() {
+  static setupSidekickListeners() {
     const doReload = () => window.location.reload();
-    const sk = document.querySelector('aem-sidekick');
+
+    // AEM Sidekick selector
+    const SIDEKICK_SELECTOR = 'aem-sidekick';
+    const sk = document.querySelector(SIDEKICK_SELECTOR);
 
     if (sk) {
       sk.addEventListener('logged-out', doReload);
       sk.addEventListener('logged-in', doReload);
     } else {
+      // Wait for the sidekick to be ready if not immediately available
       document.addEventListener('sidekick-ready', () => {
-        const sidekick = document.querySelector('aem-sidekick');
+        const sidekick = document.querySelector(SIDEKICK_SELECTOR);
         if (sidekick) {
           sidekick.addEventListener('logged-out', doReload);
           sidekick.addEventListener('logged-in', doReload);
@@ -75,10 +81,10 @@ export class ApplicationSetup {
     }
   }
 
-  setupModalElements() {
-    const membersModal = document.getElementById('members-modal');
-    const addUsersModal = document.getElementById('add-users-modal');
-    const createTeamModal = document.getElementById('create-team-modal');
+  static setupModalElements() {
+    const membersModal = document.getElementById(CONSTANTS.ELEMENT_IDS.MEMBERS_MODAL);
+    const addUsersModal = document.getElementById(CONSTANTS.ELEMENT_IDS.ADD_USERS_MODAL);
+    const createTeamModal = document.getElementById(CONSTANTS.ELEMENT_IDS.CREATE_TEAM_MODAL);
 
     document.addEventListener('DOMContentLoaded', () => {
       if (membersModal) setupModalDrag(membersModal);
@@ -87,13 +93,13 @@ export class ApplicationSetup {
     });
   }
 
-  setupGlobalKeyboardListeners() {
+  static setupGlobalKeyboardListeners() {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        const membersModal = document.getElementById('members-modal');
-        const addUsersModal = document.getElementById('add-users-modal');
-        const createTeamModal = document.getElementById('create-team-modal');
-        
+        const membersModal = document.getElementById(CONSTANTS.ELEMENT_IDS.MEMBERS_MODAL);
+        const addUsersModal = document.getElementById(CONSTANTS.ELEMENT_IDS.ADD_USERS_MODAL);
+        const createTeamModal = document.getElementById(CONSTANTS.ELEMENT_IDS.CREATE_TEAM_MODAL);
+
         membersModal.style.display = 'none';
         addUsersModal.style.display = 'none';
         createTeamModal.style.display = 'none';
@@ -101,10 +107,10 @@ export class ApplicationSetup {
     });
   }
 
-  setupSuccessModalListeners() {
+  static setupSuccessModalListeners() {
     document.getElementById('success-modal-overlay').addEventListener('click', (e) => {
       if (e.target === e.currentTarget) {
-        const addUsersModal = document.getElementById('add-users-modal');
+        const addUsersModal = document.getElementById(CONSTANTS.ELEMENT_IDS.ADD_USERS_MODAL);
         addUsersModal.style.display = 'none';
       }
     });
@@ -113,18 +119,20 @@ export class ApplicationSetup {
   async initialize() {
     // Initialize user profile
     await this.initializeUserProfile();
-    
+
     // Setup UI elements
     this.setupCreateTeamButton();
-    this.setupSidekickListeners();
-    this.setupModalElements();
-    this.setupGlobalKeyboardListeners();
-    this.setupSuccessModalListeners();
+    ApplicationSetup.setupSidekickListeners();
+    ApplicationSetup.setupModalElements();
+    ApplicationSetup.setupGlobalKeyboardListeners();
+    ApplicationSetup.setupSuccessModalListeners();
 
     return this.userProfile;
   }
 
   async getUserProfile() {
-    return await this.ensureUserProfile();
+    return this.ensureUserProfile();
   }
-} 
+}
+
+export default ApplicationSetup;

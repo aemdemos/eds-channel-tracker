@@ -10,8 +10,9 @@
  * governing permissions and limitations under the License.
  */
 
-export class ErrorHandler {
+class ErrorHandler {
   static logError(error, context = '') {
+    // eslint-disable-next-line no-console
     console.error(`[${context}] Error:`, error);
   }
 
@@ -19,34 +20,10 @@ export class ErrorHandler {
     if (container) {
       container.innerHTML = `<p class="error">${message}</p>`;
     } else {
-      alert(message);
+      // eslint-disable-next-line no-console
+      console.error('User Error:', message);
+      // Fallback to console when no container is available
     }
-  }
-
-  static handleApiError(error, context = 'API') {
-    this.logError(error, context);
-    
-    if (error.name === 'NetworkError' || !navigator.onLine) {
-      return 'Network error. Please check your connection and try again.';
-    }
-    
-    if (error.status === 401) {
-      return 'Authentication failed. Please refresh the page and try again.';
-    }
-    
-    if (error.status === 403) {
-      return 'Access denied. You may not have permission for this action.';
-    }
-    
-    if (error.status === 429) {
-      return 'Too many requests. Please wait a moment and try again.';
-    }
-    
-    if (error.status >= 500) {
-      return 'Server error. Please try again later.';
-    }
-    
-    return error.message || 'An unexpected error occurred. Please try again.';
   }
 
   static async withErrorHandling(asyncFn, context = '') {
@@ -57,47 +34,6 @@ export class ErrorHandler {
       throw error;
     }
   }
+}
 
-  static showRetryableError(message, retryFn, container = null) {
-    const errorHtml = `
-      <div class="error-container">
-        <p class="error">${message}</p>
-        <button class="retry-button" onclick="this.closest('.error-container').remove(); ${retryFn}">
-          Retry
-        </button>
-      </div>
-    `;
-    
-    if (container) {
-      container.innerHTML = errorHtml;
-    }
-  }
-
-  static validateRequired(fields) {
-    const errors = [];
-    
-    for (const [name, value] of Object.entries(fields)) {
-      if (!value || (typeof value === 'string' && value.trim() === '')) {
-        errors.push(`${name} is required`);
-      }
-    }
-    
-    return errors;
-  }
-
-  static validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
-  static createErrorBoundary(componentFn, fallbackContent = 'Something went wrong') {
-    return async (...args) => {
-      try {
-        return await componentFn(...args);
-      } catch (error) {
-        this.logError(error, 'Component Error');
-        return fallbackContent;
-      }
-    };
-  }
-} 
+export default ErrorHandler;

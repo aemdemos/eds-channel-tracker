@@ -10,17 +10,17 @@
  * governing permissions and limitations under the License.
  */
 
-export const CONSTANTS = {
+const CONSTANTS = {
   // UI Constants
   MAX_CONCURRENT_REQUESTS: 5,
   BATCH_SIZE: 5,
   UPDATE_DELAY_MS: 5000,
   THROTTLE_DELAY_MS: 16, // ~60fps
   DEBOUNCE_DELAY_MS: 300,
-  
+
   // Time Constants
   THIRTY_DAYS_MS: 30 * 24 * 60 * 60 * 1000,
-  
+
   // Element IDs
   ELEMENT_IDS: {
     TEAMS_CONTAINER: 'teams-container',
@@ -107,4 +107,9 @@ export const CONSTANTS = {
     TEAM_NAME_MIN_LENGTH: 3,
     DESCRIPTION_MAX_LENGTH: 500,
   },
-}; 
+};
+
+// Note: CONSTANTS available for use throughout the application
+// TODO: Export and use these constants to replace hardcoded strings
+
+export default CONSTANTS;
