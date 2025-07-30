@@ -94,7 +94,6 @@ export class ChannelTable {
     tbody.innerHTML = '';
 
     channels.forEach((channel) => {
-
       const tr = document.createElement('tr');
       tr.classList.add(CSS_CLASSES.TABLE.CHANNEL_ROW);
       tr.setAttribute('data-channel-id', channel.id);

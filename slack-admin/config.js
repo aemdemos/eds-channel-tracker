@@ -18,8 +18,4 @@ const API_ENDPOINT = (window.location.href.includes('localhost') && !forceProduc
   ? API_CONFIG.ENDPOINTS.LOCAL
   : API_CONFIG.ENDPOINTS.PRODUCTION;
 
-// Log the current endpoint for debugging
-console.log('API Endpoint:', API_ENDPOINT);
-console.log('Force Production:', forceProduction);
-
 export default API_ENDPOINT;

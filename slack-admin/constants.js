@@ -22,7 +22,7 @@ export const API_CONFIG = {
   },
 };
 
-// UI Configuration  
+// UI Configuration
 export const UI_CONFIG = {
   MAX_MESSAGES_COUNT: 10,
   MODAL_MAX_WIDTH: 700,
