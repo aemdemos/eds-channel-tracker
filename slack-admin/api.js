@@ -10,9 +10,10 @@
  * governing permissions and limitations under the License.
  */
 import API_ENDPOINT from './config.js';
+import { API_CONFIG } from './constants.js';
 
 export const fetchWithRetry = async (url, attempts = 0) => {
-  if (attempts >= 10) {
+  if (attempts >= API_CONFIG.MAX_RETRY_ATTEMPTS) {
     return null;
   }
   try {
@@ -22,11 +23,15 @@ export const fetchWithRetry = async (url, attempts = 0) => {
     }
     if (response.status === 429) {
       const retryAfter = parseInt(response.headers.get('Retry-After'), 10) || 1;
-      await new Promise((resolve) => { setTimeout(resolve, retryAfter * 1000); });
+      await new Promise((resolve) => {
+        setTimeout(resolve, retryAfter * API_CONFIG.DEFAULT_RETRY_DELAY);
+      });
       return await fetchWithRetry(url, attempts + 1);
     }
     return null;
   } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error(`Fetch attempt ${attempts + 1} failed for ${url}:`, e);
     return null;
   }
 };
@@ -51,10 +56,28 @@ export const getAllSlackChannels = async (userProfile, channelName = '', descrip
       url.searchParams.append('searchBy', searchBy);
     }
 
+    // eslint-disable-next-line no-console
+    console.log('Fetching channels from:', url.toString());
     const response = await fetch(url.toString());
-    return response.ok ? response.json() : [];
-  } catch (e) { /* empty */ }
-  return [];
+
+    if (!response.ok) {
+      // eslint-disable-next-line no-console
+      console.error(`API Error: ${response.status} ${response.statusText}`);
+      if (response.status === 403) {
+        // eslint-disable-next-line no-console
+        console.error('403 Forbidden: Check if the API server is properly configured and running');
+        // eslint-disable-next-line no-console
+        console.error('Current endpoint:', API_ENDPOINT);
+      }
+      return [];
+    }
+
+    return await response.json();
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching channels:', e);
+    return [];
+  }
 };
 
 export const getMessageStats = async (channelId) => fetchWithRetry(`${API_ENDPOINT}/slack/messageStats?channelId=${channelId}`);

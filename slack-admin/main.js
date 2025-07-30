@@ -9,375 +9,251 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable no-await-in-loop */
-/* eslint-disable max-len */
+
 import { getMessageStats, getMemberIds, getAllSlackChannels } from './api.js';
 import getUserProfile from './userProfile.js';
-import { countMembers } from './members.js';
-import {
-  sortTable,
-  alphaSort,
-  renderMembersTable,
-  handleModalInteraction,
-  decodeHTML,
-} from './utils.js';
+import channelTable, { ChannelTable } from './channelTable.js';
+import { API_CONFIG, DEFAULTS, ELEMENT_IDS } from './constants.js';
 
-let sortDirection = 'asc';
-let activeChannelsCount = 0;
-let isSortingEnabled = false;
-const maxMessagesCount = 10;
-const slackChannelsContainer = document.getElementById('slack-channels-container');
+/**
+ * Slack Channel Tracker Application
+ * Simplified main application controller
+ */
+class SlackChannelApp {
+  constructor() {
+    this.userProfile = null;
+    this.channels = [];
+    this.isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
-// Ensure the userProfile is fetched if not set
-let userProfile;
-
-const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-
-// If running on localhost, fetch userProfile from query params
-if (isLocalhost) {
-  const params = new URLSearchParams(window.location.search);
-  const email = params.get('email');
-  const name = params.get('name');
-
-  if (email && name) {
-    userProfile = { email, name };
-  } else {
-    // eslint-disable-next-line no-alert
-    alert('missing email and name query params for local debug');
-  }
-}
-
-const escapeHTML = (str) => {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-};
-
-const doLogout = () => window.location.reload();
-
-const sk = document.querySelector('aem-sidekick');
-if (sk) {
-  sk.addEventListener('logged-out', doLogout);
-} else {
-  document.addEventListener('sidekick-ready', () => {
-    document.querySelector('aem-sidekick').addEventListener('logged-out', doLogout);
-  }, { once: true });
-}
-
-const reattachModalHandlers = () => {
-  const modal = document.getElementById('modal');
-  document.querySelectorAll('.members-count').forEach((cell) => {
-    const row = cell.closest('tr');
-    const channelId = row.getAttribute('data-channel-id');
-
-    if (cell._handlerAttached) return;
-    cell._handlerAttached = true;
-
-    cell.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const channel = { id: channelId, name: row.querySelector('td:first-child').textContent };
-
-      await handleModalInteraction(cell, channelId, modal, async (id) => {
-        const response = await getMemberIds(id);
-        if (!response.ok) throw new Error('Failed to fetch members');
-        const { adobeMembers, nonAdobeMembers } = await countMembers(response.members);
-        adobeMembers.sort(alphaSort);
-        nonAdobeMembers.sort(alphaSort);
-        return { modalContent: renderMembersTable(channel.name, adobeMembers, nonAdobeMembers) };
-      });
-    });
-  });
-};
-
-const createCell = (content, className = '') => {
-  const td = document.createElement('td');
-  if (className) td.className = className;
-  td.textContent = content;
-  return td;
-};
-
-const renderTable = (channels) => {
-  const tbody = document.querySelector('tbody');
-  tbody.innerHTML = '';
-
-  channels.forEach((channel) => {
-    const tr = document.createElement('tr');
-    tr.classList.add('channel-row');
-    tr.setAttribute('data-channel-id', channel.id);
-
-    const nameCell = document.createElement('td');
-    const link = document.createElement('a');
-    link.href = `slack://channel?team=T0385CHDU9E&id=${channel.id}`;
-    link.target = '_blank';
-    link.textContent = channel.name;
-    link.title = 'View channel';
-    nameCell.appendChild(link);
-
-    const purposeText = decodeHTML(channel.purpose?.value || '');
-    const purposeCell = createCell(purposeText);
-    const createdDate = new Date(channel.created * 1000).toISOString().split('T')[0];
-    const createdCell = createCell(createdDate, 'stat-column');
-    const messagesCell = createCell(channel.messages ?? '', 'stat-column total-messages');
-
-    const thermometerCell = document.createElement('td');
-    thermometerCell.className = 'stat-column messages-count';
-    const thermometer = document.createElement('div');
-    thermometer.className = 'thermometer';
-    const fill = document.createElement('div');
-    fill.className = 'thermometer-fill';
-    const label = document.createElement('div');
-    label.className = 'thermometer-label';
-    const fillPercentage = Math.min((channel.engagement / maxMessagesCount) * 100, 100);
-    fill.style.width = `${fillPercentage}%`;
-    label.textContent = channel.engagement ?? '';
-    thermometer.append(fill, label);
-    thermometerCell.appendChild(thermometer);
-
-    const lastMessageCell = createCell(channel.lstMsgDt || '', 'stat-column last-message');
-    const membersCountCell = createCell(channel.membersCount ?? '', 'stat-column members-count');
-    membersCountCell.title = 'View members';
-
-    tr.append(nameCell, purposeCell, createdCell, messagesCell, thermometerCell, lastMessageCell, membersCountCell);
-    tbody.appendChild(tr);
-  });
-
-  reattachModalHandlers();
-};
-
-const toggleSortDirection = () => {
-  sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-};
-
-const addSortingToTable = (table, channels) => {
-  const headers = table.querySelectorAll('th[data-sort]');
-  headers.forEach((header) => {
-    header.addEventListener('click', () => {
-      if (!isSortingEnabled) return;
-
-      const columnKey = header.getAttribute('data-sort');
-      // Remove sort classes from all headers
-      headers.forEach((h) => h.classList.remove('sorted-asc', 'sorted-desc'));
-      // Sort data
-      const sortedData = sortTable(channels, columnKey, sortDirection);
-      // Add the appropriate arrow class
-      header.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
-      renderTable(sortedData);
-      toggleSortDirection();
-    });
-  });
-};
-
-const initTable = (channels) => {
-  slackChannelsContainer.innerHTML = '';
-  activeChannelsCount = 0;
-
-  const summaryWrapper = document.createElement('div');
-  summaryWrapper.classList.add('table-summary-wrapper');
-
-  const progressBarContainer = document.createElement('div');
-  progressBarContainer.classList.add('progress-container');
-  progressBarContainer.innerHTML = `
-  <div class="progress-bar">
-    <div class="progress-fill" style="width: 0"></div>
-  </div>
-  <div class="progress-label">Analyzing 0 of ${escapeHTML(channels.length.toString())} channels…</div>
-`;
-
-  const summary = document.createElement('div');
-  summary.classList.add('table-summary');
-  summary.style.display = 'none';
-  summary.innerHTML = `
-  <span>Total Channels: ${escapeHTML(channels.length.toString())}</span> |
-  <span>Active Channels (Last 30 days): <span id="active-channels-count">0</span></span>
-`;
-
-  summaryWrapper.appendChild(progressBarContainer);
-  summaryWrapper.appendChild(summary);
-
-  slackChannelsContainer.appendChild(summaryWrapper);
-
-  const table = document.createElement('table');
-  table.classList.add('styled-table');
-
-  table.innerHTML = `
-    <thead>
-      <tr>
-        <th data-sort="name">Name</th>
-        <th class="sorting-disabled">Description</th>
-        <th data-sort="created">Created</th>
-        <th data-sort="messages">Total Messages</th>
-        <th data-sort="engagement">
-          Messages <span class="tooltip-container">(Last 30 days)</span>
-        </th>
-        <th data-sort="lstMsgDt">Last Message</th>
-        <th data-sort="membersCount">Members</th>
-      </tr>
-    </thead>
-  `;
-
-  const tbody = document.createElement('tbody');
-  table.appendChild(tbody);
-  addSortingToTable(table, channels);
-  slackChannelsContainer.appendChild(table);
-
-  const initialSortKey = 'name';
-  const sortedChannels = sortTable(channels, initialSortKey, sortDirection);
-  document.querySelector(`th[data-sort="${initialSortKey}"]`).classList.add('sorted-asc');
-  renderTable(sortedChannels);
-  toggleSortDirection();
-
-  renderTable(channels);
-};
-
-const updateMessageCells = (channel, messages, engagement, lstMsgDt) => {
-  const row = document.querySelector(`tr[data-channel-id="${channel.id}"]`);
-  if (!row) return;
-
-  row.querySelector('.total-messages').textContent = messages;
-
-  const engagementCell = row.querySelector('.messages-count');
-  engagementCell.querySelector('.thermometer-label').textContent = engagement;
-  const fillPercentage = Math.min((engagement / maxMessagesCount) * 100, 100);
-  engagementCell.querySelector('.thermometer-fill').style.width = `${fillPercentage}%`;
-
-  row.querySelector('.last-message').textContent = lstMsgDt;
-
-  if (engagement > 0) {
-    activeChannelsCount += 1;
-    document.getElementById('active-channels-count').textContent = activeChannelsCount;
+    this.init();
   }
 
-  channel.messages = messages;
-  channel.engagement = engagement;
-  channel.lstMsgDt = lstMsgDt;
-};
+  /**
+   * Initialize the application
+   */
+  init() {
+    this.setupUserProfile();
+    this.setupEventListeners();
+    SlackChannelApp.setupSidekickLogout();
+  }
 
-const updateMembersCountCell = (channel, membersCount) => {
-  const row = document.querySelector(`tr[data-channel-id="${channel.id}"]`);
-  if (!row) return;
+  /**
+   * Setup user profile for localhost development
+   */
+  setupUserProfile() {
+    if (this.isLocalhost) {
+      const params = new URLSearchParams(window.location.search);
+      const email = params.get('email');
+      const name = params.get('name');
 
-  const membersCountCell = row.querySelector('.members-count');
-  membersCountCell.textContent = membersCount;
-  channel.membersCount = membersCount;
-  membersCountCell._fetched = false;
-  membersCountCell._modalData = null;
-
-  const modal = document.getElementById('modal');
-
-  membersCountCell.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    await handleModalInteraction(membersCountCell, channel.id, modal, async (id) => {
-      const response = await getMemberIds(id);
-      if (!response.ok) throw new Error('Failed to fetch members');
-
-      const { adobeMembers, nonAdobeMembers } = await countMembers(response.members);
-      adobeMembers.sort(alphaSort);
-      nonAdobeMembers.sort(alphaSort);
-      return { modalContent: renderMembersTable(channel.name, adobeMembers, nonAdobeMembers) };
-    });
-  });
-};
-
-async function startFetching() {
-  const rawChannel = document.getElementById('channel-name').value.trim();
-  const rawDescription = document.getElementById('channel-description').value.trim();
-
-  const channelNameFilter = rawChannel === '' || rawChannel === '*' ? undefined : rawChannel;
-  const descriptionFilter = rawDescription === '' || rawDescription === '*' ? undefined : rawDescription;
-
-  if (!userProfile) {
-    try {
-      userProfile = await getUserProfile();
-    } catch (error) {
-      teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
+      if (email && name) {
+        this.userProfile = { email, name };
+      } else {
+        // eslint-disable-next-line no-alert
+        alert('missing email and name query params for local debug');
+      }
     }
   }
 
-  // Immediately show empty loading UI
-  initTable([]);
+  /**
+   * Setup event listeners
+   */
+  setupEventListeners() {
+    // Search button click
+    document.getElementById(ELEMENT_IDS.CHANNELISATION)?.addEventListener('click', () => {
+      this.startChannelSearch();
+    });
 
-  // Now fetch channels asynchronously
-  let channels = await getAllSlackChannels(userProfile, channelNameFilter, descriptionFilter);
-
-  // Sort early for predictable loading
-  channels.sort((a, b) => a.name.localeCompare(b.name));
-
-  // Re-initialize the table now that we have real channels
-  initTable(channels);
-
-  const progressLabel = document.querySelector('.progress-label');
-  const progressFill = document.querySelector('.progress-fill');
-  let loadedCount = 0;
-
-  const batchSize = 15;
-  for (let i = 0; i < channels.length; i += batchSize) {
-    const batch = channels.slice(i, i + batchSize);
-
-    const messagePromises = batch.map((channel) => {
-      if (!channel.messages || !channel.engagement || !channel.lstMsgDt) {
-        return getMessageStats(channel.id).then((msg) => ({
-          channelId: channel.id,
-          messages: msg?.totalMessages || 0,
-          engagement: msg?.recentMessageCount || 0,
-          lstMsgDt: msg?.lastMessageTimestamp
-            ? new Date(msg.lastMessageTimestamp * 1000).toISOString().split('T')[0]
-            : 'No Messages',
-        }));
+    // Enter key search
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        this.startChannelSearch();
       }
-      return Promise.resolve({
-        channelId: channel.id,
-        messages: channel.messages,
-        engagement: channel.engagement,
-        lstMsgDt: channel.lstMsgDt,
-      });
     });
-
-    const memberPromises = batch.map((channel) => {
-      if (!channel.membersCount) {
-        return getMemberIds(channel.id).then((m) => ({
-          channelId: channel.id,
-          membersCount: m?.members?.length || 0,
-        }));
-      }
-      return Promise.resolve({
-        channelId: channel.id,
-        membersCount: channel.membersCount,
-      });
-    });
-
-    const messageResults = await Promise.all(messagePromises);
-    const memberResults = await Promise.all(memberPromises);
-
-    // eslint-disable-next-line no-loop-func
-    messageResults.forEach(({
-      channelId, messages, engagement, lstMsgDt,
-    }) => {
-      const channel = channels.find((c) => c.id === channelId);
-      updateMessageCells(channel, messages, engagement, lstMsgDt);
-    });
-
-    // eslint-disable-next-line no-loop-func
-    memberResults.forEach(({ channelId, membersCount }) => {
-      const channel = channels.find((c) => c.id === channelId);
-      updateMembersCountCell(channel, membersCount);
-    });
-
-    loadedCount += batch.length;
-    const percentage = Math.min((loadedCount / channels.length) * 100, 100);
-    progressFill.style.width = `${percentage}%`;
-    progressLabel.textContent = `Analyzing ${loadedCount} of ${channels.length} channels…`;
   }
 
-  isSortingEnabled = true;
-  document.querySelector('.progress-container').style.display = 'none';
-  document.querySelector('.table-summary').style.display = 'block';
+  /**
+   * Setup AEM sidekick logout functionality
+   */
+  static setupSidekickLogout() {
+    const doLogout = () => window.location.reload();
+
+    const sk = document.querySelector('aem-sidekick');
+    if (sk) {
+      sk.addEventListener('logged-out', doLogout);
+    } else {
+      document.addEventListener('sidekick-ready', () => {
+        document.querySelector('aem-sidekick')?.addEventListener('logged-out', doLogout);
+      }, { once: true });
+    }
+  }
+
+  /**
+   * Get filter values from form inputs
+   */
+  static getFilters() {
+    const rawChannel = document.getElementById(ELEMENT_IDS.CHANNEL_NAME)?.value.trim() || '';
+    const rawDescription = document.getElementById(ELEMENT_IDS.CHANNEL_DESCRIPTION)?.value.trim() || '';
+
+    return {
+      channelName: rawChannel === '' || rawChannel === '*' ? undefined : rawChannel,
+      description: rawDescription === '' || rawDescription === '*' ? undefined : rawDescription,
+    };
+  }
+
+  /**
+   * Ensure user profile is available
+   */
+  async ensureUserProfile() {
+    if (!this.userProfile) {
+      try {
+        this.userProfile = await getUserProfile();
+      } catch (error) {
+        const container = document.getElementById(ELEMENT_IDS.SLACK_CHANNELS_CONTAINER);
+        if (container) {
+          container.innerHTML = `<p class="error">${DEFAULTS.ERROR_MESSAGES.USER_EMAIL}</p>`;
+        }
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Fetch and process message statistics
+   */
+  static async fetchMessageStats(channels) {
+    const batchSize = API_CONFIG.BATCH_SIZE;
+    let loadedCount = 0;
+
+    // eslint-disable-next-line no-await-in-loop
+    for (let i = 0; i < channels.length; i += batchSize) {
+      const batch = channels.slice(i, i + batchSize);
+
+      const messagePromises = batch.map((channel) => {
+        if (!channel.messages || !channel.engagement || !channel.lstMsgDt) {
+          return getMessageStats(channel.id).then((msg) => ({
+            channelId: channel.id,
+            messages: msg?.totalMessages || 0,
+            engagement: msg?.recentMessageCount || 0,
+            lstMsgDt: msg?.lastMessageTimestamp
+              ? new Date(msg.lastMessageTimestamp * 1000).toISOString().split('T')[0]
+              : DEFAULTS.NO_MESSAGES_TEXT,
+          }));
+        }
+        return Promise.resolve({
+          channelId: channel.id,
+          messages: channel.messages,
+          engagement: channel.engagement,
+          lstMsgDt: channel.lstMsgDt,
+        });
+      });
+
+      const memberPromises = batch.map((channel) => {
+        if (!channel.membersCount) {
+          return getMemberIds(channel.id).then((m) => ({
+            channelId: channel.id,
+            membersCount: m?.members?.length || 0,
+          }));
+        }
+        return Promise.resolve({
+          channelId: channel.id,
+          membersCount: channel.membersCount,
+        });
+      });
+
+      // eslint-disable-next-line no-await-in-loop
+      const [messageResults, memberResults] = await Promise.all([
+        Promise.all(messagePromises),
+        Promise.all(memberPromises),
+      ]);
+
+      // Update table with results
+      messageResults.forEach(({
+        channelId, messages, engagement, lstMsgDt,
+      }) => {
+        const channel = channels.find((c) => c.id === channelId);
+        if (channel) {
+          channelTable.updateMessageCells(channel, messages, engagement, lstMsgDt);
+        }
+      });
+
+      memberResults.forEach(({ channelId, membersCount }) => {
+        const channel = channels.find((c) => c.id === channelId);
+        if (channel) {
+          ChannelTable.updateMembersCountCell(channel, membersCount);
+        }
+      });
+
+      loadedCount += batch.length;
+      ChannelTable.updateProgress(loadedCount, channels.length);
+    }
+
+    channelTable.enableSorting();
+    ChannelTable.showTableSummary();
+  }
+
+  /**
+   * Start the channel search and display process
+   */
+  async startChannelSearch() {
+    try {
+      await this.ensureUserProfile();
+
+      const filters = SlackChannelApp.getFilters();
+
+      // Show loading state
+      channelTable.initTable([]);
+
+      // Fetch channels
+      this.channels = await getAllSlackChannels(
+        this.userProfile,
+        filters.channelName,
+        filters.description,
+      );
+
+      // Check if we got any channels
+      if (!this.channels || this.channels.length === 0) {
+        const container = document.getElementById(ELEMENT_IDS.SLACK_CHANNELS_CONTAINER);
+        if (container) {
+          container.innerHTML = `
+            <div class="error-message">
+              <h3>No channels found</h3>
+              <p>This could be due to:</p>
+              <ul>
+                <li>No channels matching your search criteria</li>
+                <li>API connection issues (check browser console)</li>
+                <li>Authentication problems with the Slack API</li>
+              </ul>
+              <p><small>Check the browser console for more detailed error information.</small></p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      // Sort channels alphabetically for predictable loading
+      this.channels.sort((a, b) => a.name.localeCompare(b.name));
+
+      // Initialize table with channels
+      channelTable.initTable(this.channels);
+
+      // Fetch additional data in batches
+      await SlackChannelApp.fetchMessageStats(this.channels);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error in channel search:', error);
+      const container = document.getElementById(ELEMENT_IDS.SLACK_CHANNELS_CONTAINER);
+      if (container) {
+        container.innerHTML = `<p class="error">${DEFAULTS.ERROR_MESSAGES.LOAD_DATA}</p>`;
+      }
+    }
+  }
 }
 
-// search triggered by pressing enter
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') {
-    startFetching().then(() => {});
-  }
-});
-document.getElementById('channelisation').addEventListener('click', startFetching);
+// Initialize the application when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => new SlackChannelApp());
+} else {
+  // eslint-disable-next-line no-new
+  new SlackChannelApp();
+}

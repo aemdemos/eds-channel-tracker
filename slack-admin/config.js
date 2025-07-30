@@ -9,5 +9,17 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
-const API_ENDPOINT = window.location.href.includes('localhost') ? 'http://localhost:8787' : 'https://eds-slack-channels-worker.chrislotton.workers.dev';
+import { API_CONFIG } from './constants.js';
+
+// Check if we should force production endpoint (useful for development)
+const forceProduction = localStorage.getItem('forceProductionAPI') === 'true';
+
+const API_ENDPOINT = (window.location.href.includes('localhost') && !forceProduction)
+  ? API_CONFIG.ENDPOINTS.LOCAL
+  : API_CONFIG.ENDPOINTS.PRODUCTION;
+
+// Log the current endpoint for debugging
+console.log('API Endpoint:', API_ENDPOINT);
+console.log('Force Production:', forceProduction);
+
 export default API_ENDPOINT;

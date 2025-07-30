@@ -9,7 +9,6 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
-@import url('./slack-admin.css');
 
 .slack-admin #slack-channels-container {
   padding: 0 var(--horizontal-spacing);
@@ -72,9 +71,41 @@ th.sorted-desc::after {
     font-size: 20px;
 }
 
-.styled-table .spinner {
+#spinner {
     width: 20px;
     height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.error-message {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    color: #856404;
+}
+
+.error-message h3 {
+    margin-top: 0;
+    color: #dc3545;
+}
+
+.error-message ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.error-message small {
+    color: #6c757d;
 }
 
 .stat-column {
@@ -132,6 +163,14 @@ th.sorted-desc::after {
 
 .hover-cell {
     position: relative;
+}
+.description {
+    max-width: 320px;
+    white-space: pre-line;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.95em;
+    color: #444;
 }
 
 .modal {

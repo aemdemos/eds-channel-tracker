@@ -53,7 +53,7 @@ const hideModal = (modal) => {
   modal.addEventListener(
     'transitionend',
     () => {
-      modal.innerHTML = '<span class="spinner"></span>';
+      modal.innerHTML = '<div id="spinner"></div>';
       modal.style.display = 'none';
     },
     { once: true },
@@ -88,8 +88,8 @@ export const handleModalInteraction = async (cell, channelId, modal, fetchDataCa
   modal.style.display = 'block';
   requestAnimationFrame(() => modal.classList.add('show'));
 
-  if (cell._fetched) {
-    modal.innerHTML = cell._modalData;
+  if (cell.fetched) {
+    modal.innerHTML = cell.modalData;
     return;
   }
 
@@ -98,7 +98,8 @@ export const handleModalInteraction = async (cell, channelId, modal, fetchDataCa
     const wrapped = wrapWithCloseButton(data.modalContent, () => hideModal(modal));
     modal.innerHTML = '';
     modal.appendChild(wrapped);
-    cell._modalData = wrapped.outerHTML;
+    cell.modalData = wrapped.outerHTML;
+    cell.fetched = true;
   } catch {
     modal.innerHTML = '<p style="color: red;">Error loading data</p>';
   }
@@ -108,6 +109,12 @@ export const decodeHTML = (str) => {
   const txt = document.createElement('textarea');
   txt.innerHTML = str;
   return txt.value;
+};
+
+export const escapeHTML = (str) => {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 };
 
 export const renderMembersTable = (channelName, adobeMembers, nonAdobeMembers) => {
