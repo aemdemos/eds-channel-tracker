@@ -172,6 +172,13 @@ th.sorted-desc::after {
     font-size: 0.95em;
     color: #444;
 }
+.description-cell {
+    max-width: 320px;
+    white-space: pre-line;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+}
 
 .modal {
     position: absolute;
