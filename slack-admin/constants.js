@@ -98,6 +98,5 @@ export const ELEMENT_IDS = {
   CHANNEL_DESCRIPTION: 'channel-description',
   CHANNELISATION: 'channelisation',
   MODAL: 'modal',
-  SPINNER: 'spinner',
   ACTIVE_CHANNELS_COUNT: 'active-channels-count',
 };

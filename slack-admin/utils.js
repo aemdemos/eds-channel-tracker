@@ -53,7 +53,7 @@ const hideModal = (modal) => {
   modal.addEventListener(
     'transitionend',
     () => {
-      modal.innerHTML = '<div id="spinner"></div>';
+      modal.innerHTML = '<div class="spinner"></div>';
       modal.style.display = 'none';
     },
     { once: true },
