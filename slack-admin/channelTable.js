@@ -21,7 +21,6 @@ import {
   escapeHTML,
 } from './utils.js';
 import {
-  UI_CONFIG,
   SLACK_CONFIG,
   TABLE_CONFIG,
   CSS_CLASSES,
@@ -37,7 +36,6 @@ export class ChannelTable {
     this.sortDirection = TABLE_CONFIG.DEFAULT_SORT_DIRECTION;
     this.activeChannelsCount = 0;
     this.isSortingEnabled = false;
-    this.maxMessagesCount = UI_CONFIG.MAX_MESSAGES_COUNT;
     this.slackChannelsContainer = document.getElementById(ELEMENT_IDS.SLACK_CHANNELS_CONTAINER);
   }
 
@@ -57,9 +55,9 @@ export class ChannelTable {
   /**
    * Reattaches modal handlers to member count cells
    */
-  static reattachModalHandlers() {
+  reattachModalHandlers() {
     const modal = document.getElementById(ELEMENT_IDS.MODAL);
-    document.querySelectorAll(`.${CSS_CLASSES.TABLE.MEMBERS_COUNT}`).forEach((cell) => {
+    this.slackChannelsContainer.querySelectorAll(`.${CSS_CLASSES.TABLE.MEMBERS_COUNT}`).forEach((cell) => {
       const row = cell.closest('tr');
       const channelId = row.getAttribute('data-channel-id');
 
@@ -90,7 +88,7 @@ export class ChannelTable {
    * @param {Array} channels - Array of channel objects
    */
   renderTable(channels) {
-    const tbody = document.querySelector('tbody');
+    const tbody = this.slackChannelsContainer.querySelector('tbody');
     tbody.innerHTML = '';
 
     channels.forEach((channel) => {
@@ -121,20 +119,11 @@ export class ChannelTable {
         `${CSS_CLASSES.TABLE.STAT_COLUMN} ${CSS_CLASSES.TABLE.TOTAL_MESSAGES}`,
       );
 
-      // Engagement thermometer cell
-      const thermometerCell = document.createElement('td');
-      thermometerCell.className = `${CSS_CLASSES.TABLE.STAT_COLUMN} ${CSS_CLASSES.TABLE.MESSAGES_COUNT}`;
-      const thermometer = document.createElement('div');
-      thermometer.className = CSS_CLASSES.THERMOMETER.THERMOMETER;
-      const fill = document.createElement('div');
-      fill.className = CSS_CLASSES.THERMOMETER.FILL;
-      const label = document.createElement('div');
-      label.className = CSS_CLASSES.THERMOMETER.LABEL;
-      const fillPercentage = Math.min((channel.engagement / this.maxMessagesCount) * 100, 100);
-      fill.style.width = `${fillPercentage}%`;
-      label.textContent = channel.engagement ?? '';
-      thermometer.append(fill, label);
-      thermometerCell.appendChild(thermometer);
+      // Engagement messages cell
+      const engagementCell = ChannelTable.createCell(
+        channel.engagement ?? '',
+        `${CSS_CLASSES.TABLE.STAT_COLUMN} ${CSS_CLASSES.TABLE.MESSAGES_COUNT}`,
+      );
 
       // Last message cell
       const lastMessageCell = ChannelTable.createCell(
@@ -154,14 +143,14 @@ export class ChannelTable {
         purposeCell,
         createdCell,
         messagesCell,
-        thermometerCell,
+        engagementCell,
         lastMessageCell,
         membersCountCell,
       );
       tbody.appendChild(tr);
     });
 
-    ChannelTable.reattachModalHandlers();
+    this.reattachModalHandlers();
   }
 
   /**
@@ -251,9 +240,7 @@ export class ChannelTable {
           <th class="sorting-disabled">Description</th>
           <th data-sort="${TABLE_CONFIG.COLUMNS.CREATED}">Created</th>
           <th data-sort="${TABLE_CONFIG.COLUMNS.MESSAGES}">Total Messages</th>
-          <th data-sort="${TABLE_CONFIG.COLUMNS.ENGAGEMENT}">
-            Messages <span class="tooltip-container">(Last 30 days)</span>
-          </th>
+          <th data-sort="${TABLE_CONFIG.COLUMNS.ENGAGEMENT}">Messages (Last 30 days)</th>
           <th data-sort="${TABLE_CONFIG.COLUMNS.LAST_MESSAGE}">Last Message</th>
           <th data-sort="${TABLE_CONFIG.COLUMNS.MEMBERS_COUNT}">Members</th>
         </tr>
@@ -288,12 +275,7 @@ export class ChannelTable {
     if (!row) return;
 
     row.querySelector(`.${CSS_CLASSES.TABLE.TOTAL_MESSAGES}`).textContent = messages.toString();
-
-    const engagementCell = row.querySelector(`.${CSS_CLASSES.TABLE.MESSAGES_COUNT}`);
-    engagementCell.querySelector(`.${CSS_CLASSES.THERMOMETER.LABEL}`).textContent = engagement.toString();
-    const fillPercentage = Math.min((engagement / this.maxMessagesCount) * 100, 100);
-    engagementCell.querySelector(`.${CSS_CLASSES.THERMOMETER.FILL}`).style.width = `${fillPercentage}%`;
-
+    row.querySelector(`.${CSS_CLASSES.TABLE.MESSAGES_COUNT}`).textContent = engagement.toString();
     row.querySelector(`.${CSS_CLASSES.TABLE.LAST_MESSAGE}`).textContent = lstMsgDt;
 
     if (engagement > 0) {

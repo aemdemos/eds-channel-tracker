@@ -61,13 +61,15 @@ class SlackChannelApp {
   setupEventListeners() {
     // Search button click
     document.getElementById(ELEMENT_IDS.CHANNELISATION)?.addEventListener('click', () => {
-      this.startChannelSearch();
+      this.startChannelSearch().catch(() => {
+      });
     });
 
     // Enter key search
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
-        this.startChannelSearch();
+        this.startChannelSearch().catch(() => {
+        });
       }
     });
   }

@@ -17,22 +17,13 @@
   flex-direction: column;
 }
 
-th.sorted-asc::after {
-    content: '↑';
-    opacity: 1;
-}
-
-th.sorted-desc::after {
-    content: '↓';
-    opacity: 1;
-}
-
 .styled-table {
     width: 100%;
     border-collapse: collapse;
     font-family: Arial, sans-serif;
     font-size: 14px;
     box-shadow: 0 4px 8px rgb(0 0 0 / 10%);
+    table-layout: fixed; /* Ensures column widths are respected */
 }
 
 .styled-table thead {
@@ -43,6 +34,10 @@ th.sorted-desc::after {
 .styled-table th, .styled-table td {
     padding: 10px;
     border-bottom: 1px solid #ddd;
+}
+
+.styled-table td {
+    text-align: left;
 }
 
 .styled-table tbody tr:nth-child(even) {
@@ -108,9 +103,48 @@ th.sorted-desc::after {
     color: #6c757d;
 }
 
-.stat-column {
-    width: 150px; /* Adjust the width as needed */
+/* Column-specific styles for equal spacing */
+.styled-table th:nth-child(1), /* Name */
+.styled-table td:nth-child(1) {
+    width: 14.28%; /* 100% / 7 columns = ~14.28% each */
 }
+
+.styled-table td:nth-child(1) a {
+    color: blue;
+    text-decoration: underline;
+}
+
+.styled-table th:nth-child(2), /* Description */
+.styled-table td:nth-child(2) {
+    width: 14.28%;
+}
+
+.styled-table th:nth-child(3), /* Created */
+.styled-table td:nth-child(3) {
+    width: 14.28%;
+}
+
+.styled-table th:nth-child(4), /* Total Messages */
+.styled-table td:nth-child(4) {
+    width: 14.28%;
+}
+
+.styled-table th:nth-child(5), /* Messages (Last 30 days) */
+.styled-table td:nth-child(5) {
+    width: 14.28%;
+}
+
+.styled-table th:nth-child(6), /* Last Message */
+.styled-table td:nth-child(6) {
+    width: 14.28%;
+}
+
+.styled-table th:nth-child(7), /* Members */
+.styled-table td:nth-child(7) {
+    width: 14.28%;
+}
+
+
 
 .search-filters {
     display: flex;
@@ -217,98 +251,6 @@ th.sorted-desc::after {
     transition: background-color 0.2s ease, color 0.2s ease;
     color: #007bff;
     text-decoration: underline;
-}
-
-.tooltip-container {
-    position: relative;
-    display: inline-block;
-    font-size: 12px;
-}
-
-.tooltip-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 15px;
-    height: 15px;
-    font-size: 13px;
-    background-color: #d9534f; /* Bootstrap red */
-    color: white;
-    border-radius: 50%;
-    font-weight: bold;
-    line-height: 1;
-}
-
-.custom-tooltip {
-    visibility: hidden;
-    opacity: 0;
-    width: 180px;
-    background-color: #333;
-    color: #fff;
-    text-align: left;
-    border-radius: 4px;
-    padding: 6px 8px;
-    position: absolute;
-    z-index: 1;
-    bottom: 125%; /* Position above icon */
-    left: 50%;
-    transform: translateX(-50%);
-    transition: opacity 0.2s;
-    font-size: 13px;
-    white-space: normal;
-}
-
-.tooltip-container:hover .custom-tooltip {
-    visibility: visible;
-    opacity: 1;
-}
-
-.custom-tooltip::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
-    border-style: solid;
-    border-color: #333 transparent transparent;
-}
-
-.thermometer {
-    height: 20px;
-    width: 100%;
-    background: linear-gradient(to left, navajowhite,white); /* Customize the gradient colors */
-    border-radius: 5px;
-    position: relative;
-    overflow: hidden; /* Ensure content stays within the thermometer */
-}
-
-.thermometer-fill {
-    height: 100%;
-    background-color: red;
-    border-radius: 5px;
-    position: absolute;
-    top: 0;
-    left: 0;
-    opacity: 0.6;
-    z-index: 1; /* Ensure it stays below the label */
-}
-
-.thermometer-label {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: black; /* Ensure visibility over the fill */
-    z-index: 2; /* Ensure it stays above the fill */
-    text-align: center;
-    white-space: nowrap; /* Prevent text wrapping */
-}
-
-.thermometer-label span {
-    display: inline-block;
-    width: 100%;
-    text-align: center;
 }
 
 .progress-container {

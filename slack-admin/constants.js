@@ -22,13 +22,6 @@ export const API_CONFIG = {
   },
 };
 
-// UI Configuration
-export const UI_CONFIG = {
-  MAX_MESSAGES_COUNT: 10,
-  MODAL_MAX_WIDTH: 700,
-  MODAL_MAX_HEIGHT: 400,
-};
-
 // Slack Configuration
 export const SLACK_CONFIG = {
   TEAM_ID: 'T0385CHDU9E',
