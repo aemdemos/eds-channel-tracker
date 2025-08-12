@@ -56,8 +56,6 @@ export const getAllSlackChannels = async (userProfile, channelName = '', descrip
       url.searchParams.append('searchBy', searchBy);
     }
 
-    // eslint-disable-next-line no-console
-    console.log('Fetching channels from:', url.toString());
     const response = await fetch(url.toString());
 
     if (!response.ok) {
