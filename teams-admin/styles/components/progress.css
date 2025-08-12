@@ -44,7 +44,7 @@
 }
 
 /* Spinner */
-.spinner {
+._spinner {
   width: 24px;
   height: 24px;
   border: 4px solid #ccc;

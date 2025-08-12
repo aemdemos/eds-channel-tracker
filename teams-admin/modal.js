@@ -137,7 +137,7 @@ export const handleModalInteraction = async (cell, teamId, modal, fetchDataCallb
   showModal(modal, cell);
 
   // Set the spinner immediately so it's visible before fetching data
-  modal.innerHTML = '<span class="spinner"></span>';
+  modal.innerHTML = '<span class="_spinner"></span>';
   modal.style.display = 'block';
 
   requestAnimationFrame(() => modal.classList.add('show'));
@@ -159,7 +159,7 @@ export const handleModalInteraction = async (cell, teamId, modal, fetchDataCallb
 
 // Show spinner in the modal
 export function showSpinner(modal) {
-  const spinner = modal.querySelector('.spinner');
+  const spinner = modal.querySelector('._spinner');
   if (spinner) {
     spinner.style.display = 'block';
   }
@@ -167,7 +167,7 @@ export function showSpinner(modal) {
 
 // Hide spinner in the modal
 export function hideSpinner(modal) {
-  const spinner = modal.querySelector('.spinner');
+  const spinner = modal.querySelector('._spinner');
   if (spinner) {
     spinner.style.display = 'none';
   }

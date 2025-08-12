@@ -45,7 +45,7 @@ const CONSTANTS = {
     HIDDEN: 'hidden',
     NOBREAK: 'nobreak',
     ERROR: 'error',
-    SPINNER: 'spinner',
+    SPINNER: '_spinner',
     STYLED_TABLE: 'styled-table',
     TEAM_ROW: 'team-row',
     NAME_COLUMN: 'name-column',

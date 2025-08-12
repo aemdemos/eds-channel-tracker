@@ -130,9 +130,9 @@ class TeamTable {
       lastMessageCell.textContent = team.latestMessage ?? '—';
       recentCountCell.textContent = team.recentCount ?? '—';
     } else {
-      totalMessagesCell.innerHTML = '<span class="spinner" data-loading="true"></span>';
-      lastMessageCell.innerHTML = '<span class="spinner" data-loading="true"></span>';
-      recentCountCell.innerHTML = '<span class="spinner" data-loading="true"></span>';
+      totalMessagesCell.innerHTML = '<span class="_spinner" data-loading="true"></span>';
+      lastMessageCell.innerHTML = '<span class="_spinner" data-loading="true"></span>';
+      recentCountCell.innerHTML = '<span class="_spinner" data-loading="true"></span>';
     }
 
     return { totalMessagesCell, lastMessageCell, recentCountCell };

@@ -71,7 +71,7 @@ class TeamForms {
         </div>
       </form>
       <div id="create-team-error" style="color: red; margin-top: 10px; display: none;"></div>
-      <span class="spinner" style="display:none"></span>
+      <span class="_spinner" style="display:none"></span>
     `;
   }
 
@@ -170,7 +170,7 @@ class TeamForms {
         </div>
       </form>
       <div id="add-users-error" style="color: red; margin-top: 10px; display: none;"></div>
-      <span class="spinner" style="display:none"></span>
+      <span class="_spinner" style="display:none"></span>
     `;
   }
 
@@ -178,7 +178,7 @@ class TeamForms {
     const form = this.addUsersModal.querySelector('#add-users-form');
     const container = this.addUsersModal.querySelector('#user-rows-container');
     const addRowBtn = this.addUsersModal.querySelector('#add-row-button');
-    const spinner = this.addUsersModal.querySelector('.spinner');
+    const spinner = this.addUsersModal.querySelector('._spinner');
     const errorDiv = this.addUsersModal.querySelector('#add-users-error');
 
     // Add row handler

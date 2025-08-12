@@ -29,7 +29,7 @@ class TeamSearch {
     this.progressBar = document.getElementById('progress-bar');
     this.progressFill = document.getElementById('progress-fill');
     this.progressLabel = document.getElementById('progress-label');
-    this.spinner = document.querySelector('.spinner');
+    this.spinner = document.querySelector('._spinner');
   }
 
   setupEventListeners(searchCallback) {

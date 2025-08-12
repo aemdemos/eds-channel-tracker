@@ -129,7 +129,7 @@ th[data-sort]::after {
 }
 
 /* Table spinner */
-.styled-table .spinner {
+.styled-table ._spinner {
   width: 20px;
   height: 20px;
   border: 4px solid #ccc;
