@@ -218,7 +218,7 @@
 }
 
 .modal {
-    position: absolute;
+    position: fixed;
     display: none;
     background-color: white;
     border: 1px solid #ccc;
@@ -237,6 +237,7 @@
     padding: 15px;
     max-height: 400px;   /* Set your desired fixed height */
     overflow: hidden auto;    /* Enable vertical scrolling when content overflows */  /* Prevent horizontal scrolling */
+    cursor: move;
 }
 
 .modal h4 {
@@ -247,6 +248,10 @@
     transform: scale(1);
     opacity: 1;
     pointer-events: auto;
+}
+
+.modal.dragging {
+    transform: none !important;
 }
 
 .members-count {

@@ -61,14 +61,13 @@
 /* fallback fonts */
 @font-face {
     font-family: robotoflex-fallback;
-    size-adjust: 97.389%;
     src: local('Arial');
 }
 
 body {
     display: none;
     margin: 0;
-    font-family: var(--body-font-family);
+    font-family: var(--body-font-family), sans-serif;
     font-size: var(--body-size-l);
     line-height: var(--line-height-m);
     background-color: var(--layer-depth);
@@ -367,7 +366,7 @@ h6 {
     margin-top: 1.125em;
     margin-bottom: 0.25em;
     scroll-margin: 1em;
-    font-family: var(--heading-font-family);
+    font-family: var(--heading-font-family), sans-serif;
     font-weight: var(--weight-extrabold);
     line-height: var(--line-height-l);
 }
@@ -411,7 +410,7 @@ code,
 kbd,
 samp,
 var {
-    font-family: var(--code-font-family);
+    font-family: var(--code-font-family), sans-serif;
     font-size: var(--body-size-m);
 }
 
@@ -704,6 +703,11 @@ input[type='file'] + span * {
     cursor: pointer;
 }
 
+.channel-card-image img {
+    height: 48px;
+    margin-bottom: 1rem;
+}
+
 input[type='file'] + span .icon {
     transition: color 0.2s;
 }
@@ -903,17 +907,17 @@ table + .form-field,
 }
 
 .channel-card {
-    background: #ffffff;
+    background: #fff;
     border: 1px solid #e0e0e0; /* Lighter border */
     padding: 2rem 1.5rem;
     width: 280px; /* Slightly slimmer */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); /* Softer shadow */
+    box-shadow: 0 4px 12px rgb(0 0 0 / 6%); /* Softer shadow */
     transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .channel-card:hover {
     transform: translateY(-6px); /* Slightly more lift on hover */
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 20px rgb(0 0 0 / 12%);
 }
 
 .channel-card-link {
@@ -924,10 +928,7 @@ table + .form-field,
     align-items: center;
 }
 
-.channel-card-image img {
-    height: 48px;
-    margin-bottom: 1rem;
-}
+
 
 .channel-card-body {
     text-align: center;
@@ -935,7 +936,7 @@ table + .form-field,
 }
 
 .channel-card-body h3 {
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.5rem;
     font-size: 1.3rem;
     font-weight: 600;
     color: #333;
