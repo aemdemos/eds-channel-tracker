@@ -4,8 +4,8 @@ A self-service internal tool to monitor customer communication channels to discu
 
 ## Environments
 
-- Preview: <https://main--{repo}--{owner}.aem.page/>
-- Live: <https://main--{repo}--{owner}.aem.live/>
+- Preview: <https://main--eds-channel-tracker--aemdemos.aem.page/>
+- Live: <https://main--eds-channel-tracker--aemdemos.aem.live/>
 
 ## Documentation
 
@@ -34,4 +34,4 @@ npm run lint
 2. Add the [AEM Code Sync GitHub App](https://github.com/apps/aem-code-sync) to the repository
 3. Install the [AEM CLI](https://github.com/adobe/helix-cli): `npm install -g @adobe/aem-cli`
 4. Start AEM Proxy: `aem up` (opens your browser at `http://localhost:3000`)
-5. Open the `{repo}` directory in your favorite IDE and start coding
+5. Open the `eds-channel-tracker` directory in your favorite IDE and start coding
