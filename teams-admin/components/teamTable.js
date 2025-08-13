@@ -174,7 +174,7 @@ class TeamTable {
       await showAddUsersModal(
         addButton,
         team,
-        this.userProfile,
+        this.userProfile || {},
         this.updateTeamRowAfterDelay.bind(this),
       );
     });
@@ -185,8 +185,8 @@ class TeamTable {
 
   async showMembersModal(team, triggerElement) {
     this.membersModal.dataset.teamId = team.id;
-    this.membersModal.dataset.removedBy = this.userProfile.name;
-    this.membersModal.dataset.currentUserEmail = this.userProfile.email;
+    this.membersModal.dataset.removedBy = this.userProfile?.name || this.userProfile?.email || '';
+    this.membersModal.dataset.currentUserEmail = this.userProfile?.email || '';
 
     await handleModalInteraction(
       triggerElement,
@@ -225,7 +225,7 @@ class TeamTable {
         const currentTeam = this.currentTeams.find((t) => t.id === this.currentInviteTeamId);
         const currentTeamMembers = await getTeamMembers(this.currentInviteTeamId);
         const memberEmails = currentTeamMembers.map((t) => t.email);
-        const isMember = memberEmails.includes(this.userProfile.email);
+        const isMember = memberEmails.includes(this.userProfile?.email || '');
 
         if (currentTeam) {
           Object.assign(currentTeam, {

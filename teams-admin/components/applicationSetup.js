@@ -42,6 +42,7 @@ class ApplicationSetup {
     if (!this.userProfile) {
       try {
         this.userProfile = await getUserProfile();
+        console.log('User profile fetched:', this.userProfile);
       } catch (error) {
         const teamsContainer = document.getElementById(CONSTANTS.ELEMENT_IDS.TEAMS_CONTAINER);
         teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';

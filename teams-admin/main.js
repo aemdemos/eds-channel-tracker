@@ -28,13 +28,14 @@ class TeamsAdminApp {
     try {
       // Initialize application
       this.userProfile = await this.appSetup.initialize();
-
+      console.log('User profile initialized:', this.userProfile);
       // Initialize team table with user profile
       this.teamTable = new TeamTable(this.userProfile);
 
       // Setup search functionality
       this.teamSearch.setupEventListeners(async () => {
         const userProfile = await this.appSetup.getUserProfile();
+        console.log('Performing search with user profile:', userProfile);
         await this.teamSearch.performSearch(userProfile, (teams) => {
           this.teamTable.initTable(teams);
         });
