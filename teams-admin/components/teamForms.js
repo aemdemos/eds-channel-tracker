@@ -125,7 +125,7 @@ class TeamForms {
 
     const name = form.querySelector('#new-team-name').value.trim();
     const description = form.querySelector('#new-team-description').value.trim();
-    const createdBy = userProfile.name || userProfile.email;
+    const createdBy = userProfile?.name || userProfile?.email || 'Unknown User';
 
     try {
       const response = await fetch(`${API_ENDPOINT}/teams`, {
@@ -252,9 +252,9 @@ class TeamForms {
       spinner.style.display = 'block';
       form.style.display = 'none';
 
-      const addedBy = userProfile.name || userProfile.email;
+      const addedBy = userProfile?.name || userProfile?.email || 'Unknown User';
       const result = await addMembersToTeam(team.id, users, addedBy);
-      const addedCount = result.filter((user) => user.added).length;
+      const addedCount = result.filter((user) => user && user.added === true).length;
 
       spinner.style.display = 'none';
       form.style.display = 'flex';
