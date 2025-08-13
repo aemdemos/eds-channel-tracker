@@ -151,6 +151,14 @@ class TeamTable {
     membersCountCell.addEventListener('click', async (e) => {
       e.stopPropagation();
       e.preventDefault();
+
+      // Ensure we have a valid user profile before proceeding
+      if (!this.userProfile || (!this.userProfile.name && !this.userProfile.email)) {
+        // eslint-disable-next-line no-alert
+        alert('Unable to view members: User profile not available. Please refresh the page and try again.');
+        return;
+      }
+
       await this.showMembersModal(team, membersCountCell);
     });
 
@@ -171,10 +179,18 @@ class TeamTable {
       e.preventDefault();
       this.currentInviteTeamId = team.id;
       this.currentInviteTeamRow = tr;
+
+      // Ensure we have a valid user profile before proceeding
+      if (!this.userProfile || (!this.userProfile.name && !this.userProfile.email)) {
+        // eslint-disable-next-line no-alert
+        alert('Unable to add users: User profile not available. Please refresh the page and try again.');
+        return;
+      }
+
       await showAddUsersModal(
         addButton,
         team,
-        this.userProfile || {},
+        this.userProfile,
         this.updateTeamRowAfterDelay.bind(this),
       );
     });
@@ -185,7 +201,7 @@ class TeamTable {
 
   async showMembersModal(team, triggerElement) {
     this.membersModal.dataset.teamId = team.id;
-    this.membersModal.dataset.removedBy = this.userProfile?.name || this.userProfile?.email || '';
+    this.membersModal.dataset.removedBy = this.userProfile?.name || this.userProfile?.email || 'Unknown User';
     this.membersModal.dataset.currentUserEmail = this.userProfile?.email || '';
 
     await handleModalInteraction(

@@ -42,10 +42,17 @@ class ApplicationSetup {
     if (!this.userProfile) {
       try {
         this.userProfile = await getUserProfile();
-        console.log('User profile fetched:', this.userProfile);
+        // Check if profile is null or invalid
+        if (!this.userProfile || (!this.userProfile.name && !this.userProfile.email)) {
+          const teamsContainer = document.getElementById(CONSTANTS.ELEMENT_IDS.TEAMS_CONTAINER);
+          teamsContainer.innerHTML = '<p class="error">Unable to fetch your user profile. Please ensure you are logged in and try again.</p>';
+          throw new Error('Invalid or null user profile');
+        }
       } catch (error) {
         const teamsContainer = document.getElementById(CONSTANTS.ELEMENT_IDS.TEAMS_CONTAINER);
-        teamsContainer.innerHTML = '<p class="error">An error occurred while fetching user email. Please try again later.</p>';
+        if (!teamsContainer.innerHTML.includes('error')) {
+          teamsContainer.innerHTML = '<p class="error">An error occurred while fetching your user profile. Please try again later.</p>';
+        }
         throw error;
       }
     }

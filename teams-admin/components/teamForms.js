@@ -111,7 +111,7 @@ class TeamForms {
     const fields = form.querySelectorAll('input, textarea, button');
 
     // Ensure user profile
-    if (!userProfile) {
+    if (!userProfile || (!userProfile.name && !userProfile.email)) {
       errorDiv.textContent = 'An error occurred while fetching your user profile. Please try again later.';
       errorDiv.style.display = 'block';
       return;
@@ -274,7 +274,15 @@ class TeamForms {
     } catch (err) {
       spinner.style.display = 'none';
       form.style.display = 'flex';
-      errorDiv.textContent = 'Failed to add members. Please try again.';
+      console.error('Add members error:', err);
+      
+      // Try to extract more specific error message
+      let errorMessage = 'Failed to add members. Please try again.';
+      if (err.message && err.message !== 'Failed to add members. Please try again.') {
+        errorMessage = `Failed to add members: ${err.message}`;
+      }
+      
+      errorDiv.textContent = errorMessage;
       errorDiv.style.display = 'block';
     }
   }
