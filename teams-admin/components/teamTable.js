@@ -17,6 +17,7 @@ import {
 import { handleModalInteraction } from '../modal.js';
 import renderMemberList from '../members.js';
 import { showAddUsersModal } from './teamForms.js';
+import getUserProfile from '../userProfile.js';
 import PerformanceOptimizer from './performanceOptimizer.js';
 import ErrorHandler from './errorHandler.js';
 import CONSTANTS from './constants.js';
@@ -152,13 +153,6 @@ class TeamTable {
       e.stopPropagation();
       e.preventDefault();
 
-      // Ensure we have a valid user profile before proceeding
-      if (!this.userProfile || (!this.userProfile.name && !this.userProfile.email)) {
-        // eslint-disable-next-line no-alert
-        alert('Unable to view members: User profile not available. Please refresh the page and try again.');
-        return;
-      }
-
       await this.showMembersModal(team, membersCountCell);
     });
 
@@ -180,13 +174,6 @@ class TeamTable {
       this.currentInviteTeamId = team.id;
       this.currentInviteTeamRow = tr;
 
-      // Ensure we have a valid user profile before proceeding
-      if (!this.userProfile || (!this.userProfile.name && !this.userProfile.email)) {
-        // eslint-disable-next-line no-alert
-        alert('Unable to add users: User profile not available. Please refresh the page and try again.');
-        return;
-      }
-
       await showAddUsersModal(
         addButton,
         team,
@@ -200,9 +187,12 @@ class TeamTable {
   }
 
   async showMembersModal(team, triggerElement) {
+    // Get fresh user profile to ensure we have current user data
+    const freshUserProfile = await getUserProfile();
+
     this.membersModal.dataset.teamId = team.id;
-    this.membersModal.dataset.removedBy = this.userProfile?.name || this.userProfile?.email || 'Unknown User';
-    this.membersModal.dataset.currentUserEmail = this.userProfile?.email || '';
+    this.membersModal.dataset.removedBy = freshUserProfile?.name || freshUserProfile?.email || this.userProfile?.name || this.userProfile?.email || 'Unknown User';
+    this.membersModal.dataset.currentUserEmail = freshUserProfile?.email || this.userProfile?.email || '';
 
     await handleModalInteraction(
       triggerElement,

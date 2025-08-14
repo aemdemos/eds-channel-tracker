@@ -13,6 +13,7 @@
 import API_ENDPOINT from '../config.js';
 import { addMembersToTeam } from '../api.js';
 import { escapeHTML } from '../utils.js';
+import getUserProfile from '../userProfile.js';
 import {
   handleModalInteraction,
   showSpinner,
@@ -125,7 +126,10 @@ class TeamForms {
 
     const name = form.querySelector('#new-team-name').value.trim();
     const description = form.querySelector('#new-team-description').value.trim();
-    const createdBy = userProfile?.name || userProfile?.email || 'Unknown User';
+
+    // Get fresh user profile to ensure we have current user data
+    const freshUserProfile = await getUserProfile();
+    const createdBy = freshUserProfile?.name || freshUserProfile?.email || userProfile?.name || userProfile?.email || 'Unknown User';
 
     try {
       const response = await fetch(`${API_ENDPOINT}/teams`, {
@@ -252,7 +256,9 @@ class TeamForms {
       spinner.style.display = 'block';
       form.style.display = 'none';
 
-      const addedBy = userProfile?.name || userProfile?.email || 'Unknown User';
+      // Get fresh user profile to ensure we have current user data
+      const freshUserProfile = await getUserProfile();
+      const addedBy = freshUserProfile?.name || freshUserProfile?.email || userProfile?.name || userProfile?.email || 'Unknown User';
       const result = await addMembersToTeam(team.id, users, addedBy);
       const addedCount = result.filter((user) => user && user.added === true).length;
 
@@ -274,14 +280,13 @@ class TeamForms {
     } catch (err) {
       spinner.style.display = 'none';
       form.style.display = 'flex';
-      console.error('Add members error:', err);
-      
+
       // Try to extract more specific error message
       let errorMessage = 'Failed to add members. Please try again.';
       if (err.message && err.message !== 'Failed to add members. Please try again.') {
         errorMessage = `Failed to add members: ${err.message}`;
       }
-      
+
       errorDiv.textContent = errorMessage;
       errorDiv.style.display = 'block';
     }
