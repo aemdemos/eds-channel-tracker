@@ -29,7 +29,7 @@ class TeamSearch {
     this.progressBar = document.getElementById('progress-bar');
     this.progressFill = document.getElementById('progress-fill');
     this.progressLabel = document.getElementById('progress-label');
-    this.spinner = document.querySelector('._spinner');
+    this.spinner = document.getElementById('spinner');
   }
 
   setupEventListeners(searchCallback) {
@@ -59,6 +59,8 @@ class TeamSearch {
   }
 
   showProgress() {
+    // Ensure parent progress container is visible
+    document.getElementById('progress').style.display = 'flex';
     this.progressContainer.style.display = 'block';
     this.progressLabel.innerHTML = '';
     this.progressBar.style.display = 'none';
@@ -167,6 +169,11 @@ class TeamSearch {
     const teamIds = teams.map((team) => team.id);
     const totalTeams = teamIds.length;
 
+    // If no teams, skip progress
+    if (totalTeams === 0) {
+      return [];
+    }
+
     // Chunk team IDs for batch processing
     const chunkedTeamIds = [];
     for (let i = 0; i < totalTeams; i += 5) {
@@ -176,20 +183,25 @@ class TeamSearch {
     const teamSummaries = [];
     let loaded = 0;
 
-    await Promise.all(
-      chunkedTeamIds.map(async (chunk) => {
-        try {
-          const summaries = await getTeamSummaries(chunk);
-          teamSummaries.push(...summaries);
-        } catch (err) {
-          // eslint-disable-next-line no-console
-          console.error('Error loading team summaries:', err);
-        }
+    // Process chunks sequentially to show progress properly
+    // eslint-disable-next-line no-restricted-syntax
+    for (const chunk of chunkedTeamIds) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const summaries = await getTeamSummaries(chunk);
+        teamSummaries.push(...summaries);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Error loading team summaries:', err);
+      }
 
-        loaded += chunk.length;
-        this.updateProgress(loaded, totalTeams);
-      }),
-    );
+      loaded += chunk.length;
+      this.updateProgress(loaded, totalTeams);
+
+      // Small delay to make progress visible (can be removed in production)
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => { setTimeout(resolve, 200); });
+    }
 
     return teamSummaries;
   } // Fixed: close loadTeamSummaries method

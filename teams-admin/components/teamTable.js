@@ -288,9 +288,15 @@ class TeamTable {
     const teamIds = Array.from(rows).map((row) => row.dataset.teamId);
     const MAX_CONCURRENT = 5;
 
+    // Reset active teams counter before loading stats
+    const activeTeamsCountEl = PerformanceOptimizer.getElementById('active-teams-count');
+    if (activeTeamsCountEl) {
+      activeTeamsCountEl.textContent = '0';
+    }
+
     const updateRow = (teamId, stats) => {
       const team = this.currentTeams.find((t) => t.id === teamId);
-      if (!team || team.messageCount) return;
+      if (!team) return;
 
       const row = Array.from(rows).find((r) => r.dataset.teamId === teamId);
       if (!row) return;
@@ -319,14 +325,28 @@ class TeamTable {
     let active = 0;
 
     return new Promise((resolve) => {
-      function next() {
+      const next = () => {
         if (index >= teamIds.length && active === 0) {
           return resolve();
         }
 
         while (active < MAX_CONCURRENT && index < teamIds.length) {
           const teamId = teamIds[index];
+          const team = this.currentTeams.find((t) => t.id === teamId);
           index += 1;
+
+          // If team already has message stats, just update the counter without API call
+          if (team && team.messageCount !== undefined) {
+            if (team.recentCount > 0) {
+              const el = PerformanceOptimizer.getElementById('active-teams-count');
+              if (el) {
+                el.textContent = (parseInt(el.textContent, 10) || 0) + 1;
+              }
+            }
+            // eslint-disable-next-line no-continue
+            continue;
+          }
+
           active += 1;
           getTeamMessageStats(teamId)
             .then((stats) => {
@@ -348,7 +368,7 @@ class TeamTable {
             });
         }
         return null;
-      }
+      };
 
       next();
     });
