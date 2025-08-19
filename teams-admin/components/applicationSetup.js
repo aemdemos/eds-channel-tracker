@@ -33,6 +33,9 @@ class ApplicationSetup {
         // eslint-disable-next-line no-alert
         alert('missing email and name query params for local debug');
       }
+    } else {
+      // For production environments, fetch the user profile
+      this.userProfile = await getUserProfile();
     }
 
     return this.userProfile;
@@ -127,6 +130,13 @@ class ApplicationSetup {
   async initialize() {
     // Initialize user profile
     await this.initializeUserProfile();
+
+    // Ensure we have a valid user profile before continuing
+    if (!this.userProfile || (!this.userProfile.name && !this.userProfile.email)) {
+      const teamsContainer = document.getElementById(CONSTANTS.ELEMENT_IDS.TEAMS_CONTAINER);
+      teamsContainer.innerHTML = '<p class="error">Unable to fetch your user profile. Please ensure you are logged in and try again.</p>';
+      throw new Error('Invalid or null user profile');
+    }
 
     // Setup UI elements
     this.setupCreateTeamButton();
