@@ -14,6 +14,7 @@ const verifyTurnstile = () => new Promise((resolve, reject) => {
     'expired-callback': () => reject(new Error('Turnstile expired')),
   });
 
+  turnstile.reset(widgetId);
   turnstile.execute(widgetId);
 });
 
