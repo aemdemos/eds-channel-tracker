@@ -10,7 +10,9 @@
  * governing permissions and limitations under the License.
  */
 
-import { getTeamMembers, getTeamMessageStats } from '../api.js';
+import {
+  getTeamMembers, getTeamMessageStats, addMembersToTeam, removeMemberFromTeam,
+} from '../api.js';
 import {
   sortTable, decodeHTML, escapeHTML, sleep,
 } from '../utils.js';
@@ -65,7 +67,7 @@ class TeamTable {
     tr.appendChild(nameCell);
 
     // Member column
-    const memberCell = TeamTable.createMemberCell(team.isMember);
+    const memberCell = this.createMemberCell(team, tr);
     tr.appendChild(memberCell);
 
     // Description
@@ -100,18 +102,122 @@ class TeamTable {
     return tr;
   }
 
-  static createMemberCell(isMember) {
+  createMemberCell(team, tr) {
     const memberCell = document.createElement('td');
     memberCell.className = 'member-column';
+    memberCell.style.cursor = 'pointer';
+    memberCell.title = team.isMember ? 'Click to leave team' : 'Click to join team';
 
-    if (isMember) {
-      memberCell.innerHTML = `
-        <svg viewBox="0 0 20 20" width="18" height="18" xmlns="http://www.w3.org/2000/svg" class="checkmark-badge">
-          <rect width="20" height="20" rx="4" fill="#22c55e"/>
-          <path d="M6 10.5l2.5 2.5L14 8" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      `;
-    }
+    const updateMemberCellUI = (isMember) => {
+      memberCell.title = isMember ? 'Click to leave team' : 'Click to join team';
+      if (isMember) {
+        memberCell.innerHTML = `
+          <svg viewBox="0 0 20 20" width="18" height="18" xmlns="http://www.w3.org/2000/svg" class="checkmark-badge">
+            <rect width="20" height="20" rx="4" fill="#22c55e"/>
+            <path d="M6 10.5l2.5 2.5L14 8" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        `;
+      } else {
+        memberCell.innerHTML = `
+          <svg viewBox="0 0 20 20" width="18" height="18" xmlns="http://www.w3.org/2000/svg" class="x-badge">
+            <circle cx="10" cy="10" r="9" fill="none" stroke="#ef4444" stroke-width="2"/>
+            <path d="M10 6v8M6 10h8" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        `;
+      }
+    };
+
+    updateMemberCellUI(team.isMember);
+
+    memberCell.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      const userEmail = this.userProfile?.email;
+      const userName = this.userProfile?.name || this.userProfile?.email || 'Unknown User';
+
+      if (!userEmail) {
+        // eslint-disable-next-line no-alert
+        alert('Unable to determine your email address.');
+        return;
+      }
+
+      if (team.isMember) {
+        // Leave team
+        // eslint-disable-next-line no-alert
+        const confirmed = confirm(`Are you sure you want to leave "${team.displayName}"?`);
+        if (!confirmed) return;
+
+        try {
+          memberCell.innerHTML = '<span class="_spinner" data-loading="true"></span>';
+          await removeMemberFromTeam(team.id, userEmail, userName);
+
+          // Update team object
+          team.isMember = false;
+          team.memberCount = Math.max(0, (team.memberCount || 1) - 1);
+
+          // Update UI
+          updateMemberCellUI(false);
+
+          // Update member count cell
+          const membersCountCell = tr.querySelector('.members-count-cell a');
+          if (membersCountCell) {
+            membersCountCell.textContent = team.memberCount;
+          }
+
+          // Update team name cell to remove link
+          const nameCell = tr.querySelector('.name-column');
+          if (nameCell) {
+            nameCell.textContent = team.displayName;
+          }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error('Error leaving team:', err);
+          // eslint-disable-next-line no-alert
+          alert('Failed to leave team. Please try again.');
+          updateMemberCellUI(team.isMember);
+        }
+      } else {
+        // Join team
+        // eslint-disable-next-line no-alert
+        const confirmed = confirm(`Do you want to join "${team.displayName}"?`);
+        if (!confirmed) return;
+
+        try {
+          memberCell.innerHTML = '<span class="_spinner" data-loading="true"></span>';
+          await addMembersToTeam(team.id, [{ email: userEmail }], userName);
+
+          // Update team object
+          team.isMember = true;
+          team.memberCount = (team.memberCount || 0) + 1;
+
+          // Update UI
+          updateMemberCellUI(true);
+
+          // Update member count cell
+          const membersCountCell = tr.querySelector('.members-count-cell a');
+          if (membersCountCell) {
+            membersCountCell.textContent = team.memberCount;
+          }
+
+          // Update team name cell to add link if webUrl exists
+          const nameCell = tr.querySelector('.name-column');
+          if (nameCell && team.webUrl) {
+            nameCell.innerHTML = `<a href="${escapeHTML(
+              team.webUrl,
+            )}" target="_blank" rel="noopener noreferrer" title="Open in Microsoft Teams">${escapeHTML(
+              team.displayName,
+            )}</a>`;
+          }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error('Error joining team:', err);
+          // eslint-disable-next-line no-alert
+          alert('Failed to join team. Please try again.');
+          updateMemberCellUI(team.isMember);
+        }
+      }
+    });
 
     return memberCell;
   }
