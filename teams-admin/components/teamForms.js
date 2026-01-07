@@ -64,6 +64,11 @@ class TeamForms {
         <input type="text" id="new-team-name" name="team-name" value="aem-" required />
         <label for="new-company-name">Company Name</label>
         <input type="text" id="new-company-name" />
+        <label for="team-type">Team Type</label>
+        <select id="team-type" name="team-type" style="width:100%;font-size:15px;padding:8px 10px;margin-bottom:18px;">
+          <option value="EDS">Edge Delivery Services (EDS)</option>
+          <option value="LLM">LLM Optimizer</option>
+        </select>
         <label for="new-team-description">Description</label>
         <textarea id="new-team-description" name="description" rows="3" required
            style="width:100%;resize:vertical;font-size:15px;padding:8px 10px;margin-bottom:18px;">Collaboration channel for <COMPANY_NAME> and Adobe, focused on Edge Delivery Services</textarea>
@@ -79,24 +84,38 @@ class TeamForms {
   setupCreateTeamFormHandlers(userProfile) {
     const companyInput = this.createTeamModal.querySelector('#new-company-name');
     const descriptionInput = this.createTeamModal.querySelector('#new-team-description');
+    const teamTypeSelect = this.createTeamModal.querySelector('#team-type');
     const createTeamForm = this.createTeamModal.querySelector('#create-team-form');
 
     let userHasEditedDescription = false;
 
-    // Description autofill based on company name
+    // Helper function to get the description template based on team type
+    const getDescriptionTemplate = (company, teamType) => {
+      const companyName = company || '<COMPANY_NAME>';
+      if (teamType === 'LLM') {
+        return `Collaboration channel for ${companyName} and Adobe, focused on LLM Optimizer`;
+      }
+      return `Collaboration channel for ${companyName} and Adobe, focused on Edge Delivery Services`;
+    };
+
+    // Description autofill based on company name and team type
     descriptionInput.addEventListener('input', () => {
       userHasEditedDescription = true;
     });
 
-    companyInput.addEventListener('input', () => {
+    const updateDescription = () => {
       const company = companyInput.value.trim();
-      const defaultTemplate = `Collaboration channel for ${company || '<COMPANY_NAME>'} and Adobe, focused on Edge Delivery Services`;
+      const teamType = teamTypeSelect.value;
+      const defaultTemplate = getDescriptionTemplate(company, teamType);
 
       if (!userHasEditedDescription || descriptionInput.value.includes('<COMPANY_NAME>')) {
         descriptionInput.value = defaultTemplate;
         userHasEditedDescription = false;
       }
-    });
+    };
+
+    companyInput.addEventListener('input', updateDescription);
+    teamTypeSelect.addEventListener('change', updateDescription);
 
     // Form submission
     createTeamForm.addEventListener('submit', async (e) => {
@@ -126,6 +145,7 @@ class TeamForms {
 
     const name = form.querySelector('#new-team-name').value.trim();
     const description = form.querySelector('#new-team-description').value.trim();
+    const teamType = form.querySelector('#team-type').value;
 
     // Get fresh user profile to ensure we have current user data
     const freshUserProfile = await getUserProfile();
@@ -135,7 +155,7 @@ class TeamForms {
       const response = await fetch(`${API_ENDPOINT}/teams`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ createdBy, name, description }),
+        body: JSON.stringify({ createdBy, name, description, teamType }),
       });
 
       if (response.ok) {
