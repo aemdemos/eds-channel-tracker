@@ -67,7 +67,8 @@ class TeamForms {
         <label for="team-type">Team Type</label>
         <select id="team-type" name="team-type" style="width:100%;font-size:15px;padding:8px 10px;margin-bottom:18px;">
           <option value="EDS">Edge Delivery Services (EDS)</option>
-          <option value="LLM">LLM Optimizer</option>
+          <option value="LLM">AEM / LLM Optimizer</option>
+          <option value="Other">Other</option>
         </select>
         <label for="new-team-description">Description</label>
         <textarea id="new-team-description" name="description" rows="3" required
@@ -88,19 +89,26 @@ class TeamForms {
     const createTeamForm = this.createTeamModal.querySelector('#create-team-form');
 
     let userHasEditedDescription = false;
+    let isUpdatingProgrammatically = false;
 
     // Helper function to get the description template based on team type
     const getDescriptionTemplate = (company, teamType) => {
       const companyName = company || '<COMPANY_NAME>';
       if (teamType === 'LLM') {
-        return `Collaboration channel for ${companyName} and Adobe, focused on LLM Optimizer`;
+        return `Collaboration channel for ${companyName} and Adobe, focused on ASO/LLM Optimizer`;
       }
-      return `Collaboration channel for ${companyName} and Adobe, focused on Edge Delivery Services`;
+      if (teamType === 'EDS') {
+        return `Collaboration channel for ${companyName} and Adobe, focused on Edge Delivery Services`;
+      }
+      return `Collaboration channel for ${companyName} and Adobe`;
     };
 
     // Description autofill based on company name and team type
     descriptionInput.addEventListener('input', () => {
-      userHasEditedDescription = true;
+      // Only mark as edited if the change wasn't programmatic
+      if (!isUpdatingProgrammatically) {
+        userHasEditedDescription = true;
+      }
     });
 
     const updateDescription = () => {
@@ -109,8 +117,10 @@ class TeamForms {
       const defaultTemplate = getDescriptionTemplate(company, teamType);
 
       if (!userHasEditedDescription || descriptionInput.value.includes('<COMPANY_NAME>')) {
+        isUpdatingProgrammatically = true;
         descriptionInput.value = defaultTemplate;
         userHasEditedDescription = false;
+        isUpdatingProgrammatically = false;
       }
     };
 
