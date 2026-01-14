@@ -25,7 +25,6 @@ import ErrorHandler from './errorHandler.js';
 import CONSTANTS from './constants.js';
 
 // Wrapper around window.confirm to avoid direct use of the global
-// eslint-disable-next-line no-alert
 function confirmAction(message) {
   return window.confirm(message);
 }

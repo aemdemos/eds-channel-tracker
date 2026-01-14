@@ -170,7 +170,12 @@ class TeamForms {
       const response = await fetch(`${API_ENDPOINT}/teams`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ createdBy, name, description, teamType }),
+        body: JSON.stringify({
+          createdBy,
+          name,
+          description,
+          teamType,
+        }),
       });
 
       if (response.ok) {
