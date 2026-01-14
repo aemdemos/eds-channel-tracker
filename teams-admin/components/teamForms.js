@@ -293,8 +293,16 @@ class TeamForms {
 
       // Get fresh user profile to ensure we have current user data
       const freshUserProfile = await getUserProfile();
-      const addedBy = freshUserProfile?.name || freshUserProfile?.email || userProfile?.name || userProfile?.email || 'Unknown User';
-      const result = await addMembersToTeam(team.id, users, addedBy);
+      const addedBy = freshUserProfile?.name
+        || freshUserProfile?.email
+        || userProfile?.name
+        || userProfile?.email
+        || 'Unknown User';
+      const result = await addMembersToTeam(
+        team.id,
+        users,
+        addedBy,
+      );
       const addedCount = result.filter((user) => user && user.added === true).length;
 
       spinner.style.display = 'none';

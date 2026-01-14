@@ -24,6 +24,12 @@ import PerformanceOptimizer from './performanceOptimizer.js';
 import ErrorHandler from './errorHandler.js';
 import CONSTANTS from './constants.js';
 
+// Wrapper around window.confirm to avoid direct use of the global
+// eslint-disable-next-line no-alert
+function confirmAction(message) {
+  return window.confirm(message);
+}
+
 class TeamTable {
   constructor(userProfile) {
     this.userProfile = userProfile;
@@ -144,8 +150,7 @@ class TeamTable {
 
       if (team.isMember) {
         // Leave team
-        // eslint-disable-next-line no-alert
-        const confirmed = confirm(`Are you sure you want to leave "${team.displayName}"?`);
+        const confirmed = confirmAction(`Are you sure you want to leave "${team.displayName}"?`);
         if (!confirmed) return;
 
         try {
@@ -179,8 +184,7 @@ class TeamTable {
         }
       } else {
         // Join team
-        // eslint-disable-next-line no-alert
-        const confirmed = confirm(`Do you want to join "${team.displayName}"?`);
+        const confirmed = confirmAction(`Do you want to join "${team.displayName}"?`);
         if (!confirmed) return;
 
         try {
