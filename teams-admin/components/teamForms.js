@@ -22,6 +22,7 @@ import {
   showModal,
   hideModal,
   showSuccessModal,
+  setupModalDrag,
 } from '../modal.js';
 
 function resetAddUsersForm(container) {
@@ -52,6 +53,10 @@ class TeamForms {
 
     this.createTeamModal.innerHTML = '';
     this.createTeamModal.appendChild(modalContent);
+
+    // Enable drag/move behavior on the create team modal
+    setupModalDrag(this.createTeamModal);
+
     showModal(this.createTeamModal);
 
     this.setupCreateTeamFormHandlers(userProfile);
