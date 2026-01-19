@@ -102,9 +102,6 @@ The application automatically configures API endpoints based on environment:
 - **Development**: `http://localhost:8787`
 - **Production**: `https://eds-teams-channel-worker.chrislotton.workers.dev`
 
-#### Feature Flags
-- **Create Team Button**: Add `?createTeams=true` to URL to enable team creation (hidden by default)
-
 ## Usage
 
 ### Basic Operations
@@ -121,14 +118,13 @@ The application automatically configures API endpoints based on environment:
 3. Use "Add Users" button to add new members
 
 #### ➕ **Creating Teams** (Admin Only)
-1. Add `?createTeams=true` to URL to reveal the button
-2. Click "Create New Team" button
-3. Fill in team details:
+1. Click "Create New Team" button
+2. Fill in team details:
    - Team name
    - Description  
    - Visibility settings
    - Initial members
-4. Submit to create team
+3. Submit to create team
 
 #### 👤 **Adding Team Members**
 1. From team members modal, click "Add Users"
@@ -180,7 +176,6 @@ The application integrates with existing EDS authentication:
 
 ### Testing
 - Test in both localhost and production environments
-- Verify with and without `createTeams=true` parameter
 - Test bulk operations with progress tracking
 - Validate responsive design on various screen sizes
 
