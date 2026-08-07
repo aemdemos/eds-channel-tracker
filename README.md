@@ -2,10 +2,6 @@
 
 A self-service internal tool to monitor customer communication channels to discuss EDS
 
-## Redirect notice
-
-This tool has moved. `index.html` now redirects to the new [AEM Teams Admin](https://experience.adobe.com/#/@sitesinternal/aem-teams-admin/) app.
-
 ## Environments
 
 - Preview: <https://main--eds-channel-tracker--aemdemos.aem.page/>
@@ -24,7 +20,7 @@ Before using the aem-boilerplate, we recommand you to go through the documentati
 
 ```sh
 npm i
-```https://experience.adobe.com/#/@sitesinternal/aem-teams-admin/
+```
 
 ## Linting
 
