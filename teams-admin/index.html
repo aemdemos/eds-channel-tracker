@@ -4,104 +4,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EDS Microsoft Teams</title>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-  <script src="../scripts/aem.js" type="module"></script>
-  <script src="../scripts/scripts.js" type="module"></script>
+  <title>Edge Delivery Service Customer Channels</title>
+  <meta http-equiv="refresh" content="0; url=https://experience.adobe.com/#/aem-teams-admin/">
+  <script>
+    window.location.replace('https://experience.adobe.com/#/aem-teams-admin/');
+  </script>
   <link rel="stylesheet" href="../styles/styles.css" />
-  <script src="./main.js" type="module"></script>
-  <link rel="stylesheet" href="./main.css" />
 </head>
 
-<body class="teams-admin">
-<div id="turnstile-container"></div>
-
-<a href="../index.html" class="header-left">
-  <span style="margin-right: 5px;">🏠</span>Home
-</a>
-
-<header class="header">
-  <a href="https://adobe-dx-support.enterprise.slack.com/archives/C08LDR6NP1V" target="_blank" rel="noopener" class="feedback-link">
-    <img src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" alt="Slack" class="slack-logo">
-      Questions or issues? Get help and share feedback in Slack.
-  </a>
-</header>
+<body class="admin">
   <main>
     <div class="title-container">
       <img src="../icons/adobe.png" alt="Adobe Logo" class="adobe-logo" />
-      <h2>Edge Delivery Services - Microsoft Teams</h2>
+      <h2>This tool has moved</h2>
     </div>
-    <div style="text-align: right; margin: 1em 0;">
-      <button id="create-team-btn" class="button">Create New Team</button>
-    </div>
-    <!-- Search Filters -->
-    <div id="search-box" class="search-filters">
-      <div>
-        <label for="team-name">Name Contains</label>
-        <input type="text" id="team-name" value="aem-" placeholder="Team Name" />
-      </div>
-      <div>
-        <label for="team-description">Description Contains</label>
-        <input type="text" id="team-description" value="*" />
-      </div>
-      <div>
-        <p class="button-wrapper">
-          <button type="reset" id="teams" class="button">
-            Search
-            <img src="https://cdn.worldvectorlogo.com/logos/microsoft-teams-1.svg" alt="Microsoft Teams Logo" style="height: 20px;" />
-          </button>
-        </p>
-      </div>
-    </div>
-
-    <div id="progress">
-      <div id="progress-container" style="display: none">
-        <span id="spinner" class="_spinner" style="display: none"></span>
-        <div id="progress-bar" style="display: none">
-          <div id="progress-fill"></div>
-        </div>
-        <div id="progress-label"></div>
-      </div>
-    </div>
-
-    <!-- Teams Container -->
-    <div id="teams-container">
-    </div>
-
-    <div id="members-modal" class="modal">
-      <div class="modal-header">
-        <h4 class="modal-title">Members</h4>
-      </div>
-      <div class="modal-body">
-      </div>
-    </div>
-
-    <div id="add-users-modal" class="modal">
-      <div class="modal-header">
-        <h4 class="modal-title">Add Guests</h4>
-      </div>
-      <div class="modal-body">
-      </div>
-    </div>
-
-    <div id="success-modal-overlay" class="hidden">
-      <div id="success-modal" class="modal-content">
-        <button id="success-modal-close" class="close-button">&times;</button>
-        <div id="success-modal-message"></div>
-      </div>
-    </div>
-
-    <div id="create-team-modal" class="modal">
-      <div class="modal-header">
-        <h4 class="modal-title">Create New Team</h4>
-      </div>
-      <div class="modal-body">
-      </div>
-    </div>
-
+    <p>
+      Redirecting you to the new
+      <a href="https://experience.adobe.com/#/aem-teams-admin/">AEM Teams Admin</a> app.
+      If you're not redirected automatically, click the link above.
+    </p>
   </main>
-  <footer>
-  </footer>
+  <footer></footer>
 </body>
 
 </html>
